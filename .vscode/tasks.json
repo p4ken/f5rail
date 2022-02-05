@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "detail": "rustソースコードをビルドする",
+      "dependsOn": "format",
+      "type": "shell",
+      "command": "cargo build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "format",
+      "type": "shell",
+      "command": "cargo fmt"
+    },
+    {
+      "label": "release",
+      "detail": "リリース用パッケージを作成する",
+      "dependsOn": [
+        "bin/SIN.bat",
+        "bin/draw.exe"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "bin/SIN.bat",
+      "type": "shell",
+      "command": "wsl iconv -f utf8 -t sjis -o bin/SIN.bat bin-utf8/SIN.bat",
+      "problemMatcher": []
+    },
+    {
+      "label": "bin/draw.exe",
+      "type": "shell",
+      "dependsOn": [
+        "build-release"
+      ],
+      "command": "wsl cp -p target/release/draw.exe bin/"
+    },
+    {
+      "label": "build-release",
+      "dependsOn": "format",
+      "type": "shell",
+      "command": "cargo build --release",
+      "group": "build"
+    }
+  ]
+}
