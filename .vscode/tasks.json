@@ -1,51 +1,40 @@
 {
   "version": "2.0.0",
+  "type": "shell",
+  "problemMatcher": [],
+  "presentation": {
+    "reveal": "always",
+    "panel": "shared",
+    "echo": true,
+    "showReuseMessage": false,
+  },
   "tasks": [
     {
-      "label": "build",
-      "detail": "rustソースコードをビルドする",
-      "dependsOn": "format",
-      "type": "shell",
-      "command": "cargo build",
+      "label": "release",
+      "detail": "リリース用の実行ファイルをビルドする",
+      "dependsOn": [
+        "bin/*.bat",
+        "bin/*.exe"
+      ],
+      "dependsOrder": "sequence",
+      "command": "wsl echo Successfully built binaries for release.",
       "group": {
         "kind": "build",
         "isDefault": true
-      }
+      },
     },
     {
-      "label": "format",
-      "type": "shell",
-      "command": "cargo fmt"
+      "label": "bin/*.bat",
+      "command": "wsl iconv -f utf8 -t sjis -o bin/SIN.bat bin-utf8/SIN.bat"
     },
     {
-      "label": "release",
-      "detail": "リリース用パッケージを作成する",
-      "dependsOn": [
-        "bin/SIN.bat",
-        "bin/draw.exe"
-      ],
-      "problemMatcher": []
+      "label": "bin/*.exe",
+      "dependsOn": "target/release/*.exe",
+      "command": "wsl cp -p target/release/*.exe bin/"
     },
     {
-      "label": "bin/SIN.bat",
-      "type": "shell",
-      "command": "wsl iconv -f utf8 -t sjis -o bin/SIN.bat bin-utf8/SIN.bat",
-      "problemMatcher": []
-    },
-    {
-      "label": "bin/draw.exe",
-      "type": "shell",
-      "dependsOn": [
-        "build-release"
-      ],
-      "command": "wsl cp -p target/release/draw.exe bin/"
-    },
-    {
-      "label": "build-release",
-      "dependsOn": "format",
-      "type": "shell",
+      "label": "target/release/*.exe",
       "command": "cargo build --release",
-      "group": "build"
-    }
+    },
   ]
 }
