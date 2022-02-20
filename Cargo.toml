@@ -3,12 +3,5 @@ name = "transition"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
-anyhow = "1.0.53"
-
-[dev-dependencies]
-speculate = "0.1.2"
-tempfile = "3.3.0"
-
 [profile.release]
 panic = 'abort'
