@@ -13,11 +13,14 @@
       "label": "release",
       "detail": "リリース用の実行ファイルをビルドする",
       "dependsOn": [
+        "bin/*.exe",
         "bin/*.bat",
-        "bin/*.exe"
       ],
       "dependsOrder": "sequence",
-      "command": "wsl echo Successfully built binaries for release.",
+      "command": "echo 'Successfully built binaries for release.'",
+      "presentation": {
+        "echo": false
+      },
       "group": {
         "kind": "build",
         "isDefault": true
@@ -25,16 +28,24 @@
     },
     {
       "label": "bin/*.bat",
-      "command": "wsl iconv -f utf8 -t sjis -o bin/SIN.bat bin-utf8/SIN.bat"
+      "command": "iconv -f utf8 -t sjis -o bin/SIN.bat bin-utf8/SIN.bat",
+      "windows": {
+        "command": "wsl iconv -f utf8 -t sjis -o bin/SIN.bat bin-utf8/SIN.bat"
+      },
     },
     {
       "label": "bin/*.exe",
       "dependsOn": "target/release/*.exe",
-      "command": "wsl cp -p target/release/*.exe bin/"
+      "command": "cp -p target/release/*.exe bin/",
+      "windows": {
+        "command": "copy target\\release\\*.exe bin\\",
+      }
     },
     {
       "label": "target/release/*.exe",
-      "command": "cargo build --release",
+      "windows": {
+        "command": "cargo build --release",
+      }
     },
   ]
 }
