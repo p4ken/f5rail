@@ -1,11 +1,12 @@
-use crate::jww::{jww_temp::JwwTemp, param::Param, self};
+use anyhow::{Ok, Result};
+
+use crate::jww::{jww_temp::JwwTemp, param::Tc};
 
 /// JW_CADに緩和曲線を描画する
-pub fn draw(param: &Param) {
-    // 座標ファイル
-    let jww_temp = JwwTemp::new(&param.file);
-    plot(&mut jww_temp);
+pub fn draw(jww_temp: &mut JwwTemp, param: &Result<Tc>) -> Result<()> {
+    plot(jww_temp);
     jww_temp.flush();
+    Ok(())
 }
 
 /// 座標ファイルに緩和曲線を出力する
@@ -16,4 +17,3 @@ fn plot(jww_temp: &mut JwwTemp) {
     //     _ => (),
     // }
 }
-

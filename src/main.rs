@@ -1,12 +1,21 @@
+mod geo;
+mod jww;
+
+use anyhow::{Context, Result};
+use geo::transition;
+use jww::{
+    jww_temp::JwwTemp,
+    param::{Func, Param},
+};
 use std::env;
 
-mod jww;
-use jww::param::Param;
+fn main() -> Result<()> {
+    // osstringにしないとパスが日本語sjisだったときに落ちる？
+    let param = Param::parse(env::args()).context("引数のパースに失敗しました。")?;
 
-mod geo;
-use geo::transition;
+    let mut jww_temp = JwwTemp::new(&param.file);
 
-fn main() {
-    let param = Param::parse(env::args());
-    transition::draw(&param);
+    match param.func {
+        Func::Tc(p) => transition::draw(&mut jww_temp, &p),
+    }
 }
