@@ -1,6 +1,7 @@
+use anyhow::Result;
 use f5rail;
 use std::env;
 
-fn main() {
-    f5rail::boot(env::args_os());
+fn main() -> Result<()> {
+    f5rail::layout(env::args_os())
 }

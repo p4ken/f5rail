@@ -1,5 +1,4 @@
 mod transition;
-mod geo;
 mod jww;
 
 use anyhow::Result;
@@ -9,7 +8,8 @@ use jww::{
 };
 use std::ffi::OsString;
 
-pub fn boot(args: impl IntoIterator<Item = OsString>) -> Result<()> {
+/// 配線する
+pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
     let param = Param::parse(args)?;
 
     let mut jww_temp = JwwTemp::new(&param.file);
@@ -18,7 +18,5 @@ pub fn boot(args: impl IntoIterator<Item = OsString>) -> Result<()> {
         Func::Tc(param) => transition::draw(&mut jww_temp, &param),
     }
 
-    jww_temp.save()?;
-
-    Ok(())
+    jww_temp.save()
 }
