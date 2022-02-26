@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ffi::OsString};
 
 use anyhow::{bail, Context, Ok, Result};
 
@@ -30,8 +30,11 @@ impl Param {
     ///
     /// BATファイルの起動オプション（参考）
     /// https://www.tmk-s.com/jww/bat-file.html#c
-    pub fn parse(args: impl IntoIterator<Item = String>) -> Result<Param> {
-        let args = args.into_iter().collect::<Vec<String>>();
+    pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Param> {
+        let args = args
+            .into_iter()
+            .filter_map(|os| os.into_string().ok())
+            .collect::<Vec<String>>();
         let args = args
             .iter()
             .filter_map(|s| s.trim_start_matches(ARG_PREFIX).split_once(ARG_SEPARATOR))
@@ -109,13 +112,13 @@ mod tests {
     #[test]
     fn パースする() {
         let v = vec![
-            String::from("transition.exe"),
-            String::from("/FUNC:sin"),
-            String::from("/R1:1"),
-            String::from("/R2:2"),
-            String::from("/TCL:3"),
-            String::from("/DX:4"),
-            String::from("/FILE:./JWC_TEMP.TXT"),
+            OsString::from("transition.exe"),
+            OsString::from("/FUNC:sin"),
+            OsString::from("/R1:1"),
+            OsString::from("/R2:2"),
+            OsString::from("/TCL:3"),
+            OsString::from("/DX:4"),
+            OsString::from("/FILE:./JWC_TEMP.TXT"),
         ];
         let param = Param::parse(v);
         assert!(param.is_ok());

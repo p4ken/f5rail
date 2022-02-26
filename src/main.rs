@@ -10,8 +10,7 @@ use jww::{
 use std::env;
 
 fn main() -> Result<()> {
-    // osstringにしないとパスが日本語sjisだったときに落ちる？
-    let param = Param::parse(env::args()).context("引数のパースに失敗しました。")?;
+    let param = Param::parse(env::args_os()).context("引数のパースに失敗しました。")?;
 
     let mut jww_temp = JwwTemp::new(&param.file);
 
