@@ -24,12 +24,17 @@ impl JwwTemp {
         }
     }
 
+    // 最初のエラーのみが表示される。
+    // エラーがあれば、図形は描画されない。
+
     pub fn notice(&mut self, message: &str) {
+        // エラーがないときのみ、最後の注意が表示される。
+        // 座標間の行に出力すると、座標が途切れてしまう。
         self.message = Some(Message::Notice(message.to_owned()));
     }
 
     /// todo: 文字コード変換
-    pub fn flush(&self) -> Result<()> {
+    pub fn save(&self) -> Result<()> {
         if let Some(message) = &self.message {
             match message {
                 Message::Notice(s) => fs::write(&self.path, String::from("h#") + &s)?,

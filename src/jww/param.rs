@@ -34,7 +34,7 @@ impl Param {
         let args = args
             .into_iter()
             .filter_map(|os| os.into_string().ok())
-            .collect::<Vec<String>>();
+            .collect::<Vec<_>>();
         let args = args
             .iter()
             .filter_map(|s| s.trim_start_matches(ARG_PREFIX).split_once(ARG_SEPARATOR))
