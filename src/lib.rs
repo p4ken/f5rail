@@ -1,23 +1,22 @@
 mod format;
 mod transition;
 
-use anyhow::{Result, Ok};
-use format::args::Args;
+use anyhow::{bail, Result};
+use format::{
+    args::{Args, Param},
+    jwc_temp::JwcTemp,
+};
 use std::ffi::OsString;
 
 /// 配線する
 pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
     let args = Args::parse(args)?;
-    // match args.param {
-    //     // Args::Func::Transition(param)
-    // }
 
-    // let mut jww_temp = JwwTemp::new(&args.file);
-
-    // match args.func {
-    //     // Func::Tc(param) => transition::draw(&param),
-    // }
-
-    // jww_temp.save()
-    Ok(())
+    match args.param {
+        Param::Transition(param) => {
+            let polyline = transition::plot(&param);
+            JwcTemp::new(&args.file)?.save(&polyline)
+        }
+        _ => bail!("未実装"),
+    }
 }

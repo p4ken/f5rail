@@ -1,46 +1,51 @@
-use std::fs;
+use std::{fs::File, io::Write};
 
-use anyhow::Result;
+use anyhow::{bail, Context, Result};
+
+use crate::transition::polyline::Polyline;
 
 /// 入出力用の座標ファイル。
 ///
 /// JWC_TEMP.TXTのフォーマット（参考）
 /// http://mintleaf.sakura.ne.jp/cad/jwc_temp.html
-pub struct JwwTemp {
-    path: String,
-    message: Option<Message>,
+pub struct JwcTemp {
+    file: File,
 }
 
-pub enum Message {
-    Notice(String),
-    Error(String),
-}
-
-impl JwwTemp {
-    pub fn new(path: &str) -> JwwTemp {
-        JwwTemp {
-            path: path.to_owned(),
-            message: None,
-        }
+impl JwcTemp {
+    pub fn new(path: &str) -> Result<Self> {
+        let file = File::open(path).context("JWC_TEMP.TXTを開けませんでした。")?;
+        Ok(Self { file })
     }
 
-    // 最初のエラーのみが表示される。
-    // エラーがあれば、図形は描画されない。
+    pub fn save(&mut self, polyline: &Result<Polyline>) -> Result<()> {
+        // 最初のエラーのみが表示される。
+        // エラーがあれば、図形は描画されない。
+        if let Err(e) = polyline {
+            return self.append(&format!("he{}", e));
+        }
 
-    pub fn notice(&mut self, message: &str) {
         // エラーがないときのみ、最後の注意が表示される。
         // 座標間の行に出力すると、座標が途切れてしまう。
-        self.message = Some(Message::Notice(message.to_owned()));
+
+        bail!("未実装")
     }
 
-    /// todo: 文字コード変換
-    pub fn save(&self) -> Result<()> {
-        if let Some(message) = &self.message {
-            match message {
-                Message::Notice(s) => fs::write(&self.path, String::from("h#") + &s)?,
-                _ => (),
-            }
-        }
+    fn append(&mut self, s: &str) -> Result<()> {
+        self.file
+            .write_all(s.as_bytes())
+            .context("JWC_TEMP.TXTへの書き込みに失敗しました。")
+    }
+
+    fn a(&self) -> Result<()> {
+        // if let Some(message) = &self.message {
+        //     match message {
+        //         Message::Notice(s) => fs::write(&self.path, String::from("h#") + &s)?,
+        //         _ => (),
+        //     }
+        // }
+
+        // todo: 文字コード変換
         let mut content = "h#サイン半波長逓減";
         println!("h#サイン半波長逓減");
         println!("pl");

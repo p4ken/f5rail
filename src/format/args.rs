@@ -55,6 +55,7 @@ impl Args {
 #[derive(Debug)]
 pub enum Param {
     Transition(Result<TcParam>),
+    _Relative,
 }
 
 impl Param {
@@ -151,8 +152,8 @@ mod tests {
         ];
         let args = Args::parse(args);
         assert!(args.is_err());
-        let err = args.unwrap_err();
-        assert_eq!(err.to_string(), "FILEを指定してください")
+        let e = args.unwrap_err();
+        assert_eq!(e.to_string(), "FILEを指定してください")
     }
 
     #[test]
@@ -169,8 +170,8 @@ mod tests {
         assert!(matches!(args.param, Param::Transition(_)));
         let tc = unwrap_tc_param(&args.param);
         assert!(tc.is_err());
-        let err = tc.as_ref().unwrap_err();
-        assert_eq!(err.to_string(), "TCLを指定してください");
+        let e = tc.as_ref().unwrap_err();
+        assert_eq!(e.to_string(), "TCLを指定してください");
     }
 
     #[test]

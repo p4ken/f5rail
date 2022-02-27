@@ -14,12 +14,3 @@ pub enum Func {
     Sin,
     Linear,
 }
-
-impl Func {
-    pub fn to_string(&self) -> &str {
-        match self {
-            Sin => "サイン半波長逓減",
-            Linear => "直線逓減",
-        }
-    }
-}
