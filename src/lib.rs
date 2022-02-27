@@ -15,7 +15,7 @@ pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
     match args.param {
         Param::Transition(param) => {
             let polyline = transition::plot(&param);
-            JwcTemp::new(&args.file)?.save(&polyline)
+            JwcTemp::save(&args.file, &polyline)
         }
         _ => bail!("未実装"),
     }

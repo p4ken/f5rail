@@ -13,16 +13,14 @@ pub struct JwcTemp {
 }
 
 impl JwcTemp {
-    pub fn new(path: &str) -> Result<Self> {
-        let file = File::open(path).context("JWC_TEMP.TXTを開けませんでした。")?;
-        Ok(Self { file })
-    }
+    pub fn save(path: &str, polyline: &Result<Polyline>) -> Result<()> {
+        let file = File::create(path).context("JWC_TEMP.TXTを作成できませんでした。")?;
+        let mut out = Self { file };
 
-    pub fn save(&mut self, polyline: &Result<Polyline>) -> Result<()> {
         // 最初のエラーのみが表示される。
         // エラーがあれば、図形は描画されない。
         if let Err(e) = polyline {
-            return self.append(&format!("he{}", e));
+            return out.append(&format!("he{}", e));
         }
 
         // エラーがないときのみ、最後の注意が表示される。
