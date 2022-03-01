@@ -1,22 +1,38 @@
-mod format;
+mod agent;
 mod transition;
 
-use anyhow::{bail, Result};
-use format::{
-    args::{Args, Param},
-    jwc_temp::JwcTemp,
-};
 use std::ffi::OsString;
+
+use anyhow::{bail, Context, Result};
+
+use agent::{
+    batch::{Args, Param, TcParam},
+    jww::JwcTemp,
+};
+use transition::{param, polyline};
 
 /// 配線する
 pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
     let args = Args::parse(args)?;
 
     match args.param {
-        Param::Transition(param) => {
-            let polyline = transition::plot(&param);
-            JwcTemp::save(&args.file, &polyline)
-        }
+        Param::Transition(param) => layout_transition(&args.file, &param),
         _ => bail!("未実装"),
     }
+}
+
+fn layout_transition(jwc_temp: &str, param: &Result<TcParam>) -> Result<()> {
+    let param = match param {
+        Ok(param) => param,
+        Err(e) => return JwcTemp::export_err(jwc_temp, e),
+    };
+
+    let polyline = transition::draw(param);
+
+    let polyline = match &polyline {
+        Ok(polyline) => polyline,
+        Err(e) => return JwcTemp::export_err(jwc_temp, e),
+    };
+
+    JwcTemp::export(jwc_temp, &param.func, polyline)
 }

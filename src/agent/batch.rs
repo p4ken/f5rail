@@ -1,20 +1,10 @@
-use crate::transition::param::{Func as TcFunc, Param as TcParam};
-use anyhow::{bail, Context, Ok, Result};
 use std::{collections::HashMap, ffi::OsString};
 
-type ArgMap<'a> = HashMap<&'a str, &'a str>;
+use anyhow::{bail, Context, Ok, Result};
 
-const ARG_PREFIX: &str = "/";
-const ARG_SEPARATOR: &str = ":";
-const ARG_KEY_FUNC: &str = "FUNC";
-const ARG_KEY_R1: &str = "R1";
-const ARG_KEY_R2: &str = "R2";
-const ARG_KEY_TCL: &str = "TCL";
-const ARG_KEY_DX: &str = "DX";
-const ARG_KEY_FILE: &str = "FILE";
-const FUNC_SIN: &str = "sin";
-const FUNC_LINEAR: &str = "linear";
-const DX_DEFAULT: f64 = 0.1;
+pub use crate::transition::param::{Func as TcFunc, Param as TcParam};
+
+type ArgMap<'a> = HashMap<&'a str, &'a str>;
 
 /// コマンドライン引数
 #[derive(Debug)]
@@ -36,13 +26,13 @@ impl Args {
 
         let args = args
             .iter()
-            .filter_map(|s| s.trim_start_matches(ARG_PREFIX).split_once(ARG_SEPARATOR))
+            .filter_map(|s| s.trim_start_matches("/").split_once(":"))
             .collect::<ArgMap>();
 
         let param = Param::parse(&args)?;
 
         let file = args
-            .get(ARG_KEY_FILE)
+            .get("FILE")
             .context("FILEを指定してください")?
             .to_owned()
             .to_owned();
@@ -60,7 +50,7 @@ pub enum Param {
 
 impl Param {
     fn parse(args: &ArgMap) -> Result<Self> {
-        let func = args.get(ARG_KEY_FUNC).context("FUNCを指定してください")?;
+        let func = args.get("FUNC").context("FUNCを指定してください")?;
         if let Some(func) = Self::to_tc_func(func) {
             let param = Self::to_tc_param(func, &args);
             Ok(Self::Transition(param))
@@ -71,31 +61,31 @@ impl Param {
 
     fn to_tc_func(func: &str) -> Option<TcFunc> {
         match func {
-            FUNC_SIN => Some(TcFunc::Sin),
-            FUNC_LINEAR => Some(TcFunc::Linear),
+            "sin" => Some(TcFunc::Sin),
+            "linear" => Some(TcFunc::Linear),
             _ => None,
         }
     }
 
     fn to_tc_param(func: TcFunc, args: &ArgMap) -> Result<TcParam> {
         let r1 = args
-            .get(ARG_KEY_R1)
+            .get("R1")
             .and_then(|s| Some(s.parse().context("R1を整数で入力してください").ok()?));
 
         let r2 = args
-            .get(ARG_KEY_R2)
+            .get("R2")
             .and_then(|s| Some(s.parse().context("R2を整数で入力してください").ok()?));
 
         let tcl = args
-            .get(ARG_KEY_TCL)
+            .get("TCL")
             .context("TCLを指定してください")?
             .parse()
             .context("TCLを整数で入力してください")?;
 
         let dx = args
-            .get(ARG_KEY_DX)
+            .get("DX")
             .and_then(|s| Some(s.parse().context("DXを数値で入力してください").ok()?))
-            .unwrap_or(DX_DEFAULT);
+            .unwrap_or(0.1);
 
         Ok(TcParam {
             func,
