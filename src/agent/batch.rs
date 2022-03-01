@@ -7,6 +7,9 @@ pub use crate::transition::param::{Func as TcFunc, Param as TcParam};
 type ArgMap<'a> = HashMap<&'a str, &'a str>;
 
 /// コマンドライン引数
+///
+/// BATファイルの起動オプション（参考）
+/// https://www.tmk-s.com/jww/bat-file.html#c
 #[derive(Debug)]
 pub struct Args {
     pub param: Param,
@@ -14,10 +17,7 @@ pub struct Args {
 }
 
 impl Args {
-    /// コマンドライン引数をパースする。
-    ///
-    /// BATファイルの起動オプション（参考）
-    /// https://www.tmk-s.com/jww/bat-file.html#c
+    /// コマンドライン引数をパースする
     pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Self> {
         let args = args
             .into_iter()
@@ -31,11 +31,8 @@ impl Args {
 
         let param = Param::parse(&args)?;
 
-        let file = args
-            .get("FILE")
-            .context("FILEを指定してください")?
-            .to_owned()
-            .to_owned();
+        let file = args.get("FILE").context("FILEを指定してください")?;
+        let file = (*file).to_string();
 
         Ok(Self { param, file })
     }
@@ -45,15 +42,18 @@ impl Args {
 #[derive(Debug)]
 pub enum Param {
     Transition(Result<TcParam>),
-    _Relative,
+    _Parallel,
+    Encoding,
 }
 
 impl Param {
     fn parse(args: &ArgMap) -> Result<Self> {
-        let func = args.get("FUNC").context("FUNCを指定してください")?;
+        let func = *args.get("FUNC").context("FUNCを指定してください")?;
         if let Some(func) = Self::to_tc_func(func) {
             let param = Self::to_tc_param(func, &args);
             Ok(Self::Transition(param))
+        } else if func == "encoding" {
+            Ok(Self::Encoding)
         } else {
             bail!("FUNCの値が不正です")
         }

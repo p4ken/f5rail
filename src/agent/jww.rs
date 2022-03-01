@@ -1,8 +1,8 @@
 use std::{fmt::Display, fs::File, io::Write};
 
 use anyhow::{bail, Context, Result};
-use encoding_rs::SHIFT_JIS;
 
+use super::sjis::to_sjis;
 use crate::transition::{self, polyline::Polyline};
 
 type TcFunc = transition::param::Func;
@@ -52,9 +52,7 @@ impl JwcTemp {
 
     /// 文字列と改行を書き込む
     fn puts(&mut self, s: &str) -> Result<()> {
-        let (cow, _, _) = SHIFT_JIS.encode(s);
-
-        for bytes in [&cow[..], b"\r\n"] {
+        for bytes in [&to_sjis(s)[..], b"\r\n"] {
             self.file
                 .write_all(bytes)
                 .context("JWC_TEMP.TXTへの書き込みに失敗しました。")?;

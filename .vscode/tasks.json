@@ -30,7 +30,8 @@
       "label": "bin/*.bat",
       "command": "iconv -f utf8 -t sjis -o bin/SIN.bat bin-utf8/SIN.bat",
       "windows": {
-        "command": "wsl iconv -f utf8 -t sjis -o bin/SIN.bat bin-utf8/SIN.bat"
+        "dependsOn": "target/release/*.exe",
+        "command": "copy bin-utf8\\SIN.bat bin\\SIN.bat >NUL && target\\release\\f5rail.exe /FUNC:encoding /FILE:bin\\SIN.bat"
       },
     },
     {
@@ -38,7 +39,7 @@
       "dependsOn": "target/release/*.exe",
       "command": "cp -p target/release/*.exe bin/",
       "windows": {
-        "command": "copy target\\release\\*.exe bin\\",
+        "command": "copy target\\release\\*.exe bin\\ >NUL",
       }
     },
     {

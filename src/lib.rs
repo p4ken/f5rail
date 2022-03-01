@@ -3,13 +3,12 @@ mod transition;
 
 use std::ffi::OsString;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 
 use agent::{
     batch::{Args, Param, TcParam},
     jww::JwcTemp,
 };
-use transition::{param, polyline};
 
 /// 配線する
 pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
@@ -17,10 +16,12 @@ pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
 
     match args.param {
         Param::Transition(param) => layout_transition(&args.file, &param),
+        Param::Encoding => agent::encode(&args.file),
         _ => bail!("未実装"),
     }
 }
 
+/// 緩和曲線を配線する
 fn layout_transition(jwc_temp: &str, param: &Result<TcParam>) -> Result<()> {
     let param = match param {
         Ok(param) => param,
