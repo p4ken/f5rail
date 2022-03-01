@@ -62,16 +62,20 @@ struct ArgValue<'a> {
     pair: (&'a str, &'a str),
 }
 
-impl ArgValue<'_> {
+impl<'a> ArgValue<'a> {
     fn str(&self) -> &str {
         self.pair.1
     }
+}
 
-    fn f64(&self) -> Result<f64> {
-        self.pair
+impl<'a> TryFrom<ArgValue<'a>> for f64 {
+    type Error = anyhow::Error;
+    fn try_from(value: ArgValue<'a>) -> Result<Self, Self::Error> {
+        value
+            .pair
             .1
             .parse()
-            .with_context(|| format!("{}を数値で入力してください", self.pair.0))
+            .with_context(|| format!("{}を数値で入力してください", value.pair.0))
     }
 }
 
@@ -108,15 +112,15 @@ impl Param {
     fn to_tc_param(func: TcFunc, args: &ArgMap) -> Result<TcParam> {
         let r1 = args
             .get("R1")
-            .map_or(Ok(None), |val| val.f64().map(|d| Some(d)))?;
+            .map_or(Ok(None), |val| val.try_into().map(|d| Some(d)))?;
 
         let r2 = args
             .get("R2")
-            .map_or(Ok(None), |val| val.f64().map(|d| Some(d)))?;
+            .map_or(Ok(None), |val| val.try_into().map(|d| Some(d)))?;
 
-        let tcl = args.get("TCL")?.f64()?;
+        let tcl = args.get("TCL")?.try_into()?;
 
-        let dx = args.get("DX").map_or(Ok(0.1), |val| val.f64())?;
+        let dx = args.get("DX").map_or(Ok(0.1), |val| val.try_into())?;
 
         Ok(TcParam {
             func,

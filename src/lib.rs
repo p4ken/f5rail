@@ -6,7 +6,7 @@ use std::ffi::OsString;
 use anyhow::{bail, Result};
 
 use agent::{
-    batch::{Args, Param, TcParam},
+    bat::{Args, Param, TcParam},
     jww::JwcTemp,
 };
 

@@ -1,4 +1,4 @@
-pub mod batch;
+pub mod bat;
 pub mod jww;
 mod sjis;
 

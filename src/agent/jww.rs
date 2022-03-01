@@ -24,7 +24,7 @@ impl JwcTemp {
     /// ポリラインをファイルに書き出す
     pub fn export(path: &str, func: &TcFunc, polyline: &Polyline) -> Result<()> {
         let mut file = Self::create(path)?;
-        file.notice(to_string(func))?;
+        file.notice(func.into())?;
         file.curve(&polyline.vertex)?;
         Ok(())
     }
@@ -69,9 +69,11 @@ impl JwcTemp {
     }
 }
 
-fn to_string(tc_func: &TcFunc) -> &str {
-    match tc_func {
-        TcFunc::Sin => "サイン半波長逓減",
-        TcFunc::Linear => "直線逓減",
+impl From<&TcFunc> for &str {
+    fn from(tc_func: &TcFunc) -> Self {
+        match tc_func {
+            TcFunc::Sin => "サイン半波長逓減",
+            TcFunc::Linear => "直線逓減",
+        }
     }
 }
