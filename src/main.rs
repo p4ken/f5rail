@@ -3,5 +3,7 @@ use f5rail;
 use std::env;
 
 fn main() -> Result<()> {
-    f5rail::layout(env::args_os())
+    let args = env::args_os();
+    dbg!(&args);
+    f5rail::layout(args)
 }

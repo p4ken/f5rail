@@ -1,10 +1,8 @@
-use std::{collections::HashMap, ffi::OsString};
+use std::{collections::HashMap, ffi::OsString, fmt};
 
 use anyhow::{bail, Context, Ok, Result};
 
 pub use crate::transition::param::{Func as TcFunc, Param as TcParam};
-
-type ArgMap<'a> = HashMap<&'a str, &'a str>;
 
 /// コマンドライン引数
 ///
@@ -31,10 +29,49 @@ impl Args {
 
         let param = Param::parse(&args)?;
 
-        let file = args.get("FILE").context("FILEを指定してください")?;
-        let file = (*file).to_string();
+        let file = args.get("FILE")?.str().to_owned();
 
         Ok(Self { param, file })
+    }
+}
+
+struct ArgMap<'a> {
+    map: HashMap<&'a str, &'a str>,
+}
+
+impl<'a> FromIterator<(&'a str, &'a str)> for ArgMap<'a> {
+    fn from_iter<I: IntoIterator<Item = (&'a str, &'a str)>>(iter: I) -> Self {
+        Self {
+            map: HashMap::from_iter(iter),
+        }
+    }
+}
+
+impl ArgMap<'_> {
+    fn get(&self, key: &str) -> Result<ArgValue> {
+        let pair = self
+            .map
+            .get_key_value(key)
+            .map(|p| (*p.0, *p.1))
+            .with_context(|| format!("{}を指定してください", key))?;
+        Ok(ArgValue { pair })
+    }
+}
+
+struct ArgValue<'a> {
+    pair: (&'a str, &'a str),
+}
+
+impl ArgValue<'_> {
+    fn str(&self) -> &str {
+        self.pair.1
+    }
+
+    fn f64(&self) -> Result<f64> {
+        self.pair
+            .1
+            .parse()
+            .with_context(|| format!("{}を数値で入力してください", self.pair.0))
     }
 }
 
@@ -48,7 +85,8 @@ pub enum Param {
 
 impl Param {
     fn parse(args: &ArgMap) -> Result<Self> {
-        let func = *args.get("FUNC").context("FUNCを指定してください")?;
+        let func = args.get("FUNC")?;
+        let func = func.str();
         if let Some(func) = Self::to_tc_func(func) {
             let param = Self::to_tc_param(func, &args);
             Ok(Self::Transition(param))
@@ -70,22 +108,15 @@ impl Param {
     fn to_tc_param(func: TcFunc, args: &ArgMap) -> Result<TcParam> {
         let r1 = args
             .get("R1")
-            .and_then(|s| Some(s.parse().context("R1を数値で入力してください").ok()?));
+            .map_or(Ok(None), |val| val.f64().map(|d| Some(d)))?;
 
         let r2 = args
             .get("R2")
-            .and_then(|s| Some(s.parse().context("R2を数値で入力してください").ok()?));
+            .map_or(Ok(None), |val| val.f64().map(|d| Some(d)))?;
 
-        let tcl = args
-            .get("TCL")
-            .context("TCLを指定してください")?
-            .parse()
-            .context("TCLを数値で入力してください")?;
+        let tcl = args.get("TCL")?.f64()?;
 
-        let dx = args
-            .get("DX")
-            .and_then(|s| Some(s.parse().context("DXを数値で入力してください").ok()?))
-            .unwrap_or(0.1);
+        let dx = args.get("DX").map_or(Ok(0.1), |val| val.f64())?;
 
         Ok(TcParam {
             func,
@@ -147,7 +178,7 @@ mod tests {
     }
 
     #[test]
-    fn 緩和曲線の引数に長さがなければエラー() {
+    fn 緩和曲線の長さがなければエラー() {
         let args = vec![
             OsString::from("transition.exe"),
             OsString::from("/FUNC:sin"),
@@ -165,7 +196,7 @@ mod tests {
     }
 
     #[test]
-    fn 緩和曲線の引数の長さ以外は省略可能() {
+    fn 緩和曲線の長さ以外は省略可能() {
         let args = vec![
             OsString::from("transition.exe"),
             OsString::from("/FUNC:sin"),
@@ -185,5 +216,25 @@ mod tests {
         assert_eq!(tc.r2, None);
         assert_eq!(tc.tcl, 3.);
         assert_eq!(tc.dx, 0.1);
+    }
+
+    #[test]
+    fn 緩和曲線の半径が文字列ならエラー() {
+        let args = vec![
+            OsString::from("transition.exe"),
+            OsString::from("/FUNC:sin"),
+            OsString::from("/R1:abc"),
+            OsString::from("/TCL:3"),
+            OsString::from("/FILE:./JWC_TEMP.TXT"),
+        ];
+        let args = Args::parse(args);
+        assert!(args.is_ok());
+        let args = args.unwrap();
+        assert_eq!(args.file, "./JWC_TEMP.TXT");
+        assert!(matches!(args.param, Param::Transition(_)));
+        let tc = unwrap_tc_param(&args.param);
+        assert!(tc.is_err());
+        let e = tc.as_ref().unwrap_err();
+        assert_eq!(e.to_string(), "R1を数値で入力してください");
     }
 }
