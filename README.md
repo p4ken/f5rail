@@ -8,6 +8,6 @@ BVEの配線をJw_cadで楽しくする。
 
 ### 開発環境
 
-VSCodeでビルドタスク (`ctrl + shift + B`) を実行すると、bin配下にビルドします。
+VSCodeのビルドタスク `ctrl + shift + B` で外部変形をビルドします。
 
-RustのWindowsビルド環境が必要です。
+RustのWindowsコンパイル環境が必要です。

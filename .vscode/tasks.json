@@ -11,10 +11,10 @@
   "tasks": [
     {
       "label": "release",
-      "detail": "リリース用の実行ファイルをビルドする",
+      "detail": "外部変形をビルドする",
       "dependsOn": [
-        "bin/*.exe",
-        "bin/*.bat",
+        "外部変形/*.exe",
+        "外部変形/*.bat",
       ],
       "dependsOrder": "sequence",
       "command": "echo 'Successfully built binaries for release.'",
@@ -27,19 +27,19 @@
       },
     },
     {
-      "label": "bin/*.bat",
-      "command": "iconv -f utf8 -t sjis -o bin/SIN.bat bin-utf8/SIN.bat",
+      "label": "外部変形/*.bat",
+      "command": "iconv -f utf8 -t sjis -o 外部変形/SIN.bat bat/SIN.bat",
       "windows": {
-        "dependsOn": "target/release/*.exe",
-        "command": "copy bin-utf8\\SIN.bat bin\\SIN.bat >NUL && target\\release\\f5rail.exe /FUNC:encoding /FILE:bin\\SIN.bat"
+        "dependsOn": "外部変形/*.exe",
+        "command": "copy bat\\SIN.bat 外部変形\\ >NUL && 外部変形\\f5rail.exe /FUNC:sjis /FILE:外部変形\\SIN.bat"
       },
     },
     {
-      "label": "bin/*.exe",
+      "label": "外部変形/*.exe",
       "dependsOn": "target/release/*.exe",
-      "command": "cp -p target/release/*.exe bin/",
+      "command": "cp -p target/release/*.exe 外部変形/",
       "windows": {
-        "command": "copy target\\release\\*.exe bin\\ >NUL",
+        "command": "copy target\\release\\*.exe 外部変形\\ >NUL",
       }
     },
     {

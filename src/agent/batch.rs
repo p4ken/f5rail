@@ -43,7 +43,7 @@ impl Args {
 pub enum Param {
     Transition(Result<TcParam>),
     _Parallel,
-    Encoding,
+    Encode,
 }
 
 impl Param {
@@ -52,10 +52,10 @@ impl Param {
         if let Some(func) = Self::to_tc_func(func) {
             let param = Self::to_tc_param(func, &args);
             Ok(Self::Transition(param))
-        } else if func == "encoding" {
-            Ok(Self::Encoding)
+        } else if func == "sjis" {
+            Ok(Self::Encode)
         } else {
-            bail!("FUNCの値が不正です")
+            bail!("FUNCの値が間違っています")
         }
     }
 
@@ -70,17 +70,17 @@ impl Param {
     fn to_tc_param(func: TcFunc, args: &ArgMap) -> Result<TcParam> {
         let r1 = args
             .get("R1")
-            .and_then(|s| Some(s.parse().context("R1を整数で入力してください").ok()?));
+            .and_then(|s| Some(s.parse().context("R1を数値で入力してください").ok()?));
 
         let r2 = args
             .get("R2")
-            .and_then(|s| Some(s.parse().context("R2を整数で入力してください").ok()?));
+            .and_then(|s| Some(s.parse().context("R2を数値で入力してください").ok()?));
 
         let tcl = args
             .get("TCL")
             .context("TCLを指定してください")?
             .parse()
-            .context("TCLを整数で入力してください")?;
+            .context("TCLを数値で入力してください")?;
 
         let dx = args
             .get("DX")
@@ -114,7 +114,7 @@ mod tests {
             OsString::from("transition.exe"),
             OsString::from("/FUNC:sin"),
             OsString::from("/R1:1"),
-            OsString::from("/R2:2"),
+            OsString::from("/R2:2.2"),
             OsString::from("/TCL:3"),
             OsString::from("/DX:4"),
             OsString::from("/FILE:./JWC_TEMP.TXT"),
@@ -128,9 +128,9 @@ mod tests {
         assert!(tc.is_ok());
         let tc = tc.as_ref().unwrap();
         assert!(matches!(tc.func, TcFunc::Sin));
-        assert_eq!(tc.r1, Some(1));
-        assert_eq!(tc.r2, Some(2));
-        assert_eq!(tc.tcl, 3);
+        assert_eq!(tc.r1, Some(1.));
+        assert_eq!(tc.r2, Some(2.2));
+        assert_eq!(tc.tcl, 3.);
         assert_eq!(tc.dx, 4.);
     }
 
@@ -183,7 +183,7 @@ mod tests {
         assert!(matches!(tc.func, TcFunc::Sin));
         assert_eq!(tc.r1, None);
         assert_eq!(tc.r2, None);
-        assert_eq!(tc.tcl, 3);
+        assert_eq!(tc.tcl, 3.);
         assert_eq!(tc.dx, 0.1);
     }
 }

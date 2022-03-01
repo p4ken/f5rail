@@ -1,6 +1,6 @@
 use std::{fmt::Display, fs::File, io::Write};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 
 use super::sjis::to_sjis;
 use crate::transition::{self, polyline::Polyline};

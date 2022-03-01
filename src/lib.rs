@@ -16,7 +16,7 @@ pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
 
     match args.param {
         Param::Transition(param) => layout_transition(&args.file, &param),
-        Param::Encoding => agent::encode(&args.file),
+        Param::Encode => agent::encode(&args.file),
         _ => bail!("未実装"),
     }
 }

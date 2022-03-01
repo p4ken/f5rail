@@ -2,9 +2,9 @@
 #[derive(Debug)]
 pub struct Param {
     pub func: Func,
-    pub r1: Option<i32>,
-    pub r2: Option<i32>,
-    pub tcl: i32,
+    pub r1: Option<f64>,
+    pub r2: Option<f64>,
+    pub tcl: f64,
     pub dx: f64,
 }
 
