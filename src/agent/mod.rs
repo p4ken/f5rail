@@ -4,7 +4,7 @@ mod sjis;
 
 use std::{
     fs::File,
-    io::{self, Read, Write},
+    io::{Read, Write},
 };
 
 use anyhow::{Context, Result};
@@ -19,7 +19,5 @@ pub fn encode(path: &str) -> Result<()> {
 
     let mut file = File::create(path).context("ファイルを作成できませんでした。")?;
     file.write_all(&sjis::to_sjis(&utf8)[..])
-        .context("ファイル出力に失敗しました。")?;
-
-    Ok(())
+        .context("ファイル出力に失敗しました。")
 }

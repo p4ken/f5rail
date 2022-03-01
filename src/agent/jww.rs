@@ -18,16 +18,15 @@ pub struct JwcTemp {
 impl JwcTemp {
     /// エラーをファイルに書き出す
     pub fn export_err(path: &str, e: &impl Display) -> Result<()> {
-        Self::create(path)?.err(e)
+        Self::create(path)?.alert(e)
     }
 
     /// ポリラインをファイルに書き出す
     pub fn export(path: &str, func: &TcFunc, polyline: &Polyline) -> Result<()> {
-        let mut jwc_temp = Self::create(path)?;
-
-        jwc_temp.notice(to_string(func))?;
-
-        bail!("未実装")
+        let mut file = Self::create(path)?;
+        file.notice(to_string(func))?;
+        file.curve(&polyline.vertex)?;
+        Ok(())
     }
 
     /// ファイルを作成する
@@ -36,37 +35,36 @@ impl JwcTemp {
         Ok(Self { file })
     }
 
-    /// エラー文を出力する
+    /// エラーを出力する
     /// - 最初のエラーのみが表示される
     /// - エラーがあれば、エラー以外の座標などはすべて無視される
-    fn err(&mut self, s: &impl Display) -> Result<()> {
+    fn alert(&mut self, s: &impl Display) -> Result<()> {
         self.puts(&format!("he{}", s))
     }
 
-    /// 注意文を表示する
-    /// - 最後の注意文のみ表示される
+    /// 注意を出力する
+    /// - 最後の注意のみ表示される
     /// - 座標の間に出力すると、座標が途切れてしまう
     fn notice(&mut self, s: &str) -> Result<()> {
         self.puts(&format!("h#{}", s))
     }
 
-    /// 文字列と改行を書き込む
+    /// 曲線を出力する
+    fn curve(&mut self, vertex: &Vec<(f64, f64)>) -> Result<()> {
+        self.puts("pl")?;
+        for v in vertex {
+            self.puts(&format!("{} {}", v.0, v.1))?;
+        }
+        self.puts("#")
+    }
+
+    /// 文字列と改行を出力する
     fn puts(&mut self, s: &str) -> Result<()> {
         for bytes in [&to_sjis(s)[..], b"\r\n"] {
             self.file
                 .write_all(bytes)
                 .context("JWC_TEMP.TXTへの書き込みに失敗しました。")?;
         }
-        Ok(())
-    }
-
-    fn _a(&self) -> Result<()> {
-        println!("pl");
-        println!("0 0");
-        println!("100 -100");
-        println!("200 -400");
-        println!("300 -900");
-        println!("#");
         Ok(())
     }
 }
