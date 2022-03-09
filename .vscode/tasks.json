@@ -28,10 +28,10 @@
     },
     {
       "label": "外部変形/*.bat",
-      "command": "iconv -f utf8 -t sjis -o 外部変形/SIN.bat bat/SIN.bat",
+      "command": "iconv -f utf8 -t sjis -o 外部変形/TRANSITION.bat bat/TRANSITION.bat",
       "windows": {
         "dependsOn": "外部変形/*.exe",
-        "command": "copy bat\\SIN.bat 外部変形\\ >NUL && 外部変形\\f5rail.exe /FUNC:sjis /FILE:外部変形\\SIN.bat"
+        "command": "copy bat\\TRANSITION.bat 外部変形\\ >NUL && 外部変形\\f5rail.exe /ENCODE:外部変形\\TRANSITION.bat"
       },
     },
     {

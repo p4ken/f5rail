@@ -6,34 +6,33 @@ use std::ffi::OsString;
 use anyhow::{bail, Result};
 
 use agent::{
-    bat::{Args, Param, TcParam},
+    bat::{self, Args},
     jww::JwcTemp,
+    sjis,
 };
 
 /// 配線する
 pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
     let args = Args::parse(args)?;
 
-    match args.param {
-        Param::Transition(param) => layout_transition(&args.file, &param),
-        Param::Encode => agent::encode(&args.file),
+    match args {
+        Args::Transition(args) => plot(&args),
+        Args::Encode(path) => sjis::encode(&path),
         _ => bail!("未実装"),
     }
 }
 
-/// 緩和曲線を配線する
-fn layout_transition(jwc_temp: &str, param: &Result<TcParam>) -> Result<()> {
-    let param = match param {
+/// 緩和曲線を描画する
+fn plot(args: &bat::Transition) -> Result<()> {
+    let param = match &args.param {
         Ok(param) => param,
-        Err(e) => return JwcTemp::export_err(jwc_temp, e),
+        Err(e) => return JwcTemp::export_err(&args.file, &e),
     };
 
-    let polyline = transition::draw(param);
+    let segments = transition::plot(&param);
 
-    let polyline = match &polyline {
-        Ok(polyline) => polyline,
-        Err(e) => return JwcTemp::export_err(jwc_temp, e),
-    };
-
-    JwcTemp::export(jwc_temp, &param.func, polyline)
+    match segments {
+        Ok(s) => JwcTemp::export(&args.file, &param.spiral, &s),
+        Err(e) => JwcTemp::export_err(&args.file, &e),
+    }
 }
