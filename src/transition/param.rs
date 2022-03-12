@@ -1,13 +1,10 @@
-use super::formula::{Curvature, Radius, Spiral};
+use super::formula::{Curvature, Diminish, Point, Radius};
 
 /// 緩和曲線パラメータ
 #[derive(Debug)]
 pub struct Param {
-    /// 逓減の定義
-    pub spiral: Spiral,
-
-    /// 始点の座標
-    pub p0: (f64, f64),
+    /// 逓減
+    pub diminish: Diminish,
 
     /// 始点の曲率
     pub k0: Curvature,
@@ -15,18 +12,31 @@ pub struct Param {
     /// 終点の曲率
     pub k1: Curvature,
 
-    /// 緩和曲線長
-    pub tcl: f64,
+    /// 始点の距離程
+    pub l0: f64,
+
+    /// 終点の距離程
+    pub l1: f64,
+
+    /// 始点の座標
+    pub p0: Point,
 }
 
 impl Param {
-    pub fn new(spiral: Spiral, r0: Option<f64>, r1: Option<f64>, tcl: f64) -> Self {
+    pub fn new(
+        diminish: Diminish,
+        r0: Option<Radius>,
+        r1: Option<Radius>,
+        tcl: f64,
+        l0: f64,
+    ) -> Self {
         Self {
-            spiral,
-            p0: (0., 0.),
-            k0: Radius(r0).k(),
-            k1: Radius(r1).k(),
-            tcl,
+            diminish,
+            k0: r0.into(),
+            k1: r1.into(),
+            l0,
+            l1: l0 + tcl,
+            p0: Point { x: 0.0, y: 0.0 },
         }
     }
 }

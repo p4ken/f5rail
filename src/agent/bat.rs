@@ -1,8 +1,9 @@
+use std::result::Result::Ok;
 use std::{collections::HashMap, ffi::OsString};
 
-use anyhow::{bail, Context, Ok, Result};
+use anyhow::{bail, Context, Result};
 
-use crate::transition::formula::Spiral;
+use crate::transition::formula::{Diminish, Radius};
 use crate::transition::param::Param as TcParam;
 
 /// コマンドライン引数
@@ -59,21 +60,25 @@ pub struct Transition {
 
 impl TcParam {
     /// コマンドライン引数を緩和曲線パラメータにパースする
-    fn parse(spiral: &ArgValue, args: &ArgMap) -> Result<Self> {
-        let spiral = spiral.try_into()?;
+    fn parse(diminish: &ArgValue, args: &ArgMap) -> Result<Self> {
+        let diminish = diminish.try_into()?;
 
-        let r0 = args
-            .get("R1")
-            .ok()
-            .map_or(Ok(None), |v| v.try_into().map(|d| Some(d)))?;
+        let r0 = match args.get("R0") {
+            Ok(v) => Some(Radius(v.try_into()?)),
+            Err(_) => None,
+        };
 
-        let r1 = args
-            .get("R2")
-            .map_or(Ok(None), |v| v.try_into().map(|d| Some(d)))?;
+        let r1 = match args.get("R1") {
+            Ok(v) => Some(Radius(v.try_into()?)),
+            Err(_) => None,
+        };
 
         let tcl = args.get("TCL")?.try_into()?;
+        if tcl <= 0.0 {
+            bail!("TCLに正数を入力してください");
+        }
 
-        Ok(TcParam::new(spiral, r0, r1, tcl))
+        Ok(TcParam::new(diminish, r0, r1, tcl, 0.0))
     }
 }
 
@@ -118,126 +123,14 @@ impl<'a> TryFrom<ArgValue<'a>> for f64 {
     }
 }
 
-impl<'a> TryFrom<&ArgValue<'a>> for Spiral {
+impl<'a> TryFrom<&ArgValue<'a>> for Diminish {
     type Error = anyhow::Error;
     /// 緩和曲線関数に変換する
     fn try_from(pair: &ArgValue<'a>) -> Result<Self, Self::Error> {
         match pair.1 {
-            "1" => Ok(Spiral::Sine),
-            "2" => Ok(Spiral::Clothoid),
-            _ => bail!("緩和曲線関数を指定してください"),
+            "1" => Ok(Diminish::Sine),
+            "2" => Ok(Diminish::Linear),
+            _ => bail!("緩和曲線関数に正しい値を入力してください"),
         }
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // #[test]
-    // fn コマンドライン引数をパースできる() {
-    //     let args = vec![
-    //         OsString::from("transition.exe"),
-    //         OsString::from("/TRANSITION:1"),
-    //         OsString::from("/R1:1"),
-    //         OsString::from("/R2:2.2"),
-    //         OsString::from("/TCL:3"),
-    //         OsString::from("/ds:4"),
-    //         OsString::from("/FILE:./JWC_TEMP.TXT"),
-    //     ];
-    //     let args = Args::parse(args);
-    //     assert!(args.is_ok());
-    //     let args = args.;
-    //     assert!(matches!(args, Args::Transition(_)));
-    //     let transition = args.transition();
-    //     assert_eq!(transition.file, "./JWC_TEMP.TXT");
-    //     let param = transition.param;
-    //     assert!(matches!(transition.param., Formula::Sine));
-    //     assert_eq!(tc.r0, Some(1.));
-    //     assert_eq!(tc.r1, Some(2.2));
-    //     assert_eq!(tc.tcl, 3.);
-    //     assert_eq!(tc.ds, 4.);
-    // }
-
-    // #[test]
-    // fn コマンドライン引数にファイル名がなければエラー() {
-    //     let args = vec![
-    //         OsString::from("transition.exe"),
-    //         OsString::from("/TRANSITION:1"),
-    //     ];
-    //     let args = Args::parse(args);
-    //     assert!(args.is_err());
-    //     let e = args.unwrap_err();
-    //     assert_eq!(e.to_string(), "FILEを指定してください")
-    // }
-
-    // #[test]
-    // fn 緩和曲線の長さがなければエラー() {
-    //     let args = vec![
-    //         OsString::from("transition.exe"),
-    //         OsString::from("/TRANSITION:1"),
-    //         OsString::from("/FILE:./JWC_TEMP.TXT"),
-    //     ];
-    //     let args = Args::parse(args);
-    //     assert!(args.is_ok());
-    //     let args = args.unwrap();
-    //     assert_eq!(args.file, "./JWC_TEMP.TXT");
-    //     assert!(matches!(args.param, Param::Transition(_)));
-    //     let tc = unwrap_transition(&args.param);
-    //     assert!(tc.is_err());
-    //     let e = tc.as_ref().unwrap_err();
-    //     assert_eq!(e.to_string(), "TCLを指定してください");
-    // }
-
-    // #[test]
-    // fn 緩和曲線の長さ以外は省略可能() {
-    //     let args = vec![
-    //         OsString::from("transition.exe"),
-    //         OsString::from("/TRANSITION:1"),
-    //         OsString::from("/TCL:3"),
-    //         OsString::from("/FILE:./JWC_TEMP.TXT"),
-    //     ];
-    //     let args = Args::parse(args);
-    //     assert!(args.is_ok());
-    //     let args = args.unwrap();
-    //     assert_eq!(args.file, "./JWC_TEMP.TXT");
-    //     assert!(matches!(args.param, Param::Transition(_)));
-    //     let tc = unwrap_transition(&args.param);
-    //     assert!(tc.is_ok());
-    //     let tc = tc.as_ref().unwrap();
-    //     assert!(matches!(tc.func, Formula::Sin));
-    //     assert_eq!(tc.r0, None);
-    //     assert_eq!(tc.r1, None);
-    //     assert_eq!(tc.tcl, 3.);
-    //     assert_eq!(tc.ds, 0.1);
-    // }
-
-    // #[test]
-    // fn 緩和曲線の半径が文字列ならエラー() {
-    //     let args = vec![
-    //         OsString::from("transition.exe"),
-    //         OsString::from("/TRANSITION:1"),
-    //         OsString::from("/R1:abc"),
-    //         OsString::from("/TCL:3"),
-    //         OsString::from("/FILE:./JWC_TEMP.TXT"),
-    //     ];
-    //     let args = Args::parse(args);
-    //     assert!(args.is_ok());
-    //     let args = args.unwrap();
-    //     assert_eq!(args.file, "./JWC_TEMP.TXT");
-    //     assert!(matches!(args.param, Param::Transition(_)));
-    //     let tc = unwrap_transition(&args.param);
-    //     assert!(tc.is_err());
-    //     let e = tc.as_ref().unwrap_err();
-    //     assert_eq!(e.to_string(), "R1を数値で入力してください");
-    // }
-
-    // impl Args {
-    //     fn transition(&self) -> &Transition {
-    //         match self {
-    //             Args::Transition(t) => t,
-    //             _ => panic!(),
-    //         }
-    //     }
-    // }
 }

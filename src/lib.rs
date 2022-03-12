@@ -32,7 +32,7 @@ fn plot(args: &bat::Transition) -> Result<()> {
     let segments = transition::plot(&param);
 
     match segments {
-        Ok(s) => JwcTemp::export(&args.file, &param.spiral, &s),
+        Ok(s) => JwcTemp::export(&args.file, &param.diminish, &s),
         Err(e) => JwcTemp::export_err(&args.file, &e),
     }
 }

@@ -1,35 +1,31 @@
 pub mod formula;
 pub mod param;
-pub mod xy;
+pub mod spiral;
 
+mod divider;
 #[cfg(test)]
 mod test;
 
-use anyhow::{Result};
+use anyhow::Result;
 use param::Param;
-use xy::Polyline;
+use spiral::Line;
+
+use self::divider::Divider;
 
 /// 緩和曲線を描画する
-pub fn plot(param: &Param) -> Result<Polyline> {
-    let tcl = param.tcl; // 緩和曲線長
-    let s = 1.; // ※分割数にしたほうが良いかも
-    let size = (tcl / s) as usize + 1; // 分割数 ※切り捨て
-    let mut v = Vec::with_capacity(size);
-    // polyline.push(*p0);
-    let mut p = param.p0; // 緩和曲線上の点
-
-    for i in 1..size {
-        let l = s * (i as f64); // p0からpまでの弧長
-        let k = param.spiral.k(s); // pの曲率
-        if k.is_straight() {
-            {}// 直線
-        }
-        // let c =  // 弦長  
-        // let vc =  // 弦ベクトル
-        // // 終点p
-        // let p = 
-        // s += ds;
-    }
+pub fn plot(param: &Param) -> Result<Vec<Line>> {
+    let tcl = param.l1 - param.l0;
+    let mut divider = Divider::new(param.l0, param.l1, &param.p0);
+    let v = divider
+        .map(|segment| {
+            let k = param.diminish.k(tcl, segment.s, param.k0, param.k1);
+            if k.is_straight() {
+                Line::straight(segment.p0, segment.a0, segment.len)
+            } else {
+                Line::curve(segment.p0, k.into(), segment.a0, k.angle()/* 曲率と弧長から中心角*/)
+            }
+        })
+        .collect();
 
     Ok(v)
 }

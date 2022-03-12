@@ -3,11 +3,7 @@ use std::{fmt::Display, fs::File, io::Write};
 use anyhow::{Context, Result};
 
 use super::sjis::to_sjis;
-use crate::transition::{
-    self,
-    formula::{self, Spiral},
-    xy::Polyline,
-};
+use crate::transition::{formula::Diminish, spiral::Line};
 
 /// 入出力用の座標ファイル。
 ///
@@ -24,10 +20,10 @@ impl JwcTemp {
     }
 
     /// ポリラインをファイルに書き出す
-    pub fn export(path: &str, spiral: &Spiral, polyline: &Polyline) -> Result<()> {
+    pub fn export(path: &str, spiral: &Diminish, blueprint: &Vec<Line>) -> Result<()> {
         let mut file = Self::create(path)?;
         file.notice(spiral.into())?;
-        file.curve(&polyline)?;
+        // file.curve(&segments)?;
         Ok(())
     }
 
@@ -71,11 +67,11 @@ impl JwcTemp {
     }
 }
 
-impl From<&Spiral> for &str {
-    fn from(spiral: &Spiral) -> Self {
+impl From<&Diminish> for &str {
+    fn from(spiral: &Diminish) -> Self {
         match spiral {
-            Spiral::Sine => "サイン半波長逓減",
-            Spiral::Clothoid => "直線逓減（クロソイド曲線）",
+            Diminish::Sine => "サイン半波長逓減",
+            Diminish::Linear => "直線逓減（クロソイド曲線）",
         }
     }
 }
