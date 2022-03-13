@@ -1,6 +1,6 @@
 use std::{
     fmt::Debug,
-    ops::{Add, AddAssign, Not},
+    ops::{Add, Not, Sub},
 };
 
 /// 逓減
@@ -34,6 +34,8 @@ impl From<Curvature> for Radius {
 }
 
 /// 曲率 (1/m)
+///
+/// 左カーブなら負の数。
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Curvature(pub f64);
 
@@ -63,7 +65,30 @@ impl From<Radius> for Curvature {
 #[derive(Debug, Copy, Clone)]
 pub struct Degree(pub f64);
 
-impl Add for Degree {
+impl From<Radian> for Degree {
+    /// ラジアンから変換する。
+    fn from(rad: Radian) -> Self {
+        Degree(rad.0.to_degrees())
+    }
+}
+
+/// 角度 (ラジアン)
+#[derive(Debug, Copy, Clone)]
+pub struct Radian(pub f64);
+
+impl Radian {
+    /// サイン
+    fn sin(self) -> f64 {
+        self.0.sin()
+    }
+
+    /// コサイン
+    fn cos(self) -> f64 {
+        self.0.cos()
+    }
+}
+
+impl Add for Radian {
     type Output = Self;
 
     /// 加算演算子
@@ -72,26 +97,34 @@ impl Add for Degree {
     }
 }
 
-impl From<Radian> for Degree {
-    /// 度に変換する。
-    fn from(rad: Radian) -> Self {
-        Degree(rad.0.to_degrees())
+impl Sub for Radian {
+    type Output = Self;
+
+    /// 減算演算子
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
     }
 }
 
-/// 角度 (ラジアン)
-#[derive(Debug, Copy, Clone)]
-pub struct Radian(f64);
+impl From<Degree> for Radian {
+    /// 度から変換する。
+    fn from(rad: Degree) -> Self {
+        Radian(rad.0.to_radians())
+    }
+}
 
 /// XY座標上の点
 #[derive(Debug, Copy, Clone)]
 pub struct Point(pub f64, pub f64);
 
-impl Add<(f64, Degree)> for &Point {
+impl Add<(f64, Radian)> for &Point {
     type Output = Point;
 
-    /// 長さと向きを指定して移動する
-    fn add(self, rhs: (f64, Degree)) -> Self::Output {
-        todo!()
+    /// 大きさと向きを指定して移動する
+    fn add(self, rhs: (f64, Radian)) -> Self::Output {
+        // 左カーブなら大きさが負になる。
+        let x = self.0 + rhs.0 * rhs.1.cos();
+        let y = self.1 + rhs.0 * rhs.1.sin();
+        Point(x, y)
     }
 }

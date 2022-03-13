@@ -1,14 +1,15 @@
 use std::ops::AddAssign;
 
 use super::{
-    formula::{Degree, Point},
+    formula::{Point, Radian},
     spiral::Line,
 };
 
 /// 緩和曲線の距離程を分割する構造体。
 ///
-/// - 距離程の原点(0m)は緩和曲線の始点とは限らず、任意の場所にある。
-/// - 区間同士の境界では距離程が整数になり、最初の始点と最後の終点のみ小数になりうる。
+/// 距離程の原点(0m)は緩和曲線の始点とは限らず、任意の場所にある。
+///
+/// 区間同士の境界では距離程が整数になり、最初の始点と最後の終点のみ小数になりうる。
 pub struct Segmentation {
     /// 初回区間
     first: (f64, i32),
@@ -18,12 +19,6 @@ pub struct Segmentation {
 
     /// 現在区間の始点
     l0: i32,
-
-    /// 現在区間の始点までの回転角
-    a0: Degree,
-
-    /// 現在区間の始点の座標
-    p0: Point,
 }
 
 impl Segmentation {
@@ -35,8 +30,6 @@ impl Segmentation {
             first: (l0, l0.floor() as i32 + 1),
             last: (l1.ceil() as i32 - 1, l1),
             l0: l0 as i32,
-            a0: Degree(0.0),
-            p0: *p0,
         }
     }
 }
@@ -97,14 +90,14 @@ pub struct Head {
     /// 次回の始点座標
     pub p0: Point,
 
-    /// 次回の始点回転角
-    pub a0: Degree,
+    /// 次回の始点の進行方向（接線の向き）
+    pub t0: Radian,
 }
 
 impl Head {
     /// コンストラクタ
-    pub fn new(p0: &Point, a0: Degree) -> Self {
-        Self { p0: *p0, a0 }
+    pub fn new(p0: &Point, t0: Radian) -> Self {
+        Self { p0: *p0, t0 }
     }
 }
 
@@ -113,9 +106,9 @@ impl AddAssign<&Line> for Head {
     fn add_assign(&mut self, rhs: &Line) {
         match rhs {
             Line::Straight(_, p1) => self.p0 = *p1,
-            Line::Curve(c, r, _, a1) => {
+            Line::Curve(c, r, a0, a1) => {
                 self.p0 = c + (*r, *a1);
-                self.a0 = *a1;
+                self.t0 = self.t0 - (*a1 - *a0); // 左カーブ→引く、右カーブ→足す
             }
         }
     }

@@ -1,4 +1,4 @@
-use super::formula::{Curvature, Diminish, Point, Radius, Degree};
+use super::formula::{Curvature, Diminish, Point, Radius, Degree, Radian};
 
 /// 緩和曲線パラメータ
 #[derive(Debug)]
@@ -21,8 +21,8 @@ pub struct Param {
     /// 始点の座標
     pub p0: Point,
 
-    /// 初期回転角
-    pub a0: Degree,
+    /// 始点の進行方向（接線の向き）
+    pub t0: Radian,
 }
 
 impl Param {
@@ -34,7 +34,7 @@ impl Param {
             l0,
             l1: l0 + tcl,
             p0: Point(0.0, 0.0),
-            a0: Degree(90.0),
+            t0: Radian(0.0),
         }
     }
 }
