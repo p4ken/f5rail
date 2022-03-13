@@ -1,6 +1,9 @@
-use std::{fmt::Debug, ops::Not};
+use std::{
+    fmt::Debug,
+    ops::{Add, AddAssign, Not},
+};
 
-/// 逓減の定義
+/// 逓減
 #[derive(Debug)]
 pub enum Diminish {
     /// サイン半波長逓減
@@ -18,8 +21,9 @@ impl Diminish {
 }
 
 /// 半径 (m)
-/// 
-/// `None` の場合は直線とする。
+///
+/// `None` の場合は直線。
+#[derive(Debug)]
 pub struct Radius(pub Option<f64>);
 
 impl From<Curvature> for Radius {
@@ -59,9 +63,14 @@ impl From<Radius> for Curvature {
 #[derive(Debug, Copy, Clone)]
 pub struct Degree(pub f64);
 
-/// 角度 (ラジアン)
-#[derive(Debug, Copy, Clone)]
-pub struct Radian(f64);
+impl Add for Degree {
+    type Output = Self;
+
+    /// 加算演算子
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
+}
 
 impl From<Radian> for Degree {
     /// 度に変換する。
@@ -70,9 +79,19 @@ impl From<Radian> for Degree {
     }
 }
 
-/// 点
-#[derive(Debug)]
-pub struct Point {
-    pub x: f64,
-    pub y: f64,
+/// 角度 (ラジアン)
+#[derive(Debug, Copy, Clone)]
+pub struct Radian(f64);
+
+/// XY座標上の点
+#[derive(Debug, Copy, Clone)]
+pub struct Point(pub f64, pub f64);
+
+impl Add<(f64, Degree)> for &Point {
+    type Output = Point;
+
+    /// 長さと向きを指定して移動する
+    fn add(self, rhs: (f64, Degree)) -> Self::Output {
+        todo!()
+    }
 }

@@ -3,7 +3,7 @@ use std::{fmt::Display, fs::File, io::Write};
 use anyhow::{Context, Result};
 
 use super::sjis::to_sjis;
-use crate::transition::{formula::Diminish, spiral::Line};
+use crate::transition::{formula::Diminish, spiral::{Line, Spiral}};
 
 /// 入出力用の座標ファイル。
 ///
@@ -19,10 +19,10 @@ impl JwcTemp {
         Self::create(path)?.alert(e)
     }
 
-    /// ポリラインをファイルに書き出す。
-    pub fn export(path: &str, spiral: &Diminish, blueprint: &Vec<Line>) -> Result<()> {
+    /// 緩和曲線 `v` をファイルに書き出す。
+    pub fn export(path: &str, diminish: &Diminish, v: &Spiral) -> Result<()> {
         let mut file = Self::create(path)?;
-        file.notice(spiral.into())?;
+        file.notice(diminish.into())?;
         // file.curve(&segments)?;
         Ok(())
     }

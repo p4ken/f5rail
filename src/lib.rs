@@ -20,15 +20,11 @@ pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
 
 /// 緩和曲線を描画する
 fn plot(file: &str, param: &Result<transition::Param>) -> Result<()> {
-    let param = match param {
-        Ok(param) => param,
-        Err(e) => return JwcTemp::export_err(file, e),
-    };
-
-    let segments = transition::plot(&param);
-
-    match segments {
-        Ok(s) => JwcTemp::export(file, &param.diminish, &s),
+    match param {
+        Ok(p) => {
+            let spiral = transition::plot(&p);
+            JwcTemp::export(file, &p.diminish, &spiral)
+        }
         Err(e) => JwcTemp::export_err(file, &e),
     }
 }

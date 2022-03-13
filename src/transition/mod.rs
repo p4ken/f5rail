@@ -9,30 +9,20 @@ mod segment;
 mod test;
 
 use anyhow::Result;
-use spiral::Line;
+use segment::Head;
+use spiral::{Line, Spiral};
 
 use self::segment::Segmentation;
 
 /// 緩和曲線を描画する。
-pub fn plot(param: &Param) -> Result<Vec<Line>> {
+pub fn plot(param: &Param) -> Spiral {
     let tcl = param.l1 - param.l0;
-    let mut s = Segmentation::new(param.l0, param.l1, &param.p0);
-    let v = s
-        .map(|segment| {
+    Segmentation::new(param.l0, param.l1, &param.p0)
+        .scan(Head::new(&param.p0, param.a0), |head, segment| {
             let k = param.diminish.k(tcl, segment.s, param.k0, param.k1);
-            Line::_Mock
-            // if k.is_straight() {
-            //     Line::straight(segment.p0, segment.a0, segment.len)
-            // } else {
-            //     Line::curve(
-            //         segment.p0,
-            //         k.into(),
-            //         segment.a0,
-            //         k.angle(segment.len).into(),
-            //     )
-            // }
+            let line = Line::new(head.p0, head.a0, segment.len, k);
+            *head += &line;
+            Some(line)
         })
-        .collect();
-
-    Ok(v)
+        .collect()
 }

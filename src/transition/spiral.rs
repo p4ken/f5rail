@@ -1,54 +1,44 @@
-use super::formula::{Degree, Point, Radius};
+use super::formula::{Curvature, Degree, Point, Radius};
 
 /// 緩和曲線
-/// - 円弧または直線の集合として表現される。
-pub type Spiral = Vec<Line>;
+///
+/// 線分の集合で表現される。
+pub struct Spiral(pub Vec<Line>);
+
+impl FromIterator<Line> for Spiral {
+    /// 線分を集める。
+    fn from_iter<T: IntoIterator<Item = Line>>(iter: T) -> Self {
+        Self(Vec::from_iter(iter))
+    }
+}
 
 /// 線分
+#[derive(Debug)]
 pub enum Line {
     /// 円弧
-    Curve(Curve),
+    ///
+    /// 中心点、半径、始角、終角で表現される。
+    Curve(Point, f64, Degree, Degree),
 
     /// 直線
-    Straight(Straight),
-
-    _Mock,
+    ///
+    /// 始点と終点で表現される。
+    Straight(Point, Point),
 }
 
 impl Line {
-    /// 直線を生成する。
-    pub fn straight(p0: Point, a: Degree, len: f64) -> Self {
-        // 三角関数？
-
-        Self::_Mock
+    pub fn new(p0: Point, a0: Degree, len: f64, k: Curvature) -> Self {
+        if k.is_straight() {
+            // p0に対して左右どちらの方向か分からない・・・
+            Self::Straight(p0, &p0 + (len, a0 + Degree(90.0)))
+        } else {
+            todo!()
+            // Self::Curve {
+            //     c: p0, // 三角関数？
+            //     r: k.into(),
+            //     a0,
+            //     a1: a0 + k.angle(len).into(),
+            // }
+        }
     }
-
-    /// 円弧を生成する。
-    pub fn curve(c: Point, r: Radius, a: Degree, b: Degree) -> Self {
-        Self::Curve(Curve { c, r, a, b })
-    }
-}
-
-/// 円弧
-pub struct Curve {
-    /// 中心点
-    pub c: Point,
-
-    /// 半径
-    pub r: Radius,
-
-    /// 始角
-    pub a: Degree,
-
-    /// 終角
-    pub b: Degree,
-}
-
-/// 直線
-pub struct Straight {
-    /// 始点
-    pub p0: Point,
-
-    /// 終点
-    pub p1: Point,
 }

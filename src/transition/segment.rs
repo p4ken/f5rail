@@ -1,10 +1,15 @@
-use super::{formula::{Point, Degree}, spiral::{Spiral, Line}};
+use std::ops::AddAssign;
+
+use super::{
+    formula::{Degree, Point},
+    spiral::Line,
+};
 
 /// 緩和曲線の距離程を分割する構造体。
 ///
 /// - 距離程の原点(0m)は緩和曲線の始点とは限らず、任意の場所にある。
 /// - 区間同士の境界では距離程が整数になり、最初の始点と最後の終点のみ小数になりうる。
-pub struct Segmentation<'a> {
+pub struct Segmentation {
     /// 初回区間
     first: (f64, i32),
 
@@ -18,28 +23,34 @@ pub struct Segmentation<'a> {
     a0: Degree,
 
     /// 現在区間の始点の座標
-    p0: &'a Point,
+    p0: Point,
 }
 
-impl<'a> Segmentation<'a> {
+impl Segmentation {
     /// `l0` で始まり `l1` で終わる距離程の分割を表す構造体を生成する。
-    /// 
-    /// - `l1` よりも `l0` が大きい場合の動作は未定義。
-    pub fn new(l0: f64, l1: f64, p0: &'a Point) -> Self {
+    ///
+    /// `l0 > l1` の場合は未定義動作。
+    pub fn new(l0: f64, l1: f64, p0: &Point) -> Self {
         Self {
             first: (l0, l0.floor() as i32 + 1),
             last: (l1.ceil() as i32 - 1, l1),
             l0: l0 as i32,
             a0: Degree(0.0),
-            p0,
+            p0: *p0,
         }
     }
 }
 
-impl<'a> Iterator for Segmentation<'a> {
+impl Iterator for Segmentation {
     type Item = Segment;
 
     fn next(&mut self) -> Option<Self::Item> {
+        return None;
+        // 終了判定
+        if self.l0 - 1 == self.last.0 {
+            return None;
+        }
+
         // 区間始点
         let l0 = match self.l0 + 1 == self.first.1 {
             true => self.first.0, // 初回区間
@@ -58,12 +69,10 @@ impl<'a> Iterator for Segmentation<'a> {
         // 緩和曲線始点から区間中央までの弧長
         let s = l0 - self.first.0 + (len / 2.0);
 
-        Some(Self::Item {
-            s,
-            len,
-            // a0: self.a0, // todo: 仮
-            // p0: self.p0.to_owned(), // todo: 仮
-        })
+        // 次回区間
+        self.l0 += 1;
+
+        Some(Self::Item { s, len })
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -73,31 +82,41 @@ impl<'a> Iterator for Segmentation<'a> {
 }
 
 /// ひとつの区間
+#[derive(Debug)]
 pub struct Segment {
     /// 緩和曲線始点から区間中央までの弧長
     pub s: f64,
 
     /// 区間長
     pub len: f64,
-
-    // /// 前回までの回転角
-    // pub a0: Degree,
-
-    // /// 前回の座標
-    // pub p0: Point,
 }
 
-/// 前回までの積算値
-pub struct Head{
-    /// 前回までの回転角
-    pub a: Degree,
+/// 前回までの緩和曲線の先端の状態
+#[derive(Debug, Clone)]
+pub struct Head {
+    /// 次回の始点座標
+    pub p0: Point,
 
-    /// 前回の終点座標
-    pub p: Point,
+    /// 次回の始点回転角
+    pub a0: Degree,
 }
 
-impl<'a> FromIterator<&'a Head> for Line {
-    fn from_iter<T: IntoIterator<Item = &'a Head>>(iter: T) -> Self {
-        todo!()
+impl Head {
+    /// コンストラクタ
+    pub fn new(p0: &Point, a0: Degree) -> Self {
+        Self { p0: *p0, a0 }
+    }
+}
+
+impl AddAssign<&Line> for Head {
+    /// 線分を加算する
+    fn add_assign(&mut self, rhs: &Line) {
+        match rhs {
+            Line::Straight(_, p1) => self.p0 = *p1,
+            Line::Curve(c, r, _, a1) => {
+                self.p0 = c + (*r, *a1);
+                self.a0 = *a1;
+            }
+        }
     }
 }
