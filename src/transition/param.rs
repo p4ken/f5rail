@@ -23,13 +23,7 @@ pub struct Param {
 }
 
 impl Param {
-    pub fn new(
-        diminish: Diminish,
-        r0: Option<Radius>,
-        r1: Option<Radius>,
-        tcl: f64,
-        l0: f64,
-    ) -> Self {
+    pub fn new(diminish: Diminish, r0: Radius, r1: Radius, tcl: f64, l0: f64) -> Self {
         Self {
             diminish,
             k0: r0.into(),

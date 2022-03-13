@@ -7,28 +7,12 @@ pub type Spiral = Vec<Line>;
 /// 線分
 pub enum Line {
     /// 円弧
-    Curve {
-        /// 中心点
-        c: Point,
-
-        /// 半径
-        r: Radius,
-
-        /// 始角
-        a: Degree,
-
-        /// 終角
-        b: Degree,
-    },
+    Curve(Curve),
 
     /// 直線
-    Straight {
-        /// 始点
-        p0: Point,
+    Straight(Straight),
 
-        /// 終点
-        p1: Point,
-    },
+    _Mock,
 }
 
 impl Line {
@@ -36,12 +20,12 @@ impl Line {
     pub fn straight(p0: Point, a: Degree, len: f64) -> Self {
         // 三角関数？
 
-        Self::Straight { p0, p1: p0 }
+        Self::_Mock
     }
 
     /// 円弧を生成する。
     pub fn curve(c: Point, r: Radius, a: Degree, b: Degree) -> Self {
-        Self::Curve { c, r, a, b }
+        Self::Curve(Curve { c, r, a, b })
     }
 }
 

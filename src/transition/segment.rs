@@ -1,10 +1,10 @@
-use super::formula::{Point, Degree};
+use super::{formula::{Point, Degree}, spiral::{Spiral, Line}};
 
-/// 緩和曲線の距離程を分割する。
+/// 緩和曲線の距離程を分割する構造体。
 ///
-/// - 距離程の原点(0m)は任意の場所にある。緩和曲線の始点が0mであるとは限らない。
-/// - 区間の境界では距離程が整数になる。ただし初回区間の始点と最終区間の終点は小数になりうる。
-pub struct Divider<'a> {
+/// - 距離程の原点(0m)は緩和曲線の始点とは限らず、任意の場所にある。
+/// - 区間同士の境界では距離程が整数になり、最初の始点と最後の終点のみ小数になりうる。
+pub struct Segmentation<'a> {
     /// 初回区間
     first: (f64, i32),
 
@@ -21,7 +21,7 @@ pub struct Divider<'a> {
     p0: &'a Point,
 }
 
-impl<'a> Divider<'a> {
+impl<'a> Segmentation<'a> {
     /// `l0` で始まり `l1` で終わる距離程の分割を表す構造体を生成する。
     /// 
     /// - `l1` よりも `l0` が大きい場合の動作は未定義。
@@ -36,7 +36,7 @@ impl<'a> Divider<'a> {
     }
 }
 
-impl<'a> Iterator for Divider<'a> {
+impl<'a> Iterator for Segmentation<'a> {
     type Item = Segment;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -61,8 +61,8 @@ impl<'a> Iterator for Divider<'a> {
         Some(Self::Item {
             s,
             len,
-            a0: self.a0, // todo: 仮
-            p0: *self.p0, // todo: 仮
+            // a0: self.a0, // todo: 仮
+            // p0: self.p0.to_owned(), // todo: 仮
         })
     }
 
@@ -80,9 +80,24 @@ pub struct Segment {
     /// 区間長
     pub len: f64,
 
-    /// 前回までの回転角
-    pub a0: Degree,
+    // /// 前回までの回転角
+    // pub a0: Degree,
 
-    /// 前回の座標
-    pub p0: Point,
+    // /// 前回の座標
+    // pub p0: Point,
+}
+
+/// 前回までの積算値
+pub struct Head{
+    /// 前回までの回転角
+    pub a: Degree,
+
+    /// 前回の終点座標
+    pub p: Point,
+}
+
+impl<'a> FromIterator<&'a Head> for Line {
+    fn from_iter<T: IntoIterator<Item = &'a Head>>(iter: T) -> Self {
+        todo!()
+    }
 }

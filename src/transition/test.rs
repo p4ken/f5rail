@@ -1,10 +1,16 @@
-use super::spiral::*;
 use super::formula::*;
+use super::spiral::*;
 use super::*;
 
 #[test]
 fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m() {
-    let param = Param::new(Diminish::Sine, Some(Radius(300.)), Some(Radius(-300.)), 19.0, 0.0);
+    let param = Param::new(
+        Diminish::Sine,
+        Radius(Some(300.)),
+        Radius(Some(-300.)),
+        19.0,
+        0.0,
+    );
     let segments = plot(&param);
     let segments = segments.unwrap();
     assert_eq!(segments.len(), 19);
@@ -13,7 +19,10 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m() {
 
 impl Radius {
     fn round2(&self) -> String {
-        format!("{:.2}", self.0)
+        match self.0 {
+            Some(f) => format!("{:.2}", f),
+            None => String::new(),
+        }
     }
 }
 

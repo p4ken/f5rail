@@ -1,10 +1,10 @@
 use std::result::Result::Ok;
 use std::{collections::HashMap, ffi::OsString};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 
+use crate::transition;
 use crate::transition::formula::{Diminish, Radius};
-use crate::transition::param::Param as TcParam;
 
 /// コマンドライン引数
 ///
@@ -13,7 +13,7 @@ use crate::transition::param::Param as TcParam;
 #[derive(Debug)]
 pub enum Args {
     /// 緩和曲線
-    Transition(Transition),
+    Transition(String, Result<transition::Param>),
 
     /// 他線座標
     _Parallel,
@@ -23,7 +23,7 @@ pub enum Args {
 }
 
 impl Args {
-    /// コマンドライン引数をパースする
+    /// コマンドライン引数をパースする。
     pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Self> {
         let args = args
             .into_iter()
@@ -37,9 +37,8 @@ impl Args {
 
         if let Some(formula) = args.get("TRANSITION").ok() {
             let file = args.get("FILE")?.as_str().to_owned();
-            let param = TcParam::parse(&formula, &args);
-            let transition = Transition { file, param };
-            Ok(Self::Transition(transition))
+            let param = transition::Param::parse(&formula, &args);
+            Ok(Self::Transition(file, param))
         } else if let Some(encode) = args.get("ENCODE").ok() {
             Ok(Self::Encode(encode.as_str().to_owned()))
         } else {
@@ -48,37 +47,19 @@ impl Args {
     }
 }
 
-/// 緩和曲線
-#[derive(Debug)]
-pub struct Transition {
-    /// ファイル名
-    pub file: String,
-
-    /// パラメータ
-    pub param: Result<TcParam>,
-}
-
-impl TcParam {
-    /// コマンドライン引数を緩和曲線パラメータにパースする
+impl transition::Param {
+    /// コマンドライン引数を緩和曲線パラメータにパースする。
     fn parse(diminish: &ArgValue, args: &ArgMap) -> Result<Self> {
-        let diminish = diminish.try_into()?;
+        let tcl: f64 = args.get("TCL")?.try_into()?;
+        ensure!(tcl.is_sign_positive(), "TCLに正の数を入力してください");
 
-        let r0 = match args.get("R0") {
-            Ok(v) => Some(Radius(v.try_into()?)),
-            Err(_) => None,
-        };
-
-        let r1 = match args.get("R1") {
-            Ok(v) => Some(Radius(v.try_into()?)),
-            Err(_) => None,
-        };
-
-        let tcl = args.get("TCL")?.try_into()?;
-        if tcl <= 0.0 {
-            bail!("TCLに正数を入力してください");
-        }
-
-        Ok(TcParam::new(diminish, r0, r1, tcl, 0.0))
+        Ok(Self::new(
+            diminish.try_into()?,
+            args.get("R0").ok().try_into()?,
+            args.get("R1").ok().try_into()?,
+            tcl,
+            0.0,
+        ))
     }
 }
 
@@ -86,14 +67,14 @@ impl TcParam {
 struct ArgMap<'a>(HashMap<&'a str, &'a str>);
 
 impl<'a> FromIterator<(&'a str, &'a str)> for ArgMap<'a> {
-    /// イテレータから変換する
+    /// イテレータから変換する。
     fn from_iter<I: IntoIterator<Item = (&'a str, &'a str)>>(iter: I) -> Self {
         Self(HashMap::from_iter(iter))
     }
 }
 
 impl<'a> ArgMap<'a> {
-    /// 値を取得する
+    /// 値を取得する。
     fn get(&self, key: &'a str) -> Result<ArgValue> {
         let value = self
             .0
@@ -114,7 +95,7 @@ impl<'a> ArgValue<'a> {
 
 impl<'a> TryFrom<ArgValue<'a>> for f64 {
     type Error = anyhow::Error;
-    /// 小数に変換する
+    /// 小数に変換する。
     fn try_from(value: ArgValue<'a>) -> Result<Self, Self::Error> {
         value
             .1
@@ -123,9 +104,21 @@ impl<'a> TryFrom<ArgValue<'a>> for f64 {
     }
 }
 
+impl<'a> TryFrom<Option<ArgValue<'a>>> for Radius {
+    type Error = anyhow::Error;
+    /// 半径に変換する。
+    fn try_from(value: Option<ArgValue<'a>>) -> Result<Self, Self::Error> {
+        let r = match value {
+            Some(v) => Some(v.try_into()?),
+            None => None,
+        };
+        Ok(Radius(r))
+    }
+}
+
 impl<'a> TryFrom<&ArgValue<'a>> for Diminish {
     type Error = anyhow::Error;
-    /// 緩和曲線関数に変換する
+    /// 緩和曲線関数に変換する。
     fn try_from(pair: &ArgValue<'a>) -> Result<Self, Self::Error> {
         match pair.1 {
             "1" => Ok(Diminish::Sine),

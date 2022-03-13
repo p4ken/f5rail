@@ -1,6 +1,8 @@
 use std::ffi::OsString;
 
-use crate::transition::formula::Diminish;
+use anyhow::Result;
+
+use crate::transition::{self, formula::Diminish};
 
 use super::bat::*;
 
@@ -17,8 +19,8 @@ fn コマンドライン引数をパースできる() {
     let args = Args::parse(args);
     let args = args.unwrap();
     let transition = args.unwrap_transition();
-    assert_eq!(transition.file, "./JWC_TEMP.TXT");
-    let param = transition.param.as_ref().unwrap();
+    assert_eq!(transition.0, "./JWC_TEMP.TXT");
+    let param = transition.1.as_ref().unwrap();
     assert!(matches!(param.diminish, Diminish::Sine));
     assert_eq!(param.k0.0, 1. / 1.1);
     assert_eq!(param.k1.0, 1. / 2.);
@@ -47,8 +49,8 @@ fn 緩和曲線の長さ以外は省略可能() {
     let args = Args::parse(args);
     let args = args.unwrap();
     let transition = args.unwrap_transition();
-    assert_eq!(transition.file, "./JWC_TEMP.TXT");
-    let param = transition.param.as_ref().unwrap();
+    assert_eq!(transition.0, "./JWC_TEMP.TXT");
+    let param = transition.1.as_ref().unwrap();
     assert!(matches!(param.diminish, Diminish::Sine));
     assert_eq!(param.k0.0, 0.);
     assert_eq!(param.k1.0, 0.);
@@ -64,7 +66,7 @@ fn クロソイド曲線を指定できる() {
         OsString::from("/FILE:./JWC_TEMP.TXT"),
     ];
     let args = Args::parse(args).unwrap();
-    let param = args.unwrap_transition().param.as_ref().unwrap();
+    let param = args.unwrap_transition().1.as_ref().unwrap();
     assert!(matches!(param.diminish, Diminish::Linear));
 }
 
@@ -77,7 +79,7 @@ fn 緩和曲線関数が間違っていればエラー() {
         OsString::from("/FILE:./JWC_TEMP.TXT"),
     ];
     let args = Args::parse(args).unwrap();
-    let e = args.unwrap_transition().param.as_ref().unwrap_err();
+    let e = args.unwrap_transition().1.as_ref().unwrap_err();
     assert_eq!(e.to_string(), "緩和曲線関数に正しい値を入力してください");
 }
 
@@ -91,8 +93,8 @@ fn 緩和曲線の長さがなければエラー() {
     let args = Args::parse(args);
     let args = args.unwrap();
     let transition = args.unwrap_transition();
-    assert_eq!(transition.file, "./JWC_TEMP.TXT");
-    let e = transition.param.as_ref().unwrap_err();
+    assert_eq!(transition.0, "./JWC_TEMP.TXT");
+    let e = transition.1.as_ref().unwrap_err();
     assert_eq!(e.to_string(), "TCLを指定してください");
 }
 
@@ -108,15 +110,15 @@ fn 緩和曲線の半径が文字列ならエラー() {
     let args = Args::parse(args);
     let args = args.unwrap();
     let transition = args.unwrap_transition();
-    assert_eq!(transition.file, "./JWC_TEMP.TXT");
-    let e = transition.param.as_ref().unwrap_err();
+    assert_eq!(transition.0, "./JWC_TEMP.TXT");
+    let e = transition.1.as_ref().unwrap_err();
     assert_eq!(e.to_string(), "R0を数値で入力してください");
 }
 
 impl Args {
-    fn unwrap_transition(&self) -> &Transition {
+    fn unwrap_transition(&self) -> (&String, &Result<transition::Param>) {
         match self {
-            Self::Transition(t) => t,
+            Self::Transition(a, b) => (a, b),
             _ => panic!("This is not a transition."),
         }
     }
