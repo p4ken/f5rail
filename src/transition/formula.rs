@@ -1,5 +1,5 @@
 use std::{
-    f64::consts::FRAC_PI_2,
+    f64::consts::{FRAC_PI_2, PI},
     fmt::{write, Debug, Display},
     ops::{Add, Mul, Not, Sub},
 };
@@ -19,13 +19,14 @@ impl Diminish {
     pub fn k(&self, tcl: f64, s: f64, k0: Curvature, k1: Curvature) -> Curvature {
         // 緩和曲線長全体に対する弧長の比率
         let x = s / tcl;
+
         // 曲率変化量全体に対する曲率の比率
         let y = match self {
-            Diminish::Sine => (x * FRAC_PI_2).sin(),
+            Diminish::Sine => ((x - 0.5) * PI).sin() / 2.0 + 0.5,
             Diminish::Linear => x,
         };
-        println!("y:{}", y);
-        // println!("{} + |{}| * {}", k0, k0.gap(k1), y);
+
+        // 曲率
         k0 + (k1 - k0) * y
     }
 }
@@ -50,11 +51,7 @@ impl Curvature {
         Radian(self.0 * len)
     }
 
-    /// 差の絶対値
-    pub fn gap(&self, rhs: Self) -> Self {
-        Self((*self - rhs).0.abs())
-    }
-
+    /// 半径
     pub fn r(&self) -> Radius {
         Radius::from(*self)
     }
