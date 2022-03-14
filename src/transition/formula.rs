@@ -1,6 +1,6 @@
 use std::{
     f64::consts::FRAC_PI_2,
-    fmt::Debug,
+    fmt::{write, Debug, Display},
     ops::{Add, Mul, Not, Sub},
 };
 
@@ -24,20 +24,9 @@ impl Diminish {
             Diminish::Sine => (x * FRAC_PI_2).sin(),
             Diminish::Linear => x,
         };
-        (k1 - k0) * y
-    }
-}
-
-/// 半径 (m)
-///
-/// `None` の場合は直線。
-#[derive(Debug)]
-pub struct Radius(pub Option<f64>);
-
-impl From<Curvature> for Radius {
-    /// 曲率から半径に変換する。
-    fn from(k: Curvature) -> Self {
-        Radius(k.is_straight().not().then(|| k.0.recip()))
+        println!("y:{}", y);
+        // println!("{} + |{}| * {}", k0, k0.gap(k1), y);
+        k0 + (k1 - k0) * y
     }
 }
 
@@ -60,6 +49,24 @@ impl Curvature {
     pub fn angle(&self, len: f64) -> Radian {
         Radian(self.0 * len)
     }
+
+    /// 差の絶対値
+    pub fn gap(&self, rhs: Self) -> Self {
+        Self((*self - rhs).0.abs())
+    }
+
+    pub fn r(&self) -> Radius {
+        Radius::from(*self)
+    }
+}
+
+impl Add for Curvature {
+    type Output = Self;
+
+    /// 足し算
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
 }
 
 impl Sub for Curvature {
@@ -80,6 +87,12 @@ impl Mul<f64> for Curvature {
     }
 }
 
+impl Display for Curvature {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 impl From<Radius> for Curvature {
     /// 曲率に変換する。
     fn from(r: Radius) -> Self {
@@ -87,14 +100,22 @@ impl From<Radius> for Curvature {
     }
 }
 
-/// 角度 (度)
-#[derive(Debug, Copy, Clone)]
-pub struct Degree(pub f64);
+/// 半径 (m)
+///
+/// `None` の場合は直線。
+#[derive(Debug)]
+pub struct Radius(pub Option<f64>);
 
-impl From<Radian> for Degree {
-    /// ラジアンから変換する。
-    fn from(rad: Radian) -> Self {
-        Degree(rad.0.to_degrees())
+impl From<Curvature> for Radius {
+    /// 曲率から半径に変換する。
+    fn from(k: Curvature) -> Self {
+        Radius(k.is_straight().not().then(|| k.0.recip()))
+    }
+}
+
+impl Display for Radius {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.unwrap_or(0.0))
     }
 }
 
@@ -136,6 +157,17 @@ impl From<Degree> for Radian {
     /// 度から変換する。
     fn from(rad: Degree) -> Self {
         Radian(rad.0.to_radians())
+    }
+}
+
+/// 角度 (度)
+#[derive(Debug, Copy, Clone)]
+pub struct Degree(pub f64);
+
+impl From<Radian> for Degree {
+    /// ラジアンから変換する。
+    fn from(rad: Radian) -> Self {
+        Degree(rad.0.to_degrees())
     }
 }
 

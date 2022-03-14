@@ -6,8 +6,8 @@ use super::*;
 fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m() {
     let param = Param::new(
         Diminish::Sine,
-        Radius(Some(300.)),
-        Radius(Some(-300.)),
+        Radius(Some(300.0)),
+        Radius(Some(-300.0)),
         19.0,
         0.0,
     );

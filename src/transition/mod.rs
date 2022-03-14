@@ -15,11 +15,20 @@ use self::segment::Segmentation;
 
 /// 緩和曲線を描画する。
 pub fn plot(param: &Param) -> Spiral {
+    println!(
+        "k0:{}, r0:{}, k1:{}, r1:{}",
+        param.k0,
+        param.k0.r(),
+        param.k1,
+        param.k1.r()
+    );
     // 区間に分割する。
     Segmentation::new(param.l0, param.tcl)
         .scan(Head::new(&param.p0, param.t0), |head, segment| {
             // 区間の曲率を計算する。
             let k = param.diminish.k(param.tcl, segment.s, param.k0, param.k1);
+            println!("k:{}, r:{}", k, k.r());
+            println!();
 
             // 区間の線分を作成する。
             let line = Line::new(head.p0, head.t0, segment.len, k);
