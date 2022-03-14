@@ -1,6 +1,6 @@
-use std::f64::consts::FRAC_2_PI;
+use std::f64::consts::FRAC_PI_2;
 
-use super::formula::{Curvature, Point, Radian};
+use super::formula::{Curvature, Point, Radian, Radius};
 
 /// 緩和曲線
 ///
@@ -31,16 +31,16 @@ pub enum Line {
 impl Line {
     /// コンストラクタ
     pub fn new(p0: Point, t0: Radian, len: f64, k: Curvature) -> Self {
-        if k.is_straight() {
-            Self::Straight(p0, &p0 + (len, t0))
-        } else {
-            let r = k.0.recip();
-            Self::Curve(
-                &p0 + (r, t0 + Radian(FRAC_2_PI)),
-                r.abs(),
-                t0,
-                t0 + k.angle(len),
-            )
+        match Radius::from(k).0 {
+            None => Self::Straight(p0, &p0 + (len, t0)),
+            Some(r) => {
+                Self::Curve(
+                    &p0 + (r, t0 + Radian(FRAC_PI_2)),
+                    r.abs(),
+                    t0,
+                    t0 + k.angle(len),
+                )
+            }
         }
     }
 }

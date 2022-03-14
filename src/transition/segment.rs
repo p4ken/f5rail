@@ -22,10 +22,9 @@ pub struct Segmentation {
 }
 
 impl Segmentation {
-    /// `l0` で始まり `l1` で終わる距離程の分割を表す構造体を生成する。
-    ///
-    /// `l0 > l1` の場合は未定義動作。
-    pub fn new(l0: f64, l1: f64, p0: &Point) -> Self {
+    /// コンストラクタ
+    pub fn new(l0: f64, tcl: f64) -> Self {
+        let l1 = l0 + tcl;
         Self {
             first: (l0, l0.floor() as i32 + 1),
             last: (l1.ceil() as i32 - 1, l1),
@@ -38,7 +37,6 @@ impl Iterator for Segmentation {
     type Item = Segment;
 
     fn next(&mut self) -> Option<Self::Item> {
-        return None;
         // 終了判定
         if self.l0 - 1 == self.last.0 {
             return None;
@@ -84,7 +82,7 @@ pub struct Segment {
     pub len: f64,
 }
 
-/// 前回までの緩和曲線の先端の状態
+/// 緩和曲線の先端の状態
 #[derive(Debug, Clone)]
 pub struct Head {
     /// 次回の始点座標

@@ -1,4 +1,4 @@
-use super::formula::{Curvature, Diminish, Point, Radius, Degree, Radian};
+use super::formula::{Curvature, Diminish, Point, Radian, Radius};
 
 /// 緩和曲線パラメータ
 #[derive(Debug)]
@@ -15,8 +15,8 @@ pub struct Param {
     /// 始点の距離程
     pub l0: f64,
 
-    /// 終点の距離程
-    pub l1: f64,
+    /// 緩和曲線長
+    pub tcl: f64,
 
     /// 始点の座標
     pub p0: Point,
@@ -32,7 +32,7 @@ impl Param {
             k0: r0.into(),
             k1: r1.into(),
             l0,
-            l1: l0 + tcl,
+            tcl,
             p0: Point(0.0, 0.0),
             t0: Radian(0.0),
         }

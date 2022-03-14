@@ -24,7 +24,7 @@ fn コマンドライン引数をパースできる() {
     assert!(matches!(param.diminish, Diminish::Sine));
     assert_eq!(param.k0.0, 1. / 1.1);
     assert_eq!(param.k1.0, 1. / 2.);
-    assert_eq!(param.l1, 3.);
+    assert_eq!(param.tcl, 3.);
 }
 
 #[test]
@@ -54,7 +54,7 @@ fn 緩和曲線の長さ以外は省略可能() {
     assert!(matches!(param.diminish, Diminish::Sine));
     assert_eq!(param.k0.0, 0.);
     assert_eq!(param.k1.0, 0.);
-    assert_eq!(param.l1, 3.);
+    assert_eq!(param.tcl, 3.);
 }
 
 #[test]

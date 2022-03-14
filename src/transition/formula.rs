@@ -1,6 +1,7 @@
 use std::{
+    f64::consts::FRAC_PI_2,
     fmt::Debug,
-    ops::{Add, Not, Sub},
+    ops::{Add, Mul, Not, Sub},
 };
 
 /// 逓減
@@ -16,7 +17,14 @@ pub enum Diminish {
 impl Diminish {
     /// 曲率を計算する。
     pub fn k(&self, tcl: f64, s: f64, k0: Curvature, k1: Curvature) -> Curvature {
-        Curvature(0.)
+        // 緩和曲線長全体に対する弧長の比率
+        let x = s / tcl;
+        // 曲率変化量全体に対する曲率の比率
+        let y = match self {
+            Diminish::Sine => (x * FRAC_PI_2).sin(),
+            Diminish::Linear => x,
+        };
+        (k1 - k0) * y
     }
 }
 
@@ -39,13 +47,13 @@ impl From<Curvature> for Radius {
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Curvature(pub f64);
 
-/// 直線
-const STRAIGHT: Curvature = Curvature(0.);
-
 impl Curvature {
+    /// 直線
+    const STRAIGHT: Curvature = Curvature(0.);
+
     /// 直線を判定する。
     pub fn is_straight(&self) -> bool {
-        self.0 == STRAIGHT.0
+        self.0 == Self::STRAIGHT.0
     }
 
     /// 弧長 `len` から中心角を計算する。
@@ -54,10 +62,28 @@ impl Curvature {
     }
 }
 
+impl Sub for Curvature {
+    type Output = Self;
+
+    /// 引き算
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
+    }
+}
+
+impl Mul<f64> for Curvature {
+    type Output = Self;
+
+    /// 掛け算
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self(self.0 * rhs)
+    }
+}
+
 impl From<Radius> for Curvature {
     /// 曲率に変換する。
     fn from(r: Radius) -> Self {
-        r.0.map_or(STRAIGHT, |r| Curvature(r.recip()))
+        r.0.map_or(Self::STRAIGHT, |r| Curvature(r.recip()))
     }
 }
 
@@ -91,7 +117,7 @@ impl Radian {
 impl Add for Radian {
     type Output = Self;
 
-    /// 加算演算子
+    /// 足し算
     fn add(self, rhs: Self) -> Self::Output {
         Self(self.0 + rhs.0)
     }
@@ -100,7 +126,7 @@ impl Add for Radian {
 impl Sub for Radian {
     type Output = Self;
 
-    /// 減算演算子
+    /// 引き算
     fn sub(self, rhs: Self) -> Self::Output {
         Self(self.0 - rhs.0)
     }
