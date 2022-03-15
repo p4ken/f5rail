@@ -19,10 +19,10 @@ pub fn plot(param: &Param) -> Spiral {
     Segmentation::new(param.l0, param.tcl)
         .scan(Head::new(&param.p0, param.t0), |head, segment| {
             // 区間の曲率を計算する。
-            let k = param.diminish.k(param.tcl, segment.s, param.k0, param.k1);
+            let k = param.diminish.k(param.tcl, segment.s(), param.k0, param.k1);
 
             // 区間の線分を作成する。
-            let line = Line::new(head.p0, head.t0, segment.len, k);
+            let line = Line::new(head.p0, head.t0, segment.len(), k);
 
             // 先端の状態を更新する。
             *head += &line;

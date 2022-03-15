@@ -63,7 +63,7 @@ impl Iterator for Segmentation {
         // 次回区間
         self.l0 += 1;
 
-        Some(Self::Item { s, len })
+        Some(Segment(l0, l1))
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -72,14 +72,20 @@ impl Iterator for Segmentation {
     }
 }
 
-/// ひとつの区間
+/// 距離程の区間
 #[derive(Debug)]
-pub struct Segment {
+pub struct Segment(f64, f64);
+
+impl Segment {
     /// 緩和曲線始点から区間中央までの弧長
-    pub s: f64,
+    pub fn s(&self) -> f64 {
+        (self.1 + self.0) / 2.0
+    }
 
     /// 区間長
-    pub len: f64,
+    pub fn len(&self) -> f64 {
+        self.1 - self.0
+    }
 }
 
 /// 緩和曲線の先端の状態

@@ -1,6 +1,6 @@
 use std::{
-    f64::consts::{FRAC_PI_2, PI},
-    fmt::{write, Debug, Display},
+    f64::consts::PI,
+    fmt::{Debug, Display},
     ops::{Add, Mul, Not, Sub},
 };
 
