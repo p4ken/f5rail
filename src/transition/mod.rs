@@ -23,7 +23,7 @@ pub fn plot(param: &Param) -> Spiral {
         })
         .scan((param.p0, param.t0), |(p0, t0), (k, len)| {
             // 区間の線分
-            let line = Line::new(*p0, *t0, len, k);
+            let line = Line::new(p0, *t0, len, k);
             *p0 = line.p1();
             *t0 = line.t1(*t0);
             Some(line)

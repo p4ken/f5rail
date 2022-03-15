@@ -1,10 +1,3 @@
-use std::ops::AddAssign;
-
-use super::{
-    formula::{Point, Radian},
-    spiral::Line,
-};
-
 /// 緩和曲線の距離程を分割する構造体。
 ///
 /// 距離程の原点(0m)は緩和曲線の始点とは限らず、任意の場所にある。
