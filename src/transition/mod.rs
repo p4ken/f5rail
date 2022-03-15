@@ -8,7 +8,6 @@ mod segment;
 #[cfg(test)]
 mod test;
 
-use segment::Head;
 use spiral::{Line, Spiral};
 
 use self::segment::Segmentation;
@@ -17,17 +16,16 @@ use self::segment::Segmentation;
 pub fn plot(param: &Param) -> Spiral {
     // 区間に分割する。
     Segmentation::new(param.l0, param.tcl)
-        .scan(Head::new(&param.p0, param.t0), |head, segment| {
-            // 区間の曲率を計算する。
+        .map(|segment| {
+            // 区間の曲率
             let k = param.diminish.k(param.tcl, segment.s(), param.k0, param.k1);
-
-            // 区間の線分を作成する。
-            let line = Line::new(head.p0, head.t0, segment.len(), k);
-
-            // 先端の状態を更新する。
-            *head += &line;
-
-            // 線分を出力する。
+            (k, segment.len())
+        })
+        .scan((param.p0, param.t0), |(p0, t0), (k, len)| {
+            // 区間の線分
+            let line = Line::new(*p0, *t0, len, k);
+            *p0 = line.p1();
+            *t0 = line.t1(*t0);
             Some(line)
         })
         .collect()

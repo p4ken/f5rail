@@ -33,13 +33,30 @@ impl Line {
     pub fn new(p0: Point, t0: Radian, len: f64, k: Curvature) -> Self {
         match Radius::from(k).0 {
             None => Self::Straight(p0, &p0 + (len, t0)),
-            Some(r) => {
-                Self::Curve(
-                    &p0 + (r, t0 + Radian(FRAC_PI_2)),
-                    r.abs(),
-                    t0,
-                    t0 + k.angle(len),
-                )
+            Some(r) => Self::Curve(
+                &p0 + (r, t0 + Radian(FRAC_PI_2)),
+                r.abs(),
+                t0,
+                t0 + k.angle(len),
+            ),
+        }
+    }
+
+    /// 終点座標
+    pub fn p1(&self) -> Point {
+        match self {
+            Self::Straight(_, p1) => *p1,
+            Self::Curve(c, r, _, a1) => c + (*r, *a1),
+        }
+    }
+
+    /// 終点の進行方向（接線の向き）
+    pub fn t1(&self, t0: Radian) -> Radian {
+        match self {
+            Self::Straight(..) => t0,
+            Self::Curve(_, _, a0, a1) => {
+                // 左カーブ→引く、右カーブ→足す
+                t0 - (*a1 - *a0)
             }
         }
     }

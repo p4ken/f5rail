@@ -42,23 +42,17 @@ impl Iterator for Segmentation {
             return None;
         }
 
-        // 区間始点
+        // 区間の始点
         let l0 = match self.l0 + 1 == self.first.1 {
             true => self.first.0, // 初回区間
             false => self.l0 as f64,
         };
 
-        // 区間終点
+        // 区間の終点
         let l1 = match self.l0 == self.last.0 {
             true => self.last.1, // 最終区間
             false => (self.l0 + 1) as f64,
         };
-
-        // 区間長
-        let len = l1 - l0;
-
-        // 緩和曲線始点から区間中央までの弧長
-        let s = l0 - self.first.0 + (len / 2.0);
 
         // 次回区間
         self.l0 += 1;
@@ -66,6 +60,7 @@ impl Iterator for Segmentation {
         Some(Segment(l0, l1))
     }
 
+    /// 区間数
     fn size_hint(&self) -> (usize, Option<usize>) {
         let size = (self.last.0 - self.first.1 + 2) as usize;
         (size, Some(size))
@@ -85,35 +80,5 @@ impl Segment {
     /// 区間長
     pub fn len(&self) -> f64 {
         self.1 - self.0
-    }
-}
-
-/// 緩和曲線の先端の状態
-#[derive(Debug, Clone)]
-pub struct Head {
-    /// 次回の始点座標
-    pub p0: Point,
-
-    /// 次回の始点の進行方向（接線の向き）
-    pub t0: Radian,
-}
-
-impl Head {
-    /// コンストラクタ
-    pub fn new(p0: &Point, t0: Radian) -> Self {
-        Self { p0: *p0, t0 }
-    }
-}
-
-impl AddAssign<&Line> for Head {
-    /// 線分を加算する
-    fn add_assign(&mut self, rhs: &Line) {
-        match rhs {
-            Line::Straight(_, p1) => self.p0 = *p1,
-            Line::Curve(c, r, a0, a1) => {
-                self.p0 = c + (*r, *a1);
-                self.t0 = self.t0 - (*a1 - *a0); // 左カーブ→引く、右カーブ→足す
-            }
-        }
     }
 }
