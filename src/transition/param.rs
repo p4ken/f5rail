@@ -1,4 +1,4 @@
-use super::{formula::{Curvature, Diminish, Radian, Radius}, spiral::Point};
+use super::{curve::{Curvature, Diminish, Radian, Radius}, spiral::Point};
 
 /// 緩和曲線パラメータ
 #[derive(Debug)]

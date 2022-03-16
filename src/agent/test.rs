@@ -2,7 +2,7 @@ use std::ffi::OsString;
 
 use anyhow::Result;
 
-use crate::transition::{self, formula::Diminish};
+use crate::transition::{self, curve::Diminish};
 
 use super::bat::*;
 

@@ -4,7 +4,7 @@ use std::{collections::HashMap, ffi::OsString};
 use anyhow::{bail, ensure, Context, Result};
 
 use crate::transition;
-use crate::transition::formula::{Diminish, Radius};
+use crate::transition::curve::{Diminish, Radius};
 
 /// コマンドライン引数
 ///

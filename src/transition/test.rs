@@ -1,4 +1,4 @@
-use super::formula::*;
+use super::curve::*;
 use super::spiral::*;
 use super::*;
 
@@ -48,10 +48,10 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点
     assert!(segments.0[9].r().is_none());
 }
 
-impl Line {
+impl Atom {
     fn r(&self) -> Option<f64> {
         match self {
-            Self::Curve(_, r, _, _) => Some(*r),
+            Self::Arc(_, r, _, _) => Some(*r),
             _ => None,
         }
     }

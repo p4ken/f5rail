@@ -1,4 +1,4 @@
-pub mod formula;
+pub mod curve;
 pub mod param;
 pub mod spiral;
 
@@ -8,7 +8,7 @@ mod distance;
 #[cfg(test)]
 mod test;
 
-use spiral::{Line, Spiral};
+use spiral::{Atom, Spiral};
 
 use self::distance::Segmentation;
 
@@ -23,14 +23,14 @@ pub fn plot(param: &Param) -> Spiral {
             (k, segment.len())
         })
         .scan((param.p0, param.t0), |(p0, t0), (k, len)| {
-            // 区間の線分を作成する。
-            let line = Line::new(p0, *t0, len, k);
+            // 区間の図形を作成する。
+            let atom = Atom::new(p0, *t0, len, k);
 
             // 今回の終点を次回の始点にする。
-            *p0 = line.p1();
-            *t0 = line.t1(*t0);
+            *p0 = atom.p1();
+            *t0 = atom.t1(*t0);
 
-            Some(line)
+            Some(atom)
         })
         .collect()
 }
