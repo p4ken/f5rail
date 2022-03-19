@@ -1,8 +1,9 @@
-use std::ops::{Add, Sub};
+use std::ops::{Add, Div, Sub};
 
 /// 距離程 (m)
 ///
-/// 距離程の原点(0m)は任意の場所にある。緩和曲線始点からの距離ではない。
+/// 距離程の原点(0m)は任意の場所にある。
+///
 /// 区間境界は1m単位の距離程になる。
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Distance<T>(T);
@@ -31,11 +32,6 @@ impl Distance<f64> {
     /// 切り上げ
     fn ceil(&self) -> Distance<i32> {
         Distance(self.0.ceil() as i32)
-    }
-
-    /// 次の区間境界
-    fn next(&self) -> Distance<i32> {
-        self.floor().next()
     }
 
     /// 前の区間境界
@@ -75,19 +71,7 @@ impl Distance<i32> {
     }
 }
 
-/// 弧長 (m)
-///
-/// 緩和曲線始点からの距離。
-#[derive(Debug, Clone, Copy)]
-pub struct ArcLength(f64);
-
-impl From<f64> for ArcLength {
-    fn from(f: f64) -> Self {
-        Self(f)
-    }
-}
-
-/// 距離程の区間分割
+/// 緩和曲線の距離程の区間分割
 ///
 /// 1m単位の区間に分割される。
 pub struct Ruler {
@@ -102,10 +86,10 @@ pub struct Ruler {
 }
 
 impl Ruler {
-    /// 距離程の始点と長さをもとに区間分割を作成する。
-    pub fn new(first_l0: Distance<f64>, tcl: f64) -> Self {
+    /// 緩和曲線の始点距離程と長さをもとに区間分割を作成する。
+    pub fn new(first_l0: Distance<f64>, tcl: ArcLength) -> Self {
         let l1 = first_l0.floor();
-        let last_l1 = first_l0 + tcl;
+        let last_l1 = first_l0 + tcl.0;
 
         Self {
             first: (first_l0, l1.next()),
@@ -137,14 +121,35 @@ impl Iterator for Ruler {
     }
 }
 
+/// 弧長 (m)
+///
+/// 緩和曲線始点からの距離。
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ArcLength(f64);
+
+impl From<f64> for ArcLength {
+    fn from(f: f64) -> Self {
+        Self(f)
+    }
+}
+
+impl Div for ArcLength {
+    type Output = f64;
+
+    /// 比率
+    fn div(self, rhs: Self) -> Self::Output {
+        self.0 / rhs.0
+    }
+}
+
 /// 1つの区間
 #[derive(Debug)]
 pub struct Interval {
-    /// 区間始点の弧長
-    s0: f64,
+    /// 区間始点までの弧長
+    s0: ArcLength,
 
-    /// 区間終点の弧長
-    s1: f64,
+    /// 区間終点までの弧長
+    s1: ArcLength,
 }
 
 impl Interval {
@@ -162,17 +167,20 @@ impl Interval {
             false => ruler.l1.as_float(),
         } - ruler.first.0;
 
-        Self { s0, s1 }
+        Self {
+            s0: s0.into(),
+            s1: s1.into(),
+        }
     }
 
     /// 弧長の代表値
-    pub fn s(&self) -> f64 {
+    pub fn s(&self) -> ArcLength {
         // 区間中央の値を利用する。
-        (self.s1 + self.s0) / 2.0
+        ((self.s1.0 + self.s0.0) / 2.0).into()
     }
 
     /// 区間長
     pub fn len(&self) -> f64 {
-        self.s1 - self.s0
+        self.s1.0 - self.s0.0
     }
 }

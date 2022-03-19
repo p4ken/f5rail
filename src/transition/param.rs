@@ -20,7 +20,7 @@ pub struct Param {
     pub l0: Distance<f64>,
 
     /// 緩和曲線長
-    pub tcl: f64,
+    pub tcl: ArcLength,
 
     /// 始点の座標
     pub p0: Point,
@@ -30,7 +30,7 @@ pub struct Param {
 }
 
 impl Param {
-    pub fn new(diminish: Diminish, r0: Radius, r1: Radius, tcl: f64, l0: Distance<f64>) -> Self {
+    pub fn new(diminish: Diminish, r0: Radius, r1: Radius, tcl: ArcLength, l0: Distance<f64>) -> Self {
         Self {
             diminish,
             k0: r0.into(),

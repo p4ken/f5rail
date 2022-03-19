@@ -22,9 +22,9 @@ fn コマンドライン引数をパースできる() {
     assert_eq!(transition.0, "./JWC_TEMP.TXT");
     let param = transition.1.as_ref().unwrap();
     assert!(matches!(param.diminish, Diminish::Sine));
-    assert_eq!(param.k0.0, 1. / 1.1);
-    assert_eq!(param.k1.0, 1. / 2.);
-    assert_eq!(param.tcl, 3.);
+    assert_eq!(param.k0.0, 1.0 / 1.1);
+    assert_eq!(param.k1.0, 1.0 / 2.0);
+    assert_eq!(param.tcl, 3.0.into());
 }
 
 #[test]
@@ -52,9 +52,9 @@ fn 緩和曲線の長さ以外は省略可能() {
     assert_eq!(transition.0, "./JWC_TEMP.TXT");
     let param = transition.1.as_ref().unwrap();
     assert!(matches!(param.diminish, Diminish::Sine));
-    assert_eq!(param.k0.0, 0.);
-    assert_eq!(param.k1.0, 0.);
-    assert_eq!(param.tcl, 3.);
+    assert_eq!(param.k0.0, 0.0);
+    assert_eq!(param.k1.0, 0.0);
+    assert_eq!(param.tcl, 3.0.into());
 }
 
 #[test]

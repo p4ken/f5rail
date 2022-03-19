@@ -4,7 +4,9 @@ use std::{
     ops::{Add, Mul, Not, Sub},
 };
 
-/// 逓減
+use super::distance::ArcLength;
+
+/// 逓減関数
 #[derive(Debug)]
 pub enum Diminish {
     /// サイン半波長逓減
@@ -16,7 +18,7 @@ pub enum Diminish {
 
 impl Diminish {
     /// 曲率を計算する。
-    pub fn k(&self, tcl: f64, s: f64, k0: Curvature, k1: Curvature) -> Curvature {
+    pub fn k(&self, tcl: ArcLength, s: ArcLength, k0: Curvature, k1: Curvature) -> Curvature {
         // 緩和曲線長全体に対する弧長の比率
         let x = s / tcl;
 
@@ -38,12 +40,19 @@ impl Diminish {
 pub struct Curvature(pub f64);
 
 impl Curvature {
-    /// 直線
-    const STRAIGHT: Curvature = Curvature(0.);
-
-    /// 直線を判定する。
+    /// 直線なら `true`
     pub fn is_straight(&self) -> bool {
-        self.0 == Self::STRAIGHT.0
+        self.0 == 0.0
+    }
+
+    /// 左カーブなら `true`
+    pub fn is_left(&self) -> bool {
+        self.0 < 0.0
+    }
+
+    /// 右カーブなら `true`
+    pub fn is_right(&self) -> bool {
+        self.0 > 0.0
     }
 
     /// 弧長 `len` から中心角を計算する。
@@ -60,14 +69,7 @@ impl Curvature {
 impl From<Radius> for Curvature {
     /// 半径から変換する。
     fn from(r: Radius) -> Self {
-        r.0.map_or(Self::STRAIGHT, |r| Curvature(r.recip()))
-    }
-}
-
-impl Display for Curvature {
-    /// 表示する。
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        Curvature(r.0.map_or(0.0, |r| r.recip()))
     }
 }
 
@@ -92,7 +94,7 @@ impl Sub for Curvature {
 impl Mul<f64> for Curvature {
     type Output = Self;
 
-    /// 掛け算
+    /// 比率
     fn mul(self, rhs: f64) -> Self::Output {
         Self(self.0 * rhs)
     }
@@ -100,7 +102,8 @@ impl Mul<f64> for Curvature {
 
 /// 半径 (m)
 ///
-/// `None` の場合は直線。
+/// 左カーブなら負の数。
+/// 直線の場合は `None`
 #[derive(Debug)]
 pub struct Radius(pub Option<f64>);
 
@@ -108,13 +111,6 @@ impl From<Curvature> for Radius {
     /// 曲率から変換する。
     fn from(k: Curvature) -> Self {
         Radius(k.is_straight().not().then(|| k.0.recip()))
-    }
-}
-
-impl Display for Radius {
-    /// 表示する。
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.unwrap_or(0.0))
     }
 }
 
