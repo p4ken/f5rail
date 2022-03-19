@@ -3,7 +3,7 @@ use std::{fmt::Display, fs::File, io::Write};
 use anyhow::{Context, Result};
 
 use super::sjis::to_sjis;
-use crate::transition::{curve::Diminish, spiral::{Stroke, Spiral}};
+use crate::transition::{curve::Diminish, canvas::{Stroke, Spiral}};
 
 /// 入出力用の座標ファイル。
 ///

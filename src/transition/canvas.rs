@@ -31,10 +31,10 @@ pub enum Stroke {
 impl Stroke {
     /// コンストラクタ
     pub fn new(p0: &Point, t0: Radian, len: f64, k: Curvature) -> Self {
-        match Radius::from(k).0 {
+        match Radius::from(k).raw() {
             None => Self::Straight(*p0, p0 + &Polar(len, t0)),
             Some(r) => Self::Arc(
-                p0 + &Polar(r, t0 + Radian(FRAC_PI_2)),
+                p0 + &Polar(r, t0 + FRAC_PI_2.into()),
                 r.abs(),
                 t0,
                 t0 + k.angle(len),

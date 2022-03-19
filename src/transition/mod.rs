@@ -1,6 +1,6 @@
 pub mod curve;
 pub mod param;
-pub mod spiral;
+pub mod canvas;
 
 pub use param::Param;
 
@@ -9,7 +9,7 @@ mod distance;
 mod test;
 
 use distance::Ruler;
-use spiral::{Stroke, Spiral};
+use canvas::{Stroke, Spiral};
 
 /// 緩和曲線を描画する。
 pub fn plot(param: &Param) -> Spiral {
@@ -23,13 +23,13 @@ pub fn plot(param: &Param) -> Spiral {
         })
         .scan((param.p0, param.t0), |(p0, t0), (k, len)| {
             // 区間の図形を作成する。
-            let atom = Stroke::new(p0, *t0, len, k);
+            let stroke = Stroke::new(p0, *t0, len, k);
 
             // 今回の終点を次回の始点にする。
-            *p0 = atom.p1();
-            *t0 = atom.t1(*t0);
+            *p0 = stroke.p1();
+            *t0 = stroke.t1(*t0);
 
-            Some(atom)
+            Some(stroke)
         })
         .collect()
 }

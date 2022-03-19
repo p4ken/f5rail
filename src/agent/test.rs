@@ -2,7 +2,7 @@ use std::ffi::OsString;
 
 use anyhow::Result;
 
-use crate::transition::{self, curve::Diminish};
+use crate::transition::{self, curve::{Diminish, Radius}};
 
 use super::bat::*;
 
@@ -22,8 +22,8 @@ fn コマンドライン引数をパースできる() {
     assert_eq!(transition.0, "./JWC_TEMP.TXT");
     let param = transition.1.as_ref().unwrap();
     assert!(matches!(param.diminish, Diminish::Sine));
-    assert_eq!(param.k0.0, 1.0 / 1.1);
-    assert_eq!(param.k1.0, 1.0 / 2.0);
+    assert_eq!(param.k0.r(), Some(1.1).into());
+    assert_eq!(param.k1.r(), Some(2.0).into());
     assert_eq!(param.tcl, 3.0.into());
 }
 
@@ -52,8 +52,8 @@ fn 緩和曲線の長さ以外は省略可能() {
     assert_eq!(transition.0, "./JWC_TEMP.TXT");
     let param = transition.1.as_ref().unwrap();
     assert!(matches!(param.diminish, Diminish::Sine));
-    assert_eq!(param.k0.0, 0.0);
-    assert_eq!(param.k1.0, 0.0);
+    assert!(param.k0.is_straight());
+    assert!(param.k1.is_straight());
     assert_eq!(param.tcl, 3.0.into());
 }
 

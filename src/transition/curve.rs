@@ -1,13 +1,12 @@
 use std::{
     f64::consts::PI,
-    fmt::{Debug, Display},
     ops::{Add, Mul, Not, Sub},
 };
 
 use super::distance::ArcLength;
 
 /// 逓減関数
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Diminish {
     /// サイン半波長逓減
     Sine,
@@ -36,8 +35,8 @@ impl Diminish {
 /// 曲率 (1/m)
 ///
 /// 左カーブなら負の数。
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub struct Curvature(pub f64);
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Curvature(f64);
 
 impl Curvature {
     /// 直線なら `true`
@@ -103,20 +102,43 @@ impl Mul<f64> for Curvature {
 /// 半径 (m)
 ///
 /// 左カーブなら負の数。
+/// 
 /// 直線の場合は `None`
-#[derive(Debug)]
-pub struct Radius(pub Option<f64>);
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Radius(Option<f64>);
+
+impl From<Option<f64>> for Radius {
+    /// コンストラクタ
+    fn from(r: Option<f64>) -> Self {
+        Self(r)
+    }
+}
 
 impl From<Curvature> for Radius {
     /// 曲率から変換する。
     fn from(k: Curvature) -> Self {
-        Radius(k.is_straight().not().then(|| k.0.recip()))
+        Self(k.is_straight().not().then(|| k.0.recip()))
+    }
+}
+
+impl Radius {
+    /// 生の値
+    #[deprecated]
+    pub fn raw(&self) -> Option<f64> {
+        self.0
     }
 }
 
 /// 角度 (ラジアン)
-#[derive(Debug, Copy, Clone)]
-pub struct Radian(pub f64);
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Radian(f64);
+
+impl From<f64> for Radian {
+    /// コンストラクタ
+    fn from(rad: f64) -> Self {
+        Self(rad)
+    }
+}
 
 impl Radian {
     /// サイン
@@ -156,8 +178,8 @@ impl From<Degree> for Radian {
 }
 
 /// 角度 (度)
-#[derive(Debug, Copy, Clone)]
-pub struct Degree(pub f64);
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Degree(f64);
 
 impl From<Radian> for Degree {
     /// ラジアンから変換する。

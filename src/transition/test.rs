@@ -1,15 +1,15 @@
 use std::fmt::Display;
 
 use super::curve::*;
-use super::spiral::*;
+use super::canvas::*;
 use super::*;
 
 #[test]
 fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m() {
     let param = Param::new(
         Diminish::Sine,
-        Radius(Some(300.0)),
-        Radius(Some(-300.0)),
+        Some(300.0).into(),
+        Some(-300.0).into(),
         19.0.into(),
         0.0.into(),
     );
@@ -31,8 +31,8 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m() {
 fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点1m() {
     let param = Param::new(
         Diminish::Sine,
-        Radius(Some(300.0)),
-        Radius(Some(-300.0)),
+        Some(300.0).into(),
+        Some(-300.0).into(),
         19.0.into(),
         1.0.into(),
     );
@@ -54,8 +54,8 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点
 fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点0_5m() {
     let param = Param::new(
         Diminish::Sine,
-        Radius(Some(300.0)),
-        Radius(Some(-300.0)),
+        Some(300.0).into(),
+        Some(-300.0).into(),
         19.0.into(),
         0.5.into(),
     );
@@ -81,8 +81,8 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点
 fn 反向緩和曲線長19_5m_開始半径300m_終了半径マイナス300m() {
     let param = Param::new(
         Diminish::Sine,
-        Radius(Some(300.0)),
-        Radius(Some(-300.0)),
+        Some(300.0).into(),
+        Some(-300.0).into(),
         19.5.into(),
         0.0.into(),
     );
@@ -100,12 +100,6 @@ fn 反向緩和曲線長19_5m_開始半径300m_終了半径マイナス300m() {
     assert_eq!(format!("{:.0}", spiral.0[9].r().unwrap()), "7450");
     assert_eq!(format!("{:.0}", spiral.0[10].r().unwrap()), "2489");
     assert_eq!(format!("{:.2}", spiral.0[19].r().unwrap()), "300.24");
-}
-
-impl Display for Radius {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.unwrap_or(0.0))
-    }
 }
 
 impl Stroke {

@@ -112,7 +112,7 @@ impl<'a> TryFrom<Option<ArgValue<'a>>> for Radius {
             Some(v) => Some(v.try_into()?),
             None => None,
         };
-        Ok(Radius(r))
+        Ok(Radius::from(r))
     }
 }
 

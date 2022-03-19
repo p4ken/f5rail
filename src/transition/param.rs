@@ -1,7 +1,7 @@
 use super::{
     curve::{Curvature, Diminish, Radian, Radius},
     distance::{ArcLength, Distance},
-    spiral::Point,
+    canvas::Point,
 };
 
 /// 緩和曲線パラメータ
@@ -38,7 +38,7 @@ impl Param {
             l0,
             tcl,
             p0: Point(0.0, 0.0),
-            t0: Radian(0.0),
+            t0: 0.0.into(),
         }
     }
 }
