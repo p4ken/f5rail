@@ -1,33 +1,122 @@
-/// 区間に分割された距離程。
-///
-/// 距離程の原点 (0m) は緩和曲線の始点とは限らず、任意の場所にある。
-///
-/// 区間同士の境界では距離程が整数になり、最初の始点と最後の終点のみ小数になりうる。
-pub struct Segmentation {
-    /// 初回区間 (始点, 終点)
-    first: (f64, i32),
+use std::ops::{Add, Sub};
 
-    /// 最終区間 (始点, 終点)
-    last: (i32, f64),
+/// 距離程 (m)
+///
+/// 距離程の原点(0m)は任意の場所にある。緩和曲線始点からの距離ではない。
+/// 区間境界は1m単位の距離程になる。
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct Distance<T>(T);
 
-    /// 現在区間の終点
-    l1: i32,
+impl From<f64> for Distance<f64> {
+    fn from(f: f64) -> Self {
+        Self(f)
+    }
 }
 
-impl Segmentation {
-    /// 緩和曲線の始点の距離程 `l0` と緩和曲線長 `tcl` から区間に分割する。
-    pub fn new(l0: f64, tcl: f64) -> Self {
-        let l1 = l0 + tcl;
+impl Add<f64> for Distance<f64> {
+    type Output = Self;
+
+    /// 足し算
+    fn add(self, rhs: f64) -> Self::Output {
+        Self(self.0 + rhs)
+    }
+}
+
+impl Distance<f64> {
+    /// 切り捨て
+    fn floor(&self) -> Distance<i32> {
+        Distance(self.0.floor() as i32)
+    }
+
+    /// 切り上げ
+    fn ceil(&self) -> Distance<i32> {
+        Distance(self.0.ceil() as i32)
+    }
+
+    /// 次の区間境界
+    fn next(&self) -> Distance<i32> {
+        self.floor().next()
+    }
+
+    /// 前の区間境界
+    fn prev(&self) -> Distance<i32> {
+        self.ceil().prev()
+    }
+}
+
+impl<T: Sub<Output = T>> Sub for Distance<T> {
+    type Output = T;
+
+    /// 2点間の距離
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.0 - rhs.0
+    }
+}
+
+impl Distance<i32> {
+    /// 小数の距離程に変換する
+    fn as_float(&self) -> Distance<f64> {
+        Distance(self.0 as f64)
+    }
+
+    /// 次の区間境界
+    fn next(&self) -> Self {
+        Self(self.0 + 1)
+    }
+
+    /// 前の区間境界
+    fn prev(&self) -> Self {
+        Self(self.0 - 1)
+    }
+
+    /// 次の区間境界に進める
+    fn advance(&mut self) {
+        *self = self.next()
+    }
+}
+
+/// 弧長 (m)
+///
+/// 緩和曲線始点からの距離。
+#[derive(Debug, Clone, Copy)]
+pub struct ArcLength(f64);
+
+impl From<f64> for ArcLength {
+    fn from(f: f64) -> Self {
+        Self(f)
+    }
+}
+
+/// 距離程の区間分割
+///
+/// 1m単位の区間に分割される。
+pub struct Ruler {
+    /// 初回区間 (始点, 終点)
+    first: (Distance<f64>, Distance<i32>),
+
+    /// 最終区間 (始点, 終点)
+    last: (Distance<i32>, Distance<f64>),
+
+    /// 現在区間の終点
+    l1: Distance<i32>,
+}
+
+impl Ruler {
+    /// 距離程の始点と長さをもとに区間分割を作成する。
+    pub fn new(first_l0: Distance<f64>, tcl: f64) -> Self {
+        let l1 = first_l0.floor();
+        let last_l1 = first_l0 + tcl;
+
         Self {
-            first: (l0, l0.floor() as i32 + 1),
-            last: (l1.ceil() as i32 - 1, l1),
-            l1: l0 as i32,
+            first: (first_l0, l1.next()),
+            last: (last_l1.prev(), last_l1),
+            l1,
         }
     }
 }
 
-impl Iterator for Segmentation {
-    type Item = Segment;
+impl Iterator for Ruler {
+    type Item = Interval;
 
     /// 次回区間を取得する。
     fn next(&mut self) -> Option<Self::Item> {
@@ -37,10 +126,8 @@ impl Iterator for Segmentation {
         }
 
         // 次回区間
-        self.l1 += 1;
-        let segment = Segment::new(&self);
-
-        Some(segment)
+        self.l1.advance();
+        Some(Interval::new(&self))
     }
 
     /// 区間数
@@ -50,11 +137,9 @@ impl Iterator for Segmentation {
     }
 }
 
-/// ひとつの区間の弧長
-///
-/// 弧長は緩和曲線始点からの距離。距離程とは異なる。
+/// 1つの区間
 #[derive(Debug)]
-pub struct Segment {
+pub struct Interval {
     /// 区間始点の弧長
     s0: f64,
 
@@ -62,23 +147,20 @@ pub struct Segment {
     s1: f64,
 }
 
-impl Segment {
-    /// 区間の距離程から弧長を作成する。
-    pub fn new(distance: &Segmentation) -> Self {
-        // 区間始点の弧長
-        let s0 = match distance.l1 == distance.first.1 {
+impl Interval {
+    ///区間の弧長を作成する。
+    pub fn new(ruler: &Ruler) -> Self {
+        // 区間始点までの弧長
+        let s0 = match ruler.l1 == ruler.first.1 {
             true => 0.0, // 初回区間
-            false => (distance.l1 - 1) as f64 - distance.first.0,
+            false => ruler.l1.prev().as_float() - ruler.first.0,
         };
 
-        // 区間終点の距離程
-        let l1 = match distance.l1 > distance.last.0 {
-            true => distance.last.1, // 最終区間
-            false => distance.l1 as f64,
-        };
-
-        // 区間終点の弧長
-        let s1 = l1 - distance.first.0;
+        // 区間終点までの弧長
+        let s1 = match ruler.l1 > ruler.last.0 {
+            true => ruler.last.1, // 最終区間
+            false => ruler.l1.as_float(),
+        } - ruler.first.0;
 
         Self { s0, s1 }
     }

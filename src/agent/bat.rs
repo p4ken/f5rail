@@ -57,8 +57,8 @@ impl transition::Param {
             diminish.try_into()?,
             args.get("R0").ok().try_into()?,
             args.get("R1").ok().try_into()?,
-            tcl,
-            0.0,
+            tcl.into(),
+            0.0.into(),
         ))
     }
 }

@@ -1,4 +1,8 @@
-use super::{curve::{Curvature, Diminish, Radian, Radius}, spiral::Point};
+use super::{
+    curve::{Curvature, Diminish, Radian, Radius},
+    distance::{ArcLength, Distance},
+    spiral::Point,
+};
 
 /// 緩和曲線パラメータ
 #[derive(Debug)]
@@ -13,7 +17,7 @@ pub struct Param {
     pub k1: Curvature,
 
     /// 始点の距離程
-    pub l0: f64,
+    pub l0: Distance<f64>,
 
     /// 緩和曲線長
     pub tcl: f64,
@@ -26,7 +30,7 @@ pub struct Param {
 }
 
 impl Param {
-    pub fn new(diminish: Diminish, r0: Radius, r1: Radius, tcl: f64, l0: f64) -> Self {
+    pub fn new(diminish: Diminish, r0: Radius, r1: Radius, tcl: f64, l0: Distance<f64>) -> Self {
         Self {
             diminish,
             k0: r0.into(),

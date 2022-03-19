@@ -4,19 +4,19 @@ use super::curve::{Curvature, Radian, Radius};
 
 /// 緩和曲線
 ///
-/// 図形の集合で表現される。
-pub struct Spiral(pub Vec<Atom>);
+/// 複数の線で表現される。
+pub struct Spiral(pub Vec<Stroke>);
 
-impl FromIterator<Atom> for Spiral {
-    /// 図形の集合から緩和曲線を作成する。
-    fn from_iter<T: IntoIterator<Item = Atom>>(iter: T) -> Self {
+impl FromIterator<Stroke> for Spiral {
+    /// 線から緩和曲線を作成する。
+    fn from_iter<T: IntoIterator<Item = Stroke>>(iter: T) -> Self {
         Self(Vec::from_iter(iter))
     }
 }
 
-/// 図形の最小単位
+/// 一画の線
 #[derive(Debug)]
-pub enum Atom {
+pub enum Stroke {
     /// 円弧
     ///
     /// 中心点、半径、始角、終角で表現される。
@@ -28,7 +28,7 @@ pub enum Atom {
     Straight(Point, Point),
 }
 
-impl Atom {
+impl Stroke {
     /// コンストラクタ
     pub fn new(p0: &Point, t0: Radian, len: f64, k: Curvature) -> Self {
         match Radius::from(k).0 {

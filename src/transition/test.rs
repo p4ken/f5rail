@@ -9,7 +9,7 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m() {
         Radius(Some(300.0)),
         Radius(Some(-300.0)),
         19.0,
-        0.0,
+        0.0.into(),
     );
     let spiral = plot(&param);
     assert_eq!(spiral.0.len(), 19);
@@ -32,7 +32,7 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点
         Radius(Some(300.0)),
         Radius(Some(-300.0)),
         19.0,
-        1.0,
+        1.0.into(),
     );
     let spiral = plot(&param);
     assert_eq!(spiral.0.len(), 19);
@@ -55,7 +55,7 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点
         Radius(Some(300.0)),
         Radius(Some(-300.0)),
         19.0,
-        0.5,
+        0.5.into(),
     );
     let spiral = plot(&param);
     assert_eq!(spiral.0.len(), 20);
@@ -82,7 +82,7 @@ fn 反向緩和曲線長19_5m_開始半径300m_終了半径マイナス300m() {
         Radius(Some(300.0)),
         Radius(Some(-300.0)),
         19.5,
-        0.0,
+        0.0.into(),
     );
     let spiral = plot(&param);
     assert_eq!(spiral.0.len(), 20);
@@ -100,7 +100,7 @@ fn 反向緩和曲線長19_5m_開始半径300m_終了半径マイナス300m() {
     assert_eq!(format!("{:.2}", spiral.0[19].r().unwrap()), "300.24");
 }
 
-impl Atom {
+impl Stroke {
     fn r(&self) -> Option<f64> {
         match self {
             Self::Arc(_, r, _, _) => Some(*r),

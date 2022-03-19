@@ -57,6 +57,20 @@ impl Curvature {
     }
 }
 
+impl From<Radius> for Curvature {
+    /// 半径から変換する。
+    fn from(r: Radius) -> Self {
+        r.0.map_or(Self::STRAIGHT, |r| Curvature(r.recip()))
+    }
+}
+
+impl Display for Curvature {
+    /// 表示する。
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 impl Add for Curvature {
     type Output = Self;
 
@@ -84,19 +98,6 @@ impl Mul<f64> for Curvature {
     }
 }
 
-impl Display for Curvature {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<Radius> for Curvature {
-    /// 曲率に変換する。
-    fn from(r: Radius) -> Self {
-        r.0.map_or(Self::STRAIGHT, |r| Curvature(r.recip()))
-    }
-}
-
 /// 半径 (m)
 ///
 /// `None` の場合は直線。
@@ -104,13 +105,14 @@ impl From<Radius> for Curvature {
 pub struct Radius(pub Option<f64>);
 
 impl From<Curvature> for Radius {
-    /// 曲率から半径に変換する。
+    /// 曲率から変換する。
     fn from(k: Curvature) -> Self {
         Radius(k.is_straight().not().then(|| k.0.recip()))
     }
 }
 
 impl Display for Radius {
+    /// 表示する。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0.unwrap_or(0.0))
     }
