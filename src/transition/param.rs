@@ -1,44 +1,42 @@
 use super::{
-    curve::{Curvature, Diminish, Radian, Radius},
-    distance::{ArcLength, Distance},
-    canvas::Point,
+    canvas::{Point, Tangent},
+    curve::{Curvature, Diminish, Subtension},
+    distance::Distance,
 };
 
 /// 緩和曲線パラメータ
 #[derive(Debug)]
 pub struct Param {
-    /// 逓減
+    /// 逓減関数
     pub diminish: Diminish,
 
-    /// 始点の曲率
-    pub k0: Curvature,
-
-    /// 終点の曲率
-    pub k1: Curvature,
+    /// 始点・終点の曲率
+    pub k: (Curvature, Curvature),
 
     /// 始点の距離程
     pub l0: Distance<f64>,
 
     /// 緩和曲線長
-    pub tcl: ArcLength,
+    pub tcl: Subtension,
 
-    /// 始点の座標
-    pub p0: Point,
-
-    /// 始点の進行方向（接線の向き）
-    pub t0: Radian,
+    /// 始点の接線
+    pub t0: Tangent,
 }
 
 impl Param {
-    pub fn new(diminish: Diminish, r0: Radius, r1: Radius, tcl: ArcLength, l0: Distance<f64>) -> Self {
+    pub fn new(
+        diminish: Diminish,
+        k0: Curvature,
+        k1: Curvature,
+        tcl: Subtension,
+        l0: Distance<f64>,
+    ) -> Self {
         Self {
             diminish,
-            k0: r0.into(),
-            k1: r1.into(),
+            k: (k0, k1),
             l0,
             tcl,
-            p0: Point(0.0, 0.0),
-            t0: 0.0.into(),
+            t0: Tangent::new(Point(0.0, 0.0), 0.0.into()),
         }
     }
 }

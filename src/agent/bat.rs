@@ -4,7 +4,7 @@ use std::{collections::HashMap, ffi::OsString};
 use anyhow::{bail, ensure, Context, Result};
 
 use crate::transition;
-use crate::transition::curve::{Diminish, Radius};
+use crate::transition::curve::{Diminish, Curvature, STRAIGHT, Radius};
 
 /// コマンドライン引数
 ///
@@ -104,15 +104,15 @@ impl<'a> TryFrom<ArgValue<'a>> for f64 {
     }
 }
 
-impl<'a> TryFrom<Option<ArgValue<'a>>> for Radius {
+impl<'a> TryFrom<Option<ArgValue<'a>>> for Curvature {
     type Error = anyhow::Error;
-    /// 半径に変換する。
+    /// 曲率に変換する。
     fn try_from(value: Option<ArgValue<'a>>) -> Result<Self, Self::Error> {
-        let r = match value {
-            Some(v) => Some(v.try_into()?),
-            None => None,
+        let k = match value {
+            Some(v) => Radius(v.try_into()?).into(),
+            None => STRAIGHT,
         };
-        Ok(Radius::from(r))
+        Ok(k)
     }
 }
 

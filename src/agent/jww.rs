@@ -3,7 +3,7 @@ use std::{fmt::Display, fs::File, io::Write};
 use anyhow::{Context, Result};
 
 use super::sjis::to_sjis;
-use crate::transition::{curve::Diminish, canvas::{Stroke, Spiral}};
+use crate::transition::{canvas::Spiral, curve::Diminish};
 
 /// 入出力用の座標ファイル。
 ///
@@ -34,7 +34,7 @@ impl JwcTemp {
     }
 
     /// エラーを出力する。
-    /// 
+    ///
     /// - 最初のエラーのみが表示される。
     /// - エラーがあれば、エラー以外の座標などはすべて無視される。
     fn alert(&mut self, s: &impl Display) -> Result<()> {
@@ -42,7 +42,7 @@ impl JwcTemp {
     }
 
     /// 注意を出力する。
-    /// 
+    ///
     /// - 最後の注意のみ表示される
     /// - 座標の間に出力すると、座標が途切れてしまう
     fn notice(&mut self, s: &str) -> Result<()> {
