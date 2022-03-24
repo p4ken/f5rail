@@ -1,4 +1,7 @@
-use super::{curve::{Arc, Curvature, Radian, Radius, Subtension}, unit::Meter};
+use super::{
+    curve::{Arc, Curvature, Radian, Radius, Subtension},
+    unit::Meter,
+};
 use std::{
     f64::consts::{FRAC_PI_2, PI},
     ops::{Add, Index},
@@ -29,16 +32,16 @@ impl<I: SliceIndex<[Stroke]>> Index<I> for Spiral {
 /// 一画の線
 #[derive(Debug, Clone, Copy)]
 // pub enum Stroke {
-    /// 円弧
-    ///
-    /// 始点の接線、弧長、半径で表現される。
-    // Curve(Tangent, Subtension, Radius),
+/// 円弧
+///
+/// 始点の接線、弧長、半径で表現される。
+// Curve(Tangent, Subtension, Radius),
 //     /// 中心点、半径、始角、終角で表現される。
 //     Arc(Point, f64, Radian, Radian),
 
-    /// 直線
-    ///
-    /// 始点の接線、長さで表現される。
+/// 直線
+///
+/// 始点の接線、長さで表現される。
 //     Straight(Tangent, Subtension),
 //     /// 始点と終点で表現される。
 //     Straight(Point, Point),
@@ -101,23 +104,17 @@ impl Stroke {
 
     /// 終点
     pub fn p1(&self) -> Point {
-        // self.t0.p + ()  弦長がわからない
-        
-        match self.arc.is_straight() {
-            true => self.p0() + (self.len(), self.t0.a),
-            false => c + &Polar(*r, *a1),
+        match self.center().zip(self.r()) {
+            Some((c, r)) => c + (r, self.a1()),
+            None => self.p0() + (self.arc.len(), self.t0.a),
         }
     }
 
     /// 終点の接線
     pub fn t1(&self) -> Tangent {
-        todo!();
-        match self {
-            Self::Straight(..) => t0,
-            Self::Arc(_, _, a0, a1) => {
-                // 左カーブ→引く、右カーブ→足す
-                t0 - (*a1 - *a0)
-            }
+        Tangent {
+            p: self.p1(),
+            a: self.a1(),
         }
     }
 }
@@ -142,7 +139,7 @@ impl Tangent {
 /// ベクトル
 ///
 /// `Polar` を実装すれば、自動的に実装される。
-trait Vector {
+pub trait Vector {
     fn x(self) -> f64;
     fn y(self) -> f64;
 }
@@ -160,13 +157,30 @@ impl Vector for Point {
     }
 }
 
-impl<T: Vector> Add<T> for Point {
+impl<T: Vector + Copy> Add<T> for Point {
     type Output = Self;
 
     /// 足し算
     fn add(self, rhs: T) -> Self::Output {
-        let a = Self::from(self);
         Self(self.x() + rhs.x(), self.y() + rhs.y())
+    }
+}
+
+/// 極座標 (r, θ)
+pub trait Polar {
+    /// 半径
+    fn r(self) -> f64;
+
+    /// 中心角
+    fn a(self) -> Radian;
+}
+
+impl<T: Polar + Copy> Vector for T {
+    fn x(self) -> f64 {
+        self.r() * self.a().cos()
+    }
+    fn y(self) -> f64 {
+        self.r() * self.a().sin()
     }
 }
 
@@ -177,23 +191,5 @@ impl<T: Meter> Polar for (T, Radian) {
 
     fn a(self) -> Radian {
         self.1
-    }
-}
-
-/// 極座標 (r, θ)
-trait Polar {
-    /// 半径
-    fn r(self) -> f64;
-
-    /// 中心角
-    fn a(self) -> Radian;
-}
-
-impl<T: Polar> Vector for T {
-    fn x(self) -> f64 {
-        self.r() * self.a().cos()
-    }
-    fn y(self) -> f64 {
-        self.r() * self.a().sin()
     }
 }

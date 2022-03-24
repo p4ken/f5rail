@@ -95,7 +95,7 @@ fn 反向緩和曲線長19_5m_開始半径300m_終了半径マイナス300m() {
     assert_eq!(format!("{:.2}", spiral[6].unwrap_r()), "600.00");
     assert_eq!(format!("{:.2}", spiral[7].unwrap_r()), "846.01");
     assert_eq!(format!("{:.0}", spiral[8].unwrap_r()), "1500");
-    assert_eq!(format!("{:.0}", spiral[9].unwrap_r()), "-7450");
+    assert_eq!(format!("{:.0}", spiral[9].unwrap_r()), "7450");
     assert_eq!(format!("{:.0}", spiral[10].unwrap_r()), "-2489");
     assert_eq!(format!("{:.2}", spiral[19].unwrap_r()), "-300.24");
 }

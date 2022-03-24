@@ -1,7 +1,9 @@
 use std::{
     f64::consts::PI,
-    ops::{Add, Div, Mul, Sub},
+    ops::{Div, Mul},
 };
+
+use derive_more::{Add, Sub};
 
 use super::unit::Meter;
 
@@ -20,6 +22,7 @@ impl Diminish {
     pub fn k(&self, tcl: Subtension, s: Subtension, k0: Curvature, k1: Curvature) -> Curvature {
         // 緩和曲線長に対する弧長の比率 (0 <= x <= 1)
         let x = s / tcl;
+        debug_assert!(x <= 1.0);
 
         // 曲率の配分 (0 <= y <= 1)
         let y = match self {
@@ -33,7 +36,7 @@ impl Diminish {
 }
 
 /// 弧長 (m)
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Add, Sub)]
 pub struct Subtension(f64);
 
 impl From<f64> for Subtension {
@@ -43,7 +46,7 @@ impl From<f64> for Subtension {
     }
 }
 
-impl Meter for Subtension{
+impl Meter for Subtension {
     fn meter(self) -> f64 {
         self.0
     }
@@ -56,39 +59,12 @@ impl From<Subtension> for f64 {
     }
 }
 
-impl Add for Subtension {
-    type Output = Self;
-
-    /// 足し算
-    fn add(self, rhs: Self) -> Self::Output {
-        Self(self.0 + rhs.0)
-    }
-}
-
-impl Sub for Subtension {
-    type Output = Self;
-
-    /// 引き算
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self(self.0 - rhs.0)
-    }
-}
-
 impl Mul<f64> for Subtension {
     type Output = Self;
 
     /// 掛け算
     fn mul(self, rhs: f64) -> Self::Output {
-        Self(self.0 / rhs)
-    }
-}
-
-impl Mul<Subtension> for Curvature {
-    type Output = Radian;
-
-    /// 曲率 * 弧長 = 中心角
-    fn mul(self, rhs: Subtension) -> Self::Output {
-        Radian(self.0 * rhs.0)
+        Self(self.0 * rhs)
     }
 }
 
@@ -118,10 +94,8 @@ impl Arc {
     }
 
     /// 中心角
-    ///
-    /// 曲率 * 中心角
     pub fn angle(&self) -> Radian {
-        self.k * self.len
+        self.k.angle(self.len)
     }
 
     /// 直線なら `true`
@@ -153,7 +127,7 @@ impl Arc {
 /// 曲率 (1/m)
 ///
 /// 右カーブが正、左カーブが負。
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Add, Sub)]
 pub struct Curvature(f64);
 
 pub const STRAIGHT: Curvature = Curvature(0.0);
@@ -181,29 +155,18 @@ impl Curvature {
         *self > STRAIGHT
     }
 
+    /// 弧長 `s` から中心角を計算する。
+    pub fn angle(&self, s: Subtension) -> Radian {
+        // 中心角 = 曲率 * 弧長
+        // 反時計回りが正になるように曲率の符号を反転する。
+        Radian(-self.0 * s.meter())
+    }
+
     /// 半径 (m)
-    /// 
+    ///
     /// 直線は `None`
     pub fn r(&self) -> Option<Radius> {
         (*self != STRAIGHT).then(|| Radius(self.0.recip()))
-    }
-}
-
-impl Add for Curvature {
-    type Output = Self;
-
-    /// 足し算
-    fn add(self, rhs: Self) -> Self::Output {
-        Self(self.0 + rhs.0)
-    }
-}
-
-impl Sub for Curvature {
-    type Output = Self;
-
-    /// 引き算
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self(self.0 - rhs.0)
     }
 }
 
@@ -217,7 +180,7 @@ impl Mul<f64> for Curvature {
 }
 
 /// 半径 (m)
-/// 
+///
 /// 右カーブが正、左カーブが負。
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Radius(pub f64);
@@ -238,7 +201,7 @@ impl Meter for Radius {
 /// 角度 (ラジアン)
 ///
 /// 反時計回りが正、時計回りが負。
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Add, Sub)]
 pub struct Radian(f64);
 
 impl From<f64> for Radian {
@@ -257,24 +220,6 @@ impl Radian {
     /// コサイン
     pub fn cos(&self) -> f64 {
         self.0.cos()
-    }
-}
-
-impl Add for Radian {
-    type Output = Self;
-
-    /// 足し算
-    fn add(self, rhs: Self) -> Self::Output {
-        Self(self.0 + rhs.0)
-    }
-}
-
-impl Sub for Radian {
-    type Output = Self;
-
-    /// 引き算
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self(self.0 - rhs.0)
     }
 }
 
