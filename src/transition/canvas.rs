@@ -1,31 +1,21 @@
+use derive_more::{Deref, IntoIterator};
+
 use super::{
     curve::{Central, Curvature, Radius, Subtension, Tangential},
     unit::{Rad, Vector},
 };
-use std::{
-    f64::consts::{FRAC_PI_2, PI},
-    ops::{Add, Index},
-    slice::SliceIndex,
-};
+use std::{f64::consts::PI, ops::Add};
 
 /// 緩和曲線
 ///
 /// 複数の線で表現される。
-pub struct Spiral(pub Vec<Stroke>);
+#[derive(Deref, IntoIterator)]
+pub struct Spiral(Vec<Stroke>);
 
 impl FromIterator<Stroke> for Spiral {
     /// 線から緩和曲線を作成する。
     fn from_iter<T: IntoIterator<Item = Stroke>>(iter: T) -> Self {
         Self(Vec::from_iter(iter))
-    }
-}
-
-impl<I: SliceIndex<[Stroke]>> Index<I> for Spiral {
-    type Output = I::Output;
-
-    /// 添字アクセス
-    fn index(&self, index: I) -> &Self::Output {
-        self.0.index(index)
     }
 }
 
@@ -72,16 +62,12 @@ impl Stroke {
 
     /// 始点の中心角
     pub fn a0(&self) -> Central {
-        match self.k.is_right() {
-            true => self.t0.rad() + FRAC_PI_2,
-            false => self.t0.rad() - FRAC_PI_2,
-        }
-        .into()
+        self.t0.to_central(self.k)
     }
 
     /// 終点の中心角
     pub fn a1(&self) -> Central {
-        self.a0() + self.k.angle(self.len)
+        self.a0() + self.k.a(self.len)
     }
 
     /// 中心点
@@ -89,6 +75,11 @@ impl Stroke {
     /// 直線の場合は `None`
     pub fn center(&self) -> Option<Point> {
         self.r().map(|r| self.p0 + (r, self.a0() + PI.into()))
+    }
+
+    /// 始点
+    pub fn p0(&self) -> Point {
+        self.p0
     }
 
     /// 終点
@@ -101,7 +92,7 @@ impl Stroke {
 
     /// 終点の接線方向
     pub fn t1(&self) -> Tangential {
-        self.t0 + self.k.angle(self.len).rad().into()
+        self.t0 + self.k.a(self.len).rad().into()
     }
 }
 

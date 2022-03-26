@@ -1,119 +1,68 @@
+use rstest::rstest;
+
 use super::canvas::*;
 use super::curve::*;
-use super::unit::Meter;
 use super::*;
 
-#[test]
-fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m() {
-    let param = Param {
-        diminish: Diminish::Sine,
-        k0: Radius(300.0).into(),
-        k1: Radius(-300.0).into(),
-        tcl: 19.0.into(),
-        l0: 0.0.into(),
-        p0: Point(0.0, 0.0),
-        t0: 0.0.into(),
-    };
-    let spiral = plot(&param);
-    assert_eq!(spiral.0.len(), 19);
-    assert_eq!(format!("{:.2}", spiral[0].unwrap_r()), "301.03");
-    assert_eq!(format!("{:.2}", spiral[1].unwrap_r()), "309.47");
-    assert_eq!(format!("{:.2}", spiral[2].unwrap_r()), "327.59");
-    assert_eq!(format!("{:.2}", spiral[3].unwrap_r()), "358.35");
-    assert_eq!(format!("{:.2}", spiral[4].unwrap_r()), "407.76");
-    assert_eq!(format!("{:.2}", spiral[5].unwrap_r()), "488.43");
-    assert_eq!(format!("{:.2}", spiral[6].unwrap_r()), "630.32");
-    assert_eq!(format!("{:.2}", spiral[7].unwrap_r()), "923.93");
-    assert_eq!(format!("{:.0}", spiral[8].unwrap_r()), "1823");
-    assert!(spiral[9].is_straight());
-}
+mod 曲率計算 {
+    use super::*;
 
-#[test]
-fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点1m() {
-    let param = Param {
-        diminish: Diminish::Sine,
-        k0: Radius(300.0).into(),
-        k1: Radius(-300.0).into(),
-        tcl: 19.0.into(),
-        l0: 1.0.into(),
-        p0: Point(0.0, 0.0),
-        t0: 0.0.into(),
-    };
-    let spiral = plot(&param);
-    assert_eq!(spiral.0.len(), 19);
-    assert_eq!(format!("{:.2}", spiral[0].unwrap_r()), "301.03");
-    assert_eq!(format!("{:.2}", spiral[1].unwrap_r()), "309.47");
-    assert_eq!(format!("{:.2}", spiral[2].unwrap_r()), "327.59");
-    assert_eq!(format!("{:.2}", spiral[3].unwrap_r()), "358.35");
-    assert_eq!(format!("{:.2}", spiral[4].unwrap_r()), "407.76");
-    assert_eq!(format!("{:.2}", spiral[5].unwrap_r()), "488.43");
-    assert_eq!(format!("{:.2}", spiral[6].unwrap_r()), "630.32");
-    assert_eq!(format!("{:.2}", spiral[7].unwrap_r()), "923.93");
-    assert_eq!(format!("{:.0}", spiral[8].unwrap_r()), "1823");
-    assert!(spiral[9].is_straight());
-}
-
-#[test]
-fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点0_5m() {
-    let param = Param {
-        diminish: Diminish::Sine,
-        k0: Radius(300.0).into(),
-        k1: Radius(-300.0).into(),
-        tcl: 19.0.into(),
-        l0: 0.5.into(),
-        p0: Point(0.0, 0.0),
-        t0: 0.0.into(),
-    };
-    let spiral = plot(&param);
-    assert_eq!(spiral.0.len(), 20);
-    // 0.5m
-    assert_eq!(format!("{:.2}", spiral[0].unwrap_r()), "300.26");
-    // 1m
-    assert_eq!(format!("{:.2}", spiral[1].unwrap_r()), "304.15");
-    assert_eq!(format!("{:.2}", spiral[2].unwrap_r()), "317.19");
-    assert_eq!(format!("{:.2}", spiral[3].unwrap_r()), "341.11");
-    assert_eq!(format!("{:.2}", spiral[4].unwrap_r()), "380.16");
-    assert_eq!(format!("{:.2}", spiral[5].unwrap_r()), "442.95");
-    assert_eq!(format!("{:.2}", spiral[6].unwrap_r()), "548.50");
-    assert_eq!(format!("{:.2}", spiral[7].unwrap_r()), "746.83");
-    assert_eq!(format!("{:.0}", spiral[8].unwrap_r()), "1222");
-    assert_eq!(format!("{:.0}", spiral[9].unwrap_r()), "3633");
-    assert_eq!(format!("{:.0}", spiral[10].unwrap_r()), "-3633");
-    assert_eq!(format!("{:.0}", spiral[11].unwrap_r()), "-1222");
-}
-
-#[test]
-fn 反向緩和曲線長19_5m_開始半径300m_終了半径マイナス300m() {
-    let param = Param {
-        diminish: Diminish::Sine,
-        k0: Radius(300.0).into(),
-        k1: Radius(-300.0).into(),
-        tcl: 19.5.into(),
-        l0: 0.0.into(),
-        p0: Point(0.0, 0.0),
-        t0: 0.0.into(),
-    };
-    let spiral = plot(&param);
-    assert_eq!(spiral.0.len(), 20);
-    assert_eq!(format!("{:.2}", spiral[0].unwrap_r()), "300.98");
-    assert_eq!(format!("{:.2}", spiral[1].unwrap_r()), "308.98");
-    assert_eq!(format!("{:.2}", spiral[2].unwrap_r()), "326.09");
-    assert_eq!(format!("{:.2}", spiral[3].unwrap_r()), "354.95");
-    assert_eq!(format!("{:.2}", spiral[4].unwrap_r()), "400.80");
-    assert_eq!(format!("{:.2}", spiral[5].unwrap_r()), "474.35");
-    assert_eq!(format!("{:.2}", spiral[6].unwrap_r()), "600.00");
-    assert_eq!(format!("{:.2}", spiral[7].unwrap_r()), "846.01");
-    assert_eq!(format!("{:.0}", spiral[8].unwrap_r()), "1500");
-    assert_eq!(format!("{:.0}", spiral[9].unwrap_r()), "7450");
-    assert_eq!(format!("{:.0}", spiral[10].unwrap_r()), "-2489");
-    assert_eq!(format!("{:.2}", spiral[19].unwrap_r()), "-300.24");
-}
-
-impl Stroke {
-    fn unwrap_r(&self) -> f64 {
-        self.r().unwrap().meter()
+    fn param(tcl: f64, btc: f64) -> Param {
+        Param {
+            diminish: Diminish::Sine,
+            k0: Radius(300.0).into(),
+            k1: Radius(-300.0).into(),
+            tcl: tcl.into(),
+            l0: btc.into(),
+            p0: Point(0.0, 0.0),
+            t0: 0.0.into(),
+        }
     }
-    fn is_straight(&self) -> bool {
-        self.r().is_none()
+
+    #[rstest]
+    #[case(param(19.0, 0.0), 19)]
+    #[case(param(19.0, 1.0), 19)]
+    #[case(param(19.0, 0.5), 20)]
+    #[case(param(19.5, 0.0), 20)]
+    fn 区間数(#[case] param: Param, #[case] expected: usize) {
+        let spiral = plot(&param);
+        assert_eq!(spiral.len(), expected);
+    }
+
+    #[rstest]
+    #[case(param(19.0, 0.0), vec!["301.03", "309.47", "327.59", "358.35", "407.76", "488.43", "630.32", "923.93", "1823", "", "-1823"])]
+    #[case(param(19.0, 1.0), vec!["301.03", "309.47", "327.59", "358.35", "407.76", "488.43", "630.32", "923.93", "1823", "", "-1823"])]
+    #[case(param(19.0, 0.5), vec!["300.26", "304.15", "317.19", "341.11", "380.16", "442.95", "548.50", "746.83", "1222", "3633", "-3633"])]
+    #[case(param(19.5, 0.0), vec!["300.98", "308.98", "326.09", "354.95", "400.80", "474.35", "600.00", "846.01", "1500", "7450", "-2489"])]
+    fn 曲線半径(#[case] param: Param, #[case] expected: Vec<&str>) {
+        let spiral = plot(&param);
+        spiral
+            .into_iter()
+            .zip(expected)
+            .for_each(|(stroke, expected)| match expected.is_empty() {
+                true => assert!(stroke.r().is_none()),
+                false => assert_eq!(stroke.r().unwrap(), expected),
+            });
+    }
+}
+
+mod 座標計算 {
+    
+}
+
+impl PartialEq<&str> for Radius {
+    /// ```
+    /// assert_eq!(Radius(300.004), "300.00");
+    /// assert_ne!(Radius(300.004), "-300.00");
+    /// assert_ne!(Radius(-300.004), "300.00");
+    /// assert_ne!(Radius(300.005), "300.00");
+    /// ```
+    fn eq(&self, other: &&str) -> bool {
+        let fractional_digit = other
+            .split_once(".")
+            .map_or(0, |(_, fractional)| fractional.len() as u32);
+        let ratio_to_integer = 10_i32.pow(fractional_digit) as f64;
+        let rounded = (self.0 * ratio_to_integer).round();
+        rounded.to_string() == other.replace(".", "")
     }
 }

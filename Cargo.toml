@@ -14,3 +14,6 @@ replace-with = 'ustc'
 
 [source.ustc]
 registry = "git://mirrors.ustc.edu.cn/crates.io-index"
+
+[dev-dependencies]
+rstest = "0.12.0"

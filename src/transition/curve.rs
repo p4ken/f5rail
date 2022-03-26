@@ -1,5 +1,5 @@
 use std::{
-    f64::consts::PI,
+    f64::consts::{FRAC_2_PI, PI},
     ops::{Div, Mul},
 };
 
@@ -95,7 +95,7 @@ impl Curvature {
     }
 
     /// 弧長 `s` から中心角を計算する。
-    pub fn angle(&self, s: Subtension) -> Central {
+    pub fn a(&self, s: Subtension) -> Central {
         // 中心角 = 曲率 * 弧長
         // 反時計回りが正になるように曲率の符号を反転する。
         Central(-self.0 * s.meter())
@@ -146,6 +146,13 @@ impl Rad for Central {
 #[derive(Debug, Clone, Copy, PartialEq, From, Add)]
 pub struct Tangential(f64);
 
+impl Tangential {
+    pub fn to_central(&self, k: Curvature) -> Central {
+        let gap = if k.is_right() { FRAC_2_PI } else { -FRAC_2_PI };
+        Central(self.rad() + gap)
+    }
+}
+
 impl Rad for Tangential {
     fn rad(&self) -> f64 {
         self.0
@@ -155,7 +162,7 @@ impl Rad for Tangential {
 /// 角度 (度)
 ///
 /// Data Transfer Object.
-#[derive(Debug, Clone, Copy, PartialEq, From)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Degree(pub f64);
 
 impl Deg for Degree {

@@ -1,5 +1,7 @@
 use std::ops::{Add, Sub};
 
+use derive_more::From;
+
 use super::{curve::Subtension, unit::Meter};
 
 /// 距離程の区間分割
@@ -57,12 +59,15 @@ impl Iterator for Ruler {
 /// 距離程の原点(0m)は任意の場所にある。
 ///
 /// 区間境界は1m単位の距離程になる。
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, From)]
 pub struct Distance<T>(T);
 
-impl From<f64> for Distance<f64> {
-    fn from(f: f64) -> Self {
-        Self(f)
+impl<T: Sub<Output = T>> Sub for Distance<T> {
+    type Output = T;
+
+    /// 2点間の距離
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.0 - rhs.0
     }
 }
 
@@ -92,18 +97,9 @@ impl Distance<f64> {
     }
 }
 
-impl<T: Sub<Output = T>> Sub for Distance<T> {
-    type Output = T;
-
-    /// 2点間の距離
-    fn sub(self, rhs: Self) -> Self::Output {
-        self.0 - rhs.0
-    }
-}
-
 impl Distance<i32> {
     /// 小数の距離程
-    fn as_float(&self) -> Distance<f64> {
+    fn to_float(&self) -> Distance<f64> {
         Distance(self.0 as f64)
     }
 
@@ -139,13 +135,13 @@ impl Interval {
         // 区間始点までの弧長
         let s0 = match ruler.l1 == ruler.first.1 {
             true => 0.0, // 初回区間
-            false => ruler.l1.prev().as_float() - ruler.first.0,
+            false => ruler.l1.prev().to_float() - ruler.first.0,
         };
 
         // 区間終点までの弧長
         let s1 = match ruler.l1 > ruler.last.0 {
             true => ruler.last.1, // 最終区間
-            false => ruler.l1.as_float(),
+            false => ruler.l1.to_float(),
         } - ruler.first.0;
 
         Self {
