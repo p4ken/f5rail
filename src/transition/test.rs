@@ -1,16 +1,19 @@
 use super::canvas::*;
 use super::curve::*;
+use super::unit::Meter;
 use super::*;
 
 #[test]
 fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m() {
-    let param = Param::new(
-        Diminish::Sine,
-        Radius(300.0).into(),
-        Radius(-300.0).into(),
-        19.0.into(),
-        0.0.into(),
-    );
+    let param = Param {
+        diminish: Diminish::Sine,
+        k0: Radius(300.0).into(),
+        k1: Radius(-300.0).into(),
+        tcl: 19.0.into(),
+        l0: 0.0.into(),
+        p0: Point(0.0, 0.0),
+        t0: 0.0.into(),
+    };
     let spiral = plot(&param);
     assert_eq!(spiral.0.len(), 19);
     assert_eq!(format!("{:.2}", spiral[0].unwrap_r()), "301.03");
@@ -27,13 +30,15 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m() {
 
 #[test]
 fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点1m() {
-    let param = Param::new(
-        Diminish::Sine,
-        Radius(300.0).into(),
-        Radius(-300.0).into(),
-        19.0.into(),
-        1.0.into(),
-    );
+    let param = Param {
+        diminish: Diminish::Sine,
+        k0: Radius(300.0).into(),
+        k1: Radius(-300.0).into(),
+        tcl: 19.0.into(),
+        l0: 1.0.into(),
+        p0: Point(0.0, 0.0),
+        t0: 0.0.into(),
+    };
     let spiral = plot(&param);
     assert_eq!(spiral.0.len(), 19);
     assert_eq!(format!("{:.2}", spiral[0].unwrap_r()), "301.03");
@@ -50,13 +55,15 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点
 
 #[test]
 fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点0_5m() {
-    let param = Param::new(
-        Diminish::Sine,
-        Radius(300.0).into(),
-        Radius(-300.0).into(),
-        19.0.into(),
-        0.5.into(),
-    );
+    let param = Param {
+        diminish: Diminish::Sine,
+        k0: Radius(300.0).into(),
+        k1: Radius(-300.0).into(),
+        tcl: 19.0.into(),
+        l0: 0.5.into(),
+        p0: Point(0.0, 0.0),
+        t0: 0.0.into(),
+    };
     let spiral = plot(&param);
     assert_eq!(spiral.0.len(), 20);
     // 0.5m
@@ -77,13 +84,15 @@ fn 反向緩和曲線長19m_開始半径300m_終了半径マイナス300m_始点
 
 #[test]
 fn 反向緩和曲線長19_5m_開始半径300m_終了半径マイナス300m() {
-    let param = Param::new(
-        Diminish::Sine,
-        Radius(300.0).into(),
-        Radius(-300.0).into(),
-        19.5.into(),
-        0.0.into(),
-    );
+    let param = Param {
+        diminish: Diminish::Sine,
+        k0: Radius(300.0).into(),
+        k1: Radius(-300.0).into(),
+        tcl: 19.5.into(),
+        l0: 0.0.into(),
+        p0: Point(0.0, 0.0),
+        t0: 0.0.into(),
+    };
     let spiral = plot(&param);
     assert_eq!(spiral.0.len(), 20);
     assert_eq!(format!("{:.2}", spiral[0].unwrap_r()), "300.98");
@@ -102,6 +111,9 @@ fn 反向緩和曲線長19_5m_開始半径300m_終了半径マイナス300m() {
 
 impl Stroke {
     fn unwrap_r(&self) -> f64 {
-        self.r().unwrap().0
+        self.r().unwrap().meter()
+    }
+    fn is_straight(&self) -> bool {
+        self.r().is_none()
     }
 }

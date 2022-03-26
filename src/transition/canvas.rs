@@ -1,6 +1,6 @@
 use super::{
-    curve::{Arc, Curvature, Radian, Radius, Subtension},
-    unit::Meter,
+    curve::{Central, Curvature, Radius, Subtension, Tangential},
+    unit::{Rad, Vector},
 };
 use std::{
     f64::consts::{FRAC_PI_2, PI},
@@ -36,112 +36,73 @@ impl<I: SliceIndex<[Stroke]>> Index<I> for Spiral {
 ///
 /// 始点の接線、弧長、半径で表現される。
 // Curve(Tangent, Subtension, Radius),
-//     /// 中心点、半径、始角、終角で表現される。
-//     Arc(Point, f64, Radian, Radian),
+// /// 中心点、半径、始角、終角で表現される。
+// Arc(Point, f64, Radian, Radian),
 
 /// 直線
 ///
 /// 始点の接線、長さで表現される。
-//     Straight(Tangent, Subtension),
-//     /// 始点と終点で表現される。
-//     Straight(Point, Point),
+// Straight(Tangent, Subtension),
+// /// 始点と終点で表現される。
+// Straight(Point, Point),
 pub struct Stroke {
-    /// 円弧
-    arc: Arc,
+    /// 曲率
+    k: Curvature,
 
-    /// 始点の接線
-    t0: Tangent,
+    /// 弧長
+    len: Subtension,
+
+    /// 始点の座標
+    p0: Point,
+
+    /// 始点の接線方向
+    t0: Tangential,
 }
 
 impl Stroke {
     /// コンストラクタ
-    pub fn new(arc: Arc, t0: Tangent) -> Self {
-        Self { arc, t0 }
-    }
-
-    /// 直線なら `true`
-    pub fn is_straight(&self) -> bool {
-        self.arc.is_straight()
+    pub fn new(k: Curvature, len: Subtension, p0: Point, t0: Tangential) -> Self {
+        Self { k, len, p0, t0 }
     }
 
     /// 曲線半径
     pub fn r(&self) -> Option<Radius> {
-        self.arc.r()
+        self.k.r()
     }
 
     /// 始点の中心角
-    pub fn a0(&self) -> Radian {
-        match self.arc.is_right() {
-            true => self.t0.a + FRAC_PI_2.into(),
-            false => self.t0.a - FRAC_PI_2.into(),
+    pub fn a0(&self) -> Central {
+        match self.k.is_right() {
+            true => self.t0.rad() + FRAC_PI_2,
+            false => self.t0.rad() - FRAC_PI_2,
         }
+        .into()
     }
 
     /// 終点の中心角
-    pub fn a1(&self) -> Radian {
-        match self.arc.is_right() {
-            true => self.a0() - self.arc.angle(),
-            false => self.a0() + self.arc.angle(),
-        }
+    pub fn a1(&self) -> Central {
+        self.a0() + self.k.angle(self.len)
     }
 
     /// 中心点
     ///
     /// 直線の場合は `None`
     pub fn center(&self) -> Option<Point> {
-        self.r().map(|r| self.t0.p + (r, self.a0() + PI.into()))
-    }
-
-    /// 長さ
-    pub fn len(&self) -> Subtension {
-        self.arc.len()
-    }
-
-    /// 始点
-    pub fn p0(&self) -> Point {
-        self.t0.p
+        self.r().map(|r| self.p0 + (r, self.a0() + PI.into()))
     }
 
     /// 終点
     pub fn p1(&self) -> Point {
         match self.center().zip(self.r()) {
             Some((c, r)) => c + (r, self.a1()),
-            None => self.p0() + (self.arc.len(), self.t0.a),
+            None => self.p0 + (self.len, self.t0),
         }
     }
 
-    /// 終点の接線
-    pub fn t1(&self) -> Tangent {
-        Tangent {
-            p: self.p1(),
-            a: self.a1(),
-        }
+    /// 終点の接線方向
+    pub fn t1(&self) -> Tangential {
+        self.t0 + self.k.angle(self.len).rad().into()
     }
-}
-
-/// 接線
-#[derive(Debug, Clone, Copy)]
-pub struct Tangent {
-    /// 接点
-    p: Point,
-
-    /// 方向
-    a: Radian,
-}
-
-impl Tangent {
-    /// コンストラクタ
-    pub fn new(p: Point, a: Radian) -> Self {
-        Self { p, a }
-    }
-}
-
-/// ベクトル
-///
-/// `Polar` を実装すれば、自動的に実装される。
-pub trait Vector {
-    fn x(self) -> f64;
-    fn y(self) -> f64;
 }
 
 /// 座標 (x, y)
@@ -163,33 +124,5 @@ impl<T: Vector + Copy> Add<T> for Point {
     /// 足し算
     fn add(self, rhs: T) -> Self::Output {
         Self(self.x() + rhs.x(), self.y() + rhs.y())
-    }
-}
-
-/// 極座標 (r, θ)
-pub trait Polar {
-    /// 半径
-    fn r(self) -> f64;
-
-    /// 中心角
-    fn a(self) -> Radian;
-}
-
-impl<T: Polar + Copy> Vector for T {
-    fn x(self) -> f64 {
-        self.r() * self.a().cos()
-    }
-    fn y(self) -> f64 {
-        self.r() * self.a().sin()
-    }
-}
-
-impl<T: Meter> Polar for (T, Radian) {
-    fn r(self) -> f64 {
-        self.0.meter()
-    }
-
-    fn a(self) -> Radian {
-        self.1
     }
 }

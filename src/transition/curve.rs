@@ -3,9 +3,9 @@ use std::{
     ops::{Div, Mul},
 };
 
-use derive_more::{Add, Sub};
+use derive_more::{Add, From, Sub};
 
-use super::unit::Meter;
+use super::unit::{Deg, Meter, Rad};
 
 /// 逓減関数
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -36,26 +36,12 @@ impl Diminish {
 }
 
 /// 弧長 (m)
-#[derive(Debug, Clone, Copy, PartialEq, Add, Sub)]
+#[derive(Debug, Clone, Copy, PartialEq, From, Add, Sub)]
 pub struct Subtension(f64);
-
-impl From<f64> for Subtension {
-    /// コンストラクタ
-    fn from(f: f64) -> Self {
-        Self(f)
-    }
-}
 
 impl Meter for Subtension {
     fn meter(self) -> f64 {
         self.0
-    }
-}
-
-impl From<Subtension> for f64 {
-    /// キャスト
-    fn from(f: Subtension) -> Self {
-        f.0
     }
 }
 
@@ -77,53 +63,6 @@ impl Div for Subtension {
     }
 }
 
-/// 円弧
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Arc {
-    /// 曲率
-    k: Curvature,
-
-    /// 長さ
-    len: Subtension,
-}
-
-impl Arc {
-    /// コンストラクタ
-    pub fn new(k: Curvature, len: Subtension) -> Self {
-        Self { k, len }
-    }
-
-    /// 中心角
-    pub fn angle(&self) -> Radian {
-        self.k.angle(self.len)
-    }
-
-    /// 直線なら `true`
-    pub fn is_straight(&self) -> bool {
-        self.k.is_straight()
-    }
-
-    /// 左カーブなら `true`
-    pub fn is_left(&self) -> bool {
-        self.k.is_left()
-    }
-
-    /// 右カーブなら `true`
-    pub fn is_right(&self) -> bool {
-        self.k.is_left()
-    }
-
-    /// 半径
-    pub fn r(&self) -> Option<Radius> {
-        self.k.r()
-    }
-
-    /// 長さ
-    pub fn len(&self) -> Subtension {
-        self.len
-    }
-}
-
 /// 曲率 (1/m)
 ///
 /// 右カーブが正、左カーブが負。
@@ -133,7 +72,7 @@ pub struct Curvature(f64);
 pub const STRAIGHT: Curvature = Curvature(0.0);
 
 impl From<Radius> for Curvature {
-    /// 半径 `r` (m) から曲率を作成する。
+    /// 半径 `r` から曲率を作成する。
     fn from(r: Radius) -> Self {
         Self(r.0.recip())
     }
@@ -156,10 +95,10 @@ impl Curvature {
     }
 
     /// 弧長 `s` から中心角を計算する。
-    pub fn angle(&self, s: Subtension) -> Radian {
+    pub fn angle(&self, s: Subtension) -> Central {
         // 中心角 = 曲率 * 弧長
         // 反時計回りが正になるように曲率の符号を反転する。
-        Radian(-self.0 * s.meter())
+        Central(-self.0 * s.meter())
     }
 
     /// 半径 (m)
@@ -182,6 +121,8 @@ impl Mul<f64> for Curvature {
 /// 半径 (m)
 ///
 /// 右カーブが正、左カーブが負。
+///
+/// Data Transfer Object.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Radius(pub f64);
 
@@ -191,76 +132,34 @@ impl Meter for Radius {
     }
 }
 
-// /// 回転角
-// pub struct Rotation<T>(T);
+/// 中心角 (rad)
+#[derive(Debug, Clone, Copy, PartialEq, From, Add, Sub)]
+pub struct Central(f64);
 
-// impl<T> Rotation<T>{
-
-// }
-
-/// 角度 (ラジアン)
-///
-/// 反時計回りが正、時計回りが負。
-#[derive(Debug, Clone, Copy, PartialEq, Add, Sub)]
-pub struct Radian(f64);
-
-impl From<f64> for Radian {
-    /// コンストラクタ
-    fn from(rad: f64) -> Self {
-        Self(rad)
+impl Rad for Central {
+    fn rad(&self) -> f64 {
+        self.0
     }
 }
 
-impl Radian {
-    /// サイン
-    pub fn sin(&self) -> f64 {
-        self.0.sin()
-    }
+/// 接線方向 (rad)
+#[derive(Debug, Clone, Copy, PartialEq, From, Add)]
+pub struct Tangential(f64);
 
-    /// コサイン
-    pub fn cos(&self) -> f64 {
-        self.0.cos()
-    }
-}
-
-// impl Mul for Radian {
-//     type Output = Self;
-
-//     /// 掛け算
-//     fn mul(self, rhs: Self) -> Self::Output {
-//         Self(self.0 * rhs.0)
-//     }
-// }
-
-impl From<Degree> for Radian {
-    /// 度から変換する。
-    fn from(rad: Degree) -> Self {
-        Self(rad.0.to_radians())
+impl Rad for Tangential {
+    fn rad(&self) -> f64 {
+        self.0
     }
 }
 
 /// 角度 (度)
 ///
-/// 反時計回りが正、時計回りが負。
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// Data Transfer Object.
+#[derive(Debug, Clone, Copy, PartialEq, From)]
 pub struct Degree(pub f64);
 
-impl From<Radian> for Degree {
-    /// ラジアンから変換する。
-    fn from(rad: Radian) -> Self {
-        Self(rad.0.to_degrees())
+impl Deg for Degree {
+    fn deg(self) -> f64 {
+        self.0
     }
 }
-
-// /// 単位
-// trait Unit {
-//     fn v() -> f64;
-// }
-
-// impl<T: Unit + From<f64>> Add for T {
-//     type Output = T;
-
-//     fn add(self, rhs: Self) -> Self::Output {
-//         T::from(self.v() + rhs.v())
-//     }
-// }

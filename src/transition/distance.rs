@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub};
 
-use super::curve::Subtension;
+use super::{curve::Subtension, unit::Meter};
 
 /// 距離程の区間分割
 ///
@@ -66,14 +66,14 @@ impl From<f64> for Distance<f64> {
     }
 }
 
-impl Add<Subtension> for Distance<f64> {
-   type Output = Self;
+impl<T: Meter> Add<T> for Distance<f64> {
+    type Output = Self;
 
-   /// 足し算
-   fn add(self, rhs: Subtension) -> Self::Output {
-       Self(self.0 + f64::from(rhs))
-   }
-} 
+    /// 足し算
+    fn add(self, rhs: T) -> Self::Output {
+        Self(self.0 + rhs.meter())
+    }
+}
 
 impl Distance<f64> {
     /// 切り捨て

@@ -4,7 +4,8 @@ use std::{collections::HashMap, ffi::OsString};
 use anyhow::{bail, ensure, Context, Result};
 
 use crate::transition;
-use crate::transition::curve::{Diminish, Curvature, STRAIGHT, Radius};
+use crate::transition::canvas::Point;
+use crate::transition::curve::{Curvature, Diminish, Radius, STRAIGHT};
 
 /// コマンドライン引数
 ///
@@ -53,13 +54,15 @@ impl transition::Param {
         let tcl: f64 = args.get("TCL")?.try_into()?;
         ensure!(tcl.is_sign_positive(), "TCLに正の数を入力してください");
 
-        Ok(Self::new(
-            diminish.try_into()?,
-            args.get("R0").ok().try_into()?,
-            args.get("R1").ok().try_into()?,
-            tcl.into(),
-            0.0.into(),
-        ))
+        Ok(Self {
+            diminish: diminish.try_into()?,
+            k0: args.get("R0").ok().try_into()?,
+            k1: args.get("R1").ok().try_into()?,
+            l0: 0.0.into(),
+            tcl: tcl.into(),
+            p0: Point(0.0, 0.0),
+            t0: 0.0.into(),
+        })
     }
 }
 

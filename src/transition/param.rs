@@ -1,6 +1,6 @@
 use super::{
-    canvas::{Point, Tangent},
-    curve::{Curvature, Diminish, Subtension},
+    canvas::Point,
+    curve::{Curvature, Diminish, Subtension, Tangential},
     distance::Distance,
 };
 
@@ -10,8 +10,11 @@ pub struct Param {
     /// 逓減関数
     pub diminish: Diminish,
 
-    /// 始点・終点の曲率
-    pub k: (Curvature, Curvature),
+    /// 始点の曲率
+    pub k0: Curvature,
+    
+    /// 終点の曲率
+    pub k1: Curvature,
 
     /// 始点の距離程
     pub l0: Distance<f64>,
@@ -19,24 +22,9 @@ pub struct Param {
     /// 緩和曲線長
     pub tcl: Subtension,
 
-    /// 始点の接線
-    pub t0: Tangent,
-}
+    /// 始点の座標
+    pub p0: Point,
 
-impl Param {
-    pub fn new(
-        diminish: Diminish,
-        k0: Curvature,
-        k1: Curvature,
-        tcl: Subtension,
-        l0: Distance<f64>,
-    ) -> Self {
-        Self {
-            diminish,
-            k: (k0, k1),
-            l0,
-            tcl,
-            t0: Tangent::new(Point(0.0, 0.0), 0.0.into()),
-        }
-    }
+    /// 始点の接線方向
+    pub t0: Tangential,
 }
