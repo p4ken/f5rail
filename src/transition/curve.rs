@@ -126,7 +126,7 @@ impl Meter for Radius {
 }
 
 /// 中心角 (rad)
-#[derive(Debug, Clone, Copy, PartialEq, From, Add, Sub)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, From, Add, Sub)]
 pub struct Central(f64);
 
 impl Rad for Central {

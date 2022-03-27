@@ -10,7 +10,8 @@ use anyhow::{Context, Result};
 use super::sjis::to_sjis;
 use crate::transition::{
     canvas::{Point, Spiral},
-    curve::{Central, Diminish, Radius}, unit::{Meter, Rad, Vector},
+    curve::{Central, Diminish, Radius},
+    unit::{Meter, Rad, Vector},
 };
 
 /// 出力用の座標ファイルを作成する。
@@ -53,7 +54,7 @@ impl Write {
     /// 注意を出力する。
     ///
     /// 最後の注意のみ表示される。
-    /// 
+    ///
     /// 座標の間に出力すると、座標が途切れてしまう。
     fn notice(&mut self, s: &str) -> Result<()> {
         self.puts(format!("h#{}", s))
@@ -61,9 +62,15 @@ impl Write {
 
     /// 曲線を出力する。
     fn curve(&mut self, c: Point, r: Radius, a0: Central, a1: Central) -> Result<()> {
-        self.puts("pl")?;
-        self.puts(format!("{} {} {} {} {}", c.x(), c.y(), r.meter().abs(), a0.deg(), a1.deg()))?;
-        self.puts("#")
+        let (a0, a1) = if a0 < a1 { (a0, a1) } else { (a1, a0) };
+        self.puts(format!(
+            "ci {} {} {} {} {}",
+            c.x(),
+            c.y(),
+            r.meter().abs(),
+            a0.deg(),
+            a1.deg()
+        ))
     }
 
     /// 直線を出力する。
