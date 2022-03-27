@@ -1,0 +1,52 @@
+{
+  "version": "2.0.0",
+  "type": "shell",
+  "problemMatcher": [],
+  "presentation": {
+    "reveal": "always",
+    "panel": "shared",
+    "echo": true,
+    "showReuseMessage": false,
+  },
+  "tasks": [
+    {
+      "label": "release",
+      "detail": "外部変形をビルドする",
+      "dependsOn": [
+        "外部変形/*.exe",
+        "外部変形/*.bat",
+      ],
+      "dependsOrder": "sequence",
+      "command": "echo 'Successfully built binaries for release.'",
+      "presentation": {
+        "echo": false
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+    },
+    {
+      "label": "外部変形/*.bat",
+      "command": "iconv -f utf8 -t sjis -o 外部変形/TRANSITION.bat bat/TRANSITION.bat",
+      "windows": {
+        "dependsOn": "外部変形/*.exe",
+        "command": "copy bat\\TRANSITION.bat 外部変形\\ >NUL && 外部変形\\f5rail.exe /ENCODE:外部変形\\TRANSITION.bat"
+      },
+    },
+    {
+      "label": "外部変形/*.exe",
+      "dependsOn": "target/release/*.exe",
+      "command": "cp -p target/release/*.exe 外部変形/",
+      "windows": {
+        "command": "copy target\\release\\*.exe 外部変形\\ >NUL",
+      }
+    },
+    {
+      "label": "target/release/*.exe",
+      "windows": {
+        "command": "cargo build --release",
+      }
+    },
+  ]
+}

@@ -1,0 +1,12 @@
+[package]
+name = "f5rail"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.54"
+derive_more = "0.99.17"
+encoding_rs = "0.8.30"
+
+[dev-dependencies]
+rstest = "0.12.0"
