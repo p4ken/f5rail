@@ -1,13 +1,13 @@
 pub mod canvas;
 pub mod curve;
 pub mod param;
+pub mod unit;
 
 pub use param::Param;
 
 mod distance;
 #[cfg(test)]
 mod test;
-mod unit;
 
 use canvas::{Spiral, Stroke};
 use distance::Ruler;

@@ -65,7 +65,7 @@ fn 区間数(#[case] param: Param, #[case] expected: usize) {
 #[case(直線(90.0), vec![""])]
 fn 半径(#[case] param: Param, #[case] expected: Vec<&str>) {
     plot(&param)
-        .into_iter()
+        .iter()
         .zip(expected)
         .for_each(|(stroke, expected)| match expected.is_empty() {
             true => assert!(stroke.r().is_none()),
@@ -79,17 +79,17 @@ fn 半径(#[case] param: Param, #[case] expected: Vec<&str>) {
 #[case(直線(-100.0), vec![-100.0, -100.0])]
 fn 接線方向(#[case] param: Param, #[case] expected: Vec<f64>) {
     plot(&param)
-        .into_iter()
+        .iter()
         .zip(expected)
         .for_each(|(stroke, expected)| {
-            assert_eq!(stroke.t1().deg(), Degree(expected));
+            assert_eq!(stroke.t1().deg(), expected);
         });
 }
 
 #[rstest]
 #[case(円(-FRAC_2_PI, (FRAC_2_PI, 0.0)), ("0.00000", "0.00000"))]
 fn 中心点(#[case] param: Param, #[case] expected: (&str, &str)) {
-    plot(&param).into_iter().for_each(|stroke| {
+    plot(&param).iter().for_each(|stroke| {
         assert_eq!(stroke.center().unwrap(), expected);
     });
 }
@@ -99,13 +99,10 @@ fn 中心点(#[case] param: Param, #[case] expected: (&str, &str)) {
 #[case(円(FRAC_2_PI, (-FRAC_2_PI, 0.0)), vec![("-0.63662", "0.00000"), ("0.00000", "0.63662"), ("0.63662", "0.00000"), ("0.00000", "-0.63662"), ("-0.63662", "0.00000")])]
 #[case(直線(90.0), vec![("0.00000", "0.00000"), ("0.00000", "1.00000"), ("0.00000", "2.00000")])]
 fn 座標(#[case] param: Param, #[case] expected: Vec<(&str, &str)>) {
-    plot(&param)
-        .into_iter()
-        .enumerate()
-        .for_each(|(i, stroke)| {
-            assert_eq!(stroke.p0(), expected[i]);
-            assert_eq!(stroke.p1(), expected[i + 1]);
-        });
+    plot(&param).iter().enumerate().for_each(|(i, stroke)| {
+        assert_eq!(stroke.p0(), expected[i]);
+        assert_eq!(stroke.p1(), expected[i + 1]);
+    });
 }
 
 impl PartialEq<&str> for Radius {
@@ -130,12 +127,6 @@ fn radius_eq_test() {
 impl From<Degree> for Tangential {
     fn from(degree: Degree) -> Self {
         degree.0.to_radians().into()
-    }
-}
-
-impl Tangential {
-    fn deg(&self) -> Degree {
-        Degree(self.rad().to_degrees())
     }
 }
 

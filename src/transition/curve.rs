@@ -3,7 +3,7 @@ use std::{
     ops::{Div, Mul},
 };
 
-use derive_more::{Add, From, Sub};
+use derive_more::{Add, From, Sub, AsRef};
 
 use super::unit::{Meter, Rad};
 

@@ -5,7 +5,7 @@ use std::ffi::OsString;
 
 use anyhow::Result;
 
-use agent::{bat::Args, jww::JwcTemp, sjis};
+use agent::{bat::Args, jwc_temp, sjis};
 
 /// 配線する
 pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
@@ -20,11 +20,12 @@ pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
 
 /// 緩和曲線を描画する
 fn plot(file: &str, param: &Result<transition::Param>) -> Result<()> {
+    let mut jwc_temp = jwc_temp::create(file)?;
     match param {
         Ok(p) => {
             let spiral = transition::plot(&p);
-            JwcTemp::export(file, &p.diminish, &spiral)
+            jwc_temp.diminish(p.diminish)?.spiral(&spiral)
         }
-        Err(e) => JwcTemp::export_err(file, &e),
+        Err(e) => jwc_temp.error(&e),
     }
 }

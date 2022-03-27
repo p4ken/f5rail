@@ -9,7 +9,7 @@ use std::{f64::consts::PI, ops::Add};
 /// 緩和曲線
 ///
 /// 複数の線で表現される。
-#[derive(Deref, IntoIterator)]
+#[derive(Deref)]
 pub struct Spiral(Vec<Stroke>);
 
 impl FromIterator<Stroke> for Spiral {
