@@ -8,12 +8,5 @@ anyhow = "1.0.54"
 derive_more = "0.99.17"
 encoding_rs = "0.8.30"
 
-[source.crates-io]
-registry = "https://github.com/rust-lang/crates.io-index"
-replace-with = 'ustc'
-
-[source.ustc]
-registry = "git://mirrors.ustc.edu.cn/crates.io-index"
-
 [dev-dependencies]
 rstest = "0.12.0"

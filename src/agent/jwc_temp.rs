@@ -35,9 +35,10 @@ impl Write {
         self.puts(&format!("he{}", e))
     }
 
-    /// 逓減 `diminish` を出力する。
+    /// 成功メッセージを出力する。
     pub fn diminish(&mut self, diminish: Diminish) -> Result<&mut Self> {
-        self.notice(diminish.into()).and(Ok(self))
+        self.notice(format!("{}を描画しました。", diminish))
+            .and(Ok(self))
     }
 
     /// 緩和曲線 `spiral` を出力する。
@@ -56,8 +57,8 @@ impl Write {
     /// 最後の注意のみ表示される。
     ///
     /// 座標の間に出力すると、座標が途切れてしまう。
-    fn notice(&mut self, s: &str) -> Result<()> {
-        self.puts(format!("h#{}", s))
+    fn notice<T: AsRef<str>>(&mut self, s: T) -> Result<()> {
+        self.puts(format!("h#{} v{}", s.as_ref(), env!("CARGO_PKG_VERSION")))
     }
 
     /// 曲線を出力する。
@@ -88,11 +89,11 @@ impl Write {
     }
 }
 
-impl From<Diminish> for &str {
-    fn from(spiral: Diminish) -> Self {
-        match spiral {
-            Diminish::Sine => "サイン半波長逓減",
-            Diminish::Linear => "直線逓減（クロソイド曲線）",
+impl Display for Diminish {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Diminish::Sine => f.write_str("サイン半波長逓減曲線"),
+            Diminish::Linear => f.write_str("直線逓減（クロソイド）"),
         }
     }
 }
