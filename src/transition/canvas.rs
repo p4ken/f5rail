@@ -1,4 +1,4 @@
-use derive_more::{Deref, From, IntoIterator};
+use derive_more::{Deref, From};
 
 use super::{
     curve::{Central, Curvature, Radius, Subtension, Tangential},
@@ -21,20 +21,6 @@ impl FromIterator<Stroke> for Spiral {
 
 /// 一画の線
 #[derive(Debug, Clone, Copy)]
-// pub enum Stroke {
-/// 円弧
-///
-/// 始点の接線、弧長、半径で表現される。
-// Curve(Tangent, Subtension, Radius),
-// /// 中心点、半径、始角、終角で表現される。
-// Arc(Point, f64, Radian, Radian),
-
-/// 直線
-///
-/// 始点の接線、長さで表現される。
-// Straight(Tangent, Subtension),
-// /// 始点と終点で表現される。
-// Straight(Point, Point),
 pub struct Stroke {
     /// 曲率
     k: Curvature,

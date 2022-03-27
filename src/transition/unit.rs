@@ -3,8 +3,8 @@
 //! 構造体の値の単位は意識する必要はなく、簡単に変換できたほうがよい。
 
 /// メートル
-pub trait Meter /*: From<f64>*/ {
-    fn meter(self) -> f64;
+pub trait Meter {
+    fn meter(&self) -> f64;
 }
 
 /// ラジアン

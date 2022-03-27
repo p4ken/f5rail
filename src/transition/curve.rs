@@ -3,7 +3,7 @@ use std::{
     ops::{Div, Mul},
 };
 
-use derive_more::{Add, From, Sub, AsRef};
+use derive_more::{Add, From, Sub};
 
 use super::unit::{Meter, Rad};
 
@@ -40,7 +40,7 @@ impl Diminish {
 pub struct Subtension(f64);
 
 impl Meter for Subtension {
-    fn meter(self) -> f64 {
+    fn meter(&self) -> f64 {
         self.0
     }
 }
@@ -72,18 +72,8 @@ pub struct Curvature(f64);
 pub const STRAIGHT: Curvature = Curvature(0.0);
 
 impl Curvature {
-    /// 直線なら `true`
-    pub fn is_straight(&self) -> bool {
-        *self == STRAIGHT
-    }
-
-    /// 左カーブなら `true`
-    pub fn is_left(&self) -> bool {
-        *self < STRAIGHT
-    }
-
     /// 右カーブなら `true`
-    pub fn is_right(&self) -> bool {
+    fn is_right(&self) -> bool {
         *self > STRAIGHT
     }
 
@@ -96,7 +86,7 @@ impl Curvature {
 
     /// 半径 (m)
     ///
-    /// 直線は `None`
+    /// 直線は `None`.
     pub fn r(&self) -> Option<Radius> {
         (*self != STRAIGHT).then(|| Radius(self.0.recip()))
     }
@@ -120,7 +110,7 @@ impl Mul<f64> for Curvature {
 pub struct Radius(pub f64);
 
 impl Meter for Radius {
-    fn meter(self) -> f64 {
+    fn meter(&self) -> f64 {
         self.0
     }
 }

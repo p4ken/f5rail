@@ -2,7 +2,10 @@ use std::ffi::OsString;
 
 use anyhow::Result;
 
-use crate::transition::{self, curve::{Diminish, Radius}};
+use crate::transition::{
+    self,
+    curve::{Curvature, Diminish, Radius, STRAIGHT},
+};
 
 use super::bat::*;
 
@@ -121,5 +124,11 @@ impl Args {
             Self::Transition(a, b) => (a, b),
             _ => panic!("This is not a transition."),
         }
+    }
+}
+
+impl Curvature {
+    fn is_straight(&self) -> bool {
+        *self == STRAIGHT
     }
 }

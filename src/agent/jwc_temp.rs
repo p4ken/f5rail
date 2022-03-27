@@ -44,7 +44,10 @@ impl Write {
     /// 緩和曲線 `spiral` を出力する。
     pub fn spiral(&mut self, spiral: &Spiral) -> Result<()> {
         for stroke in spiral.iter() {
-            match stroke.center().zip(stroke.r()) {
+            match stroke
+                .center()
+                .zip(stroke.r().filter(|r| r.meter().abs() < 100_000.0))
+            {
                 Some((c, r)) => self.curve(c, r, stroke.a0(), stroke.a1())?,
                 None => self.straight(stroke.p0(), stroke.p1())?,
             }
