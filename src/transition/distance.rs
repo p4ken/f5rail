@@ -60,7 +60,7 @@ impl Iterator for Ruler {
 ///
 /// 区間境界は1m単位の距離程になる。
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, From)]
-pub struct Distance<T>(T);
+pub struct Distance<T>( T);
 
 impl<T: Sub<Output = T>> Sub for Distance<T> {
     type Output = T;

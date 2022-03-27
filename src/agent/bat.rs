@@ -4,7 +4,6 @@ use std::{collections::HashMap, ffi::OsString};
 use anyhow::{bail, ensure, Context, Result};
 
 use crate::transition;
-use crate::transition::canvas::Point;
 use crate::transition::curve::{Curvature, Diminish, Radius, STRAIGHT};
 
 /// コマンドライン引数
@@ -60,7 +59,7 @@ impl transition::Param {
             k1: args.get("R1").ok().try_into()?,
             l0: 0.0.into(),
             tcl: tcl.into(),
-            p0: Point(0.0, 0.0),
+            p0: (0.0, 0.0).into(),
             t0: 0.0.into(),
         })
     }
@@ -128,5 +127,11 @@ impl<'a> TryFrom<&ArgValue<'a>> for Diminish {
             "2" => Ok(Diminish::Linear),
             _ => bail!("緩和曲線関数に正しい値を入力してください"),
         }
+    }
+}
+
+impl From<Radius> for Curvature {
+    fn from(r: Radius) -> Self {
+        r.0.recip().into()
     }
 }

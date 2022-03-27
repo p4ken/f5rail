@@ -1,4 +1,4 @@
-use derive_more::{Deref, IntoIterator};
+use derive_more::{Deref, From, IntoIterator};
 
 use super::{
     curve::{Central, Curvature, Radius, Subtension, Tangential},
@@ -97,14 +97,14 @@ impl Stroke {
 }
 
 /// 座標 (x, y)
-#[derive(Debug, Copy, Clone)]
-pub struct Point(pub f64, pub f64);
+#[derive(Debug, Copy, Clone, PartialEq, From)]
+pub struct Point(f64, f64);
 
 impl Vector for Point {
-    fn x(self) -> f64 {
+    fn x(&self) -> f64 {
         self.0
     }
-    fn y(self) -> f64 {
+    fn y(&self) -> f64 {
         self.1
     }
 }

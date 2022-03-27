@@ -1,11 +1,11 @@
 use std::{
-    f64::consts::{FRAC_2_PI, PI},
+    f64::consts::{FRAC_PI_2, PI},
     ops::{Div, Mul},
 };
 
 use derive_more::{Add, From, Sub};
 
-use super::unit::{Deg, Meter, Rad};
+use super::unit::{Meter, Rad};
 
 /// 逓減関数
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -66,17 +66,10 @@ impl Div for Subtension {
 /// 曲率 (1/m)
 ///
 /// 右カーブが正、左カーブが負。
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Add, Sub)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, From, Add, Sub)]
 pub struct Curvature(f64);
 
 pub const STRAIGHT: Curvature = Curvature(0.0);
-
-impl From<Radius> for Curvature {
-    /// 半径 `r` から曲率を作成する。
-    fn from(r: Radius) -> Self {
-        Self(r.0.recip())
-    }
-}
 
 impl Curvature {
     /// 直線なら `true`
@@ -148,7 +141,7 @@ pub struct Tangential(f64);
 
 impl Tangential {
     pub fn to_central(&self, k: Curvature) -> Central {
-        let gap = if k.is_right() { FRAC_2_PI } else { -FRAC_2_PI };
+        let gap = if k.is_right() { FRAC_PI_2 } else { -FRAC_PI_2 };
         Central(self.rad() + gap)
     }
 }
@@ -164,9 +157,3 @@ impl Rad for Tangential {
 /// Data Transfer Object.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Degree(pub f64);
-
-impl Deg for Degree {
-    fn deg(self) -> f64 {
-        self.0
-    }
-}
