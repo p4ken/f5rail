@@ -10,25 +10,24 @@
   },
   "tasks": [
     {
-      "label": "release",
-      "detail": "外部変形をビルドする",
+      "label": "外部変形パッケージ作成",
       "dependsOn": [
-        "target/release/f5rail.exe",
-        "target/debug/package.exe",
+        "リリースビルド"
       ],
       "command": "cargo run --bin package",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
+      "group":  "build"
     },
     {
-      "label": "target/release/f5rail.exe",
+      "label": "リリースビルド",
       "command": "cargo build --release --bin f5rail",
+      "dependsOn": [
+        "テスト実行"
+      ]
     },
     {
-      "label": "target/debug/package.exe",
-      "command": "cargo build --bin package",
-    },
+      "label": "テスト実行",
+      "command": "cargo test --lib --test *",
+      "group": "test"
+    }
   ]
 }

@@ -14,3 +14,4 @@ encoding_rs = "0.8.30"
 
 [dev-dependencies]
 rstest = "0.12.0"
+tempfile = "3.3.0"

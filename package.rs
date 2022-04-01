@@ -10,6 +10,8 @@ use encoding_rs::SHIFT_JIS;
 
 fn main() -> Result<()> {
     let utf8_dir = Path::new("./bat");
+    assert!(utf8_dir.exists());
+
     let sjis_dir = Path::new("./外部変形");
     if !sjis_dir.exists() {
         fs::create_dir(sjis_dir)?;
