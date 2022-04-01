@@ -1,6 +1,8 @@
-use anyhow::Result;
-use f5rail;
 use std::env;
+
+use anyhow::Result;
+
+use f5rail;
 
 fn main() -> Result<()> {
     let args = env::args_os();

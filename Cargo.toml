@@ -3,6 +3,10 @@ name = "f5rail"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "package"
+path = "package.rs"
+
 [dependencies]
 anyhow = "1.0.54"
 derive_more = "0.99.17"

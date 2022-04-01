@@ -6,8 +6,8 @@
 use std::{fmt::Display, fs::File, io};
 
 use anyhow::{Context, Result};
+use encoding_rs::SHIFT_JIS;
 
-use super::sjis::to_sjis;
 use crate::transition::{
     canvas::{Point, Spiral},
     curve::{Central, Diminish, Radius},
@@ -84,7 +84,8 @@ impl Write {
 
     /// 文字列と改行を出力する。
     fn puts<T: AsRef<str>>(&mut self, s: T) -> Result<()> {
-        for bytes in [&to_sjis(s.as_ref())[..], b"\r\n"] {
+        let (sjis, _, _) = SHIFT_JIS.encode(s.as_ref());
+        for bytes in [&sjis[..], b"\r\n"] {
             io::Write::write_all(&mut self.file, bytes)
                 .context("JWC_TEMP.TXTへの書き込みに失敗しました。")?;
         }

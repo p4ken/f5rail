@@ -5,7 +5,7 @@ use std::ffi::OsString;
 
 use anyhow::Result;
 
-use agent::{bat::Args, jwc_temp, sjis};
+use agent::{bat::Args, jwc_temp};
 
 /// 配線する
 pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
@@ -13,7 +13,6 @@ pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
 
     match &args {
         Args::Transition(file, args) => plot(file, args),
-        Args::Encode(path) => sjis::encode(&path),
         _ => todo!(),
     }
 }

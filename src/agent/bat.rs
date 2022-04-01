@@ -17,9 +17,6 @@ pub enum Args {
 
     /// 他線座標
     _Parallel,
-
-    /// 文字コード
-    Encode(String),
 }
 
 impl Args {
@@ -39,8 +36,6 @@ impl Args {
             let file = args.get("FILE")?.as_str().to_owned();
             let param = transition::Param::parse(&formula, &args);
             Ok(Self::Transition(file, param))
-        } else if let Some(encode) = args.get("ENCODE").ok() {
-            Ok(Self::Encode(encode.as_str().to_owned()))
         } else {
             bail!("機能を指定してください")
         }
