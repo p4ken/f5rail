@@ -29,10 +29,10 @@ impl Args {
 
         let args = args
             .iter()
-            .filter_map(|s| s.trim_start_matches("/").split_once(":"))
+            .filter_map(|s| s.trim_start_matches('/').split_once(":"))
             .collect::<ArgMap>();
 
-        if let Some(formula) = args.get("TRANSITION").ok() {
+        if let Ok(formula) = args.get("TRANSITION") {
             let file = args.get("FILE")?.as_str().to_owned();
             let param = transition::Param::parse(&formula, &args);
             Ok(Self::Transition(file, param))

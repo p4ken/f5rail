@@ -44,7 +44,7 @@ impl Iterator for Ruler {
 
         // 次回区間
         self.l1.advance();
-        Some(Interval::new(&self))
+        Some(Interval::new(self))
     }
 
     /// 区間数

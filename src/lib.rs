@@ -22,7 +22,7 @@ fn plot(file: &str, param: &Result<transition::Param>) -> Result<()> {
     let mut jwc_temp = jwc_temp::create(file)?;
     match param {
         Ok(p) => {
-            let spiral = transition::plot(&p);
+            let spiral = transition::plot(p);
             jwc_temp.diminish(p.diminish)?.spiral(&spiral)
         }
         Err(e) => jwc_temp.error(&e),
