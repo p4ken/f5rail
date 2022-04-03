@@ -22,6 +22,8 @@ fn main() -> Result<()> {
         if utf8_path.extension() != Some(OsStr::new("bat")) {
             continue;
         }
+        
+        // 外部変形batファイル
         let sjis_path = sjis_dir.join(utf8_path.file_name().unwrap());
         println!(
             "Encoding {} -> {}",
@@ -29,9 +31,11 @@ fn main() -> Result<()> {
             sjis_path.display()
         );
 
-        // 文字コード変換
         let mut utf8 = String::new();
         File::open(&utf8_path)?.read_to_string(&mut utf8)?;
+        // バージョン表示
+        utf8 = utf8.replace("(VERSION)", env!("CARGO_PKG_VERSION"));
+        // 文字コード変換
         let (cow, _, _) = SHIFT_JIS.encode(&utf8);
         File::create(&sjis_path)?.write_all(&cow[..])?;
     }
