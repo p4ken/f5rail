@@ -1,4 +1,4 @@
-@REM BVEの緩和曲線を作図します
+@REM 緩和曲線を作図します
 @echo off
 REM #jww
 REM #cd

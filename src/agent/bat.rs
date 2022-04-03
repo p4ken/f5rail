@@ -47,7 +47,7 @@ impl transition::Param {
     fn parse(diminish: &ArgValue, args: &ArgMap) -> Result<Self> {
         Ok(Self {
             diminish: diminish.try_into()?,
-            // 半径は無くてもOKだが、あるなら適切な値でなければならない。
+            // 半径は無くてもよいが、あるなら適切な値でなければならない。
             k0: args.get("R0").ok().try_into()?,
             k1: args.get("R1").ok().try_into()?,
             l0: 0.0.into(),
