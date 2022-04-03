@@ -1,6 +1,7 @@
 use std::ffi::OsString;
 
 use anyhow::Result;
+use rstest::rstest;
 
 use crate::transition::{
     self,
@@ -86,27 +87,34 @@ fn 緩和曲線関数が間違っていればエラー() {
     assert_eq!(e.to_string(), "緩和曲線関数に正しい値を入力してください");
 }
 
-#[test]
-fn 緩和曲線の長さがなければエラー() {
+#[rstest]
+#[case("", "TCLを指定してください")]
+#[case("/TCL:0", "TCLに0より大きい値を入力してください")]
+#[case("/TCL:-1", "TCLに0より大きい値を入力してください")]
+fn 緩和曲線の長さのエラーチェック(#[case] arg: &str, #[case] err: &str) {
     let args = vec![
         OsString::from("transition.exe"),
         OsString::from("/TRANSITION:1"),
+        OsString::from(arg),
         OsString::from("/FILE:./JWC_TEMP.TXT"),
     ];
     let args = Args::parse(args);
     let args = args.unwrap();
-    let transition = args.unwrap_transition();
-    assert_eq!(transition.0, "./JWC_TEMP.TXT");
-    let e = transition.1.as_ref().unwrap_err();
-    assert_eq!(e.to_string(), "TCLを指定してください");
+    let (_, param) = args.unwrap_transition();
+    let e = param.as_ref().unwrap_err();
+    assert_eq!(e.to_string(), err);
 }
 
-#[test]
-fn 緩和曲線の半径が文字列ならエラー() {
+#[rstest]
+#[case("/R0:abc", "R0を数値で入力してください")]
+#[case("/R1:abc", "R1を数値で入力してください")]
+#[case("/R0:0", "R0に0を指定できません")]
+#[case("/R1:0", "R1に0を指定できません")]
+fn 緩和曲線の半径のエラーチェック(#[case] arg: &str, #[case] err: &str) {
     let args = vec![
         OsString::from("transition.exe"),
         OsString::from("/TRANSITION:1"),
-        OsString::from("/R0:abc"),
+        OsString::from(arg),
         OsString::from("/TCL:3"),
         OsString::from("/FILE:./JWC_TEMP.TXT"),
     ];
@@ -115,7 +123,7 @@ fn 緩和曲線の半径が文字列ならエラー() {
     let transition = args.unwrap_transition();
     assert_eq!(transition.0, "./JWC_TEMP.TXT");
     let e = transition.1.as_ref().unwrap_err();
-    assert_eq!(e.to_string(), "R0を数値で入力してください");
+    assert_eq!(e.to_string(), err);
 }
 
 impl Args {

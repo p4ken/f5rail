@@ -4,7 +4,7 @@ use std::{collections::HashMap, ffi::OsString};
 use anyhow::{bail, ensure, Context, Result};
 
 use crate::transition;
-use crate::transition::curve::{Curvature, Diminish, Radius, STRAIGHT};
+use crate::transition::curve::{Curvature, Diminish, Radius, Subtension, STRAIGHT};
 
 /// コマンドライン引数
 ///
@@ -45,15 +45,13 @@ impl Args {
 impl transition::Param {
     /// コマンドライン引数を緩和曲線パラメータにパースする。
     fn parse(diminish: &ArgValue, args: &ArgMap) -> Result<Self> {
-        let tcl: f64 = args.get("TCL")?.try_into()?;
-        ensure!(tcl.is_sign_positive(), "TCLに正の数を入力してください");
-
         Ok(Self {
             diminish: diminish.try_into()?,
+            // 半径は無くてもOKだが、あるなら適切な値でなければならない。
             k0: args.get("R0").ok().try_into()?,
             k1: args.get("R1").ok().try_into()?,
             l0: 0.0.into(),
-            tcl: tcl.into(),
+            tcl: args.get("TCL")?.try_into()?,
             p0: (0.0, 0.0).into(),
             t0: 0.0.into(),
         })
@@ -90,10 +88,10 @@ impl<'a> ArgValue<'a> {
     }
 }
 
-impl<'a> TryFrom<ArgValue<'a>> for f64 {
+impl<'a> TryFrom<&ArgValue<'a>> for f64 {
     type Error = anyhow::Error;
     /// 小数に変換する。
-    fn try_from(value: ArgValue<'a>) -> Result<Self, Self::Error> {
+    fn try_from(value: &ArgValue<'a>) -> Result<Self, Self::Error> {
         value
             .1
             .parse()
@@ -105,11 +103,23 @@ impl<'a> TryFrom<Option<ArgValue<'a>>> for Curvature {
     type Error = anyhow::Error;
     /// 曲率に変換する。
     fn try_from(value: Option<ArgValue<'a>>) -> Result<Self, Self::Error> {
-        let k = match value {
-            Some(v) => Radius(v.try_into()?).into(),
-            None => STRAIGHT,
+        let v = match value {
+            Some(v) => v,
+            None => return Ok(STRAIGHT),
         };
-        Ok(k)
+        let r = Radius((&v).try_into()?);
+        ensure!(r != Radius(0.0), "{}に0を指定できません", v.0);
+        Ok(r.into())
+    }
+}
+
+impl<'a> TryFrom<ArgValue<'a>> for Subtension {
+    type Error = anyhow::Error;
+    /// 緩和曲線長に変換する。
+    fn try_from(value: ArgValue<'a>) -> Result<Self, Self::Error> {
+        let tcl: f64 = (&value).try_into()?;
+        ensure!(tcl > 0.0, "{}に0より大きい値を入力してください", value.0);
+        Ok(tcl.into())
     }
 }
 
