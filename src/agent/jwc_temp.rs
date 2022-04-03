@@ -61,7 +61,7 @@ impl Write {
     ///
     /// 座標の間に出力すると、座標が途切れてしまう。
     fn notice<T: AsRef<str>>(&mut self, s: T) -> Result<()> {
-        self.puts(format!("h#{} v{}", s.as_ref(), env!("CARGO_PKG_VERSION")))
+        self.puts(format!("h#{}", s.as_ref()))
     }
 
     /// 曲線を出力する。
@@ -84,6 +84,11 @@ impl Write {
 
     /// 文字列と改行を出力する。
     fn puts<T: AsRef<str>>(&mut self, s: T) -> Result<()> {
+        // TODO:
+        // SHIFT_JISではなくCP932にしたほうがいい。
+        // 外部からの入力ファイルを読みだす場合は必須と思われる。
+        // - https://crates.io/crates/codepage
+        // - https://crates.io/search?q=windows%20encoding&sort=downloads
         let (sjis, _, _) = SHIFT_JIS.encode(s.as_ref());
         for bytes in [&sjis[..], b"\r\n"] {
             io::Write::write_all(&mut self.file, bytes)

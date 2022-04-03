@@ -1,10 +1,10 @@
 ## f5rail
 
-BVEの配線をJw_cadで楽しくする。
+BVEの配線作業をCADで楽しくする。
 
 ### ダウンロード
 
-開発中の外部変形をこちらからダウンロードできます。
+Jw_cad外部変形の開発版をこちらからダウンロードできます。
 
 https://github.com/p4ken/f5rail/releases
 

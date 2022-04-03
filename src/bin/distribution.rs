@@ -36,6 +36,21 @@ fn main() -> Result<()> {
         File::create(&sjis_path)?.write_all(&cow[..])?;
     }
 
+    // README
+    let readme_path = sjis_dir.join("readme.txt");
+    println!("Creating {}", readme_path.display());
+    let mut readme_file = File::create(readme_path)?;
+    write!(
+        &mut readme_file,
+        "f5rail v{}\r\n\r\n",
+        env!("CARGO_PKG_VERSION")
+    )?;
+    write!(&mut readme_file, "BVE layout tool for Jw_cad.\r\n\r\n")?;
+    let mut license = Vec::<u8>::new();
+    File::open("./LICENSE")?.read_to_end(&mut license)?;
+    readme_file.write_all(&license)?;
+
+    // 実行ファイル
     let from_path = Path::new("./target/release/f5rail.exe");
     let to_path = sjis_dir.join(from_path.file_name().unwrap());
     println!("Copying {} -> {}", from_path.display(), to_path.display());

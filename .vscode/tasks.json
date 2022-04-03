@@ -14,7 +14,7 @@
       "dependsOn": [
         "リリースビルド"
       ],
-      "command": "cargo run --bin package",
+      "command": "cargo run --bin distribution",
       "group":  "build"
     },
     {

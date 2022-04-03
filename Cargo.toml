@@ -3,10 +3,6 @@ name = "f5rail"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "package"
-path = "package.rs"
-
 [profile.release]
 # lto = true      # -22KB (slow)
 # panic = 'abort' # -9KB
