@@ -13,3 +13,7 @@ https://github.com/p4ken/f5rail/releases
 VSCodeのビルドタスク `ctrl + shift + B` で外部変形をビルドします。
 
 RustのWindowsコンパイル環境が必要です。
+
+### ライセンス
+
+[The MIT License](LICENSE)
