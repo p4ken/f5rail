@@ -2,6 +2,7 @@
 name = "f5rail"
 version = "0.1.1"
 edition = "2021"
+default-run = "distribution"
 
 [profile.release]
 # lto = true      # -22KB (slow)
