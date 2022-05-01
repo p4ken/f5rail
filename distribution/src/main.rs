@@ -1,47 +1,30 @@
 use std::{
-    ffi::OsStr,
     fs::{self, File},
     io::{Read, Write},
     path::Path,
 };
 
 use anyhow::Result;
-use encoding_rs::SHIFT_JIS;
+
+use crate::{dir::Dir, make::Make};
+
+mod bat;
+mod dir;
+mod make;
 
 fn main() -> Result<()> {
-    let utf8_dir = Path::new("./bat");
-    assert!(utf8_dir.exists());
+    let in_dir = &Dir::open("./bat")?;
+    let out_dir = &Dir::create("./外部変形")?;
 
-    let sjis_dir = Path::new("./外部変形");
-    if !sjis_dir.exists() {
-        fs::create_dir(sjis_dir)?;
-    }
-
-    for entry in utf8_dir.read_dir()? {
-        let utf8_path = entry?.path();
-        if utf8_path.extension() != Some(OsStr::new("bat")) {
-            continue;
-        }
-        
-        // 外部変形batファイル
-        let sjis_path = sjis_dir.join(utf8_path.file_name().unwrap());
-        println!(
-            "Encoding {} -> {}",
-            utf8_path.display(),
-            sjis_path.display()
-        );
-
-        let mut utf8 = String::new();
-        File::open(&utf8_path)?.read_to_string(&mut utf8)?;
-        // バージョン表示
-        utf8 = utf8.replace("(VERSION)", env!("CARGO_PKG_VERSION"));
-        // 文字コード変換
-        let (cow, _, _) = SHIFT_JIS.encode(&utf8);
-        File::create(&sjis_path)?.write_all(&cow[..])?;
+    // 外部変形batファイル
+    for bat in in_dir.bats()? {
+        let out = out_dir.join(bat.strip_prefix(in_dir)?);
+        println!("Encoding {} -> {}", bat.display(), out.display());
+        bat.make(&out)?;
     }
 
     // README
-    let readme_path = sjis_dir.join("readme.txt");
+    let readme_path = out_dir.join("readme.txt");
     println!("Creating {}", readme_path.display());
     let mut readme_file = File::create(readme_path)?;
     write!(
@@ -56,7 +39,7 @@ fn main() -> Result<()> {
 
     // 実行ファイル
     let from_path = Path::new("./target/release/f5rail.exe");
-    let to_path = sjis_dir.join(from_path.file_name().unwrap());
+    let to_path = out_dir.join(from_path.file_name().unwrap());
     println!("Copying {} -> {}", from_path.display(), to_path.display());
     fs::copy(from_path, to_path)?;
 

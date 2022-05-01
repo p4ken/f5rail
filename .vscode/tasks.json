@@ -19,14 +19,14 @@
     },
     {
       "label": "リリースビルド",
-      "command": "cargo build --release --bin f5rail",
+      "command": "cargo build --release --bin f5rail -p f5rail",
       "dependsOn": [
         "テスト実行"
       ]
     },
     {
       "label": "テスト実行",
-      "command": "cargo test --lib --test *",
+      "command": "cargo test --lib --test * -p f5rail",
       "group": "test"
     }
   ]
