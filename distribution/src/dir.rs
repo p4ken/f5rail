@@ -1,12 +1,12 @@
 use std::{
     ffi::OsStr,
-    fs::{self, DirEntry},
+    fs::{DirEntry},
     io,
     path::{Path, PathBuf},
 };
 
-use anyhow::{Result, ensure};
-use derive_more::{From, IntoIterator, Deref};
+use anyhow::{ensure, Result};
+use derive_more::{Deref, From, IntoIterator};
 
 use crate::bat::Bat;
 
@@ -22,28 +22,20 @@ impl Dir {
         Ok(dir)
     }
 
-    pub fn create(path: impl AsRef<OsStr>) -> Result<Self> {
-        let dir = Self::new(path);
-        if !dir.exists() {
-            fs::create_dir(&dir.path)?;
-        }
-        Ok(dir)
+    pub fn bats(&self) -> Result<Bats> {
+        let root = self.read_dir()?;
+        let sub = self.sub().read_dir()?;
+        Ok(root.chain(sub).collect::<io::Result<_>>()?)
     }
 
-    pub fn bats(&self) -> Result<Bats> {
-        // let sub = self.sub_dir()?;
-        Ok(self.read_dir()?.collect::<io::Result<_>>()?)
+    fn sub(&self) -> Self {
+        Self::new(self.join("sub"))
     }
 
     fn new(path: impl AsRef<OsStr>) -> Self {
         let path = Path::new(&path).to_path_buf();
         Self { path }
     }
-
-    // fn sub_dir(&self) -> io::Result<fs::ReadDir> {
-    //     let sub_dir
-    //     self.path.join("sub").read_dir()
-    // }
 }
 
 impl AsRef<Path> for Dir {

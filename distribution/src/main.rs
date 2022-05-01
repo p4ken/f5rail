@@ -14,9 +14,9 @@ mod make;
 
 fn main() -> Result<()> {
     let in_dir = &Dir::open("./bat")?;
-    let out_dir = &Dir::create("./外部変形")?;
+    let out_dir = Path::new("./外部変形");
 
-    // 外部変形batファイル
+    // .batファイル
     for bat in in_dir.bats()? {
         let out = out_dir.join(bat.strip_prefix(in_dir)?);
         println!("Encoding {} -> {}", bat.display(), out.display());
