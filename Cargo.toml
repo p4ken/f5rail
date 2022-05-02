@@ -2,10 +2,7 @@
 name = "f5rail"
 version = "0.1.1"
 edition = "2021"
-
-[workspace]
-members = ["distribution"]
-default-members = ["distribution"] # for `cargo run`
+default-run = "make"
 
 [profile.release]
 # lto = true      # -22KB (slow)

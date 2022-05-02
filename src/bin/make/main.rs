@@ -1,3 +1,7 @@
+//! Makefileの代わり。
+//! RustにすることでWindowsで実行できるようになったが、
+//! ファイル操作の開発効率はMakefileのほうが優れている思われる。
+
 use std::{
     fs::{self, File},
     io::{Read, Write},
@@ -30,6 +34,7 @@ fn main() -> Result<()> {
     write!(
         &mut readme_file,
         "f5rail v{}\r\n\r\n",
+        // f5railと同じパッケージとしてビルドされている必要がある
         env!("CARGO_PKG_VERSION")
     )?;
     write!(&mut readme_file, "BVE layout tool for Jw_cad.\r\n\r\n")?;
