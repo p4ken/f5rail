@@ -1,19 +1,19 @@
 mod agent;
 mod transition;
 
-use std::ffi::OsString;
+use std::ffi::OsStr;
 
 use anyhow::Result;
 
 use agent::{bat::Args, jwc_temp};
 
 /// 配線する
-pub fn layout(args: impl IntoIterator<Item = OsString>) -> Result<()> {
+pub fn layout(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<()> {
     let args = Args::parse(args)?;
 
     match &args {
         Args::Transition(file, args) => plot(file, args),
-        _ => todo!(),
+        Args::Track => Ok(()),
     }
 }
 

@@ -1,5 +1,6 @@
+use std::collections::HashMap;
+use std::ffi::OsStr;
 use std::result::Result::Ok;
-use std::{collections::HashMap, ffi::OsString};
 
 use anyhow::{bail, ensure, Context, Result};
 
@@ -16,15 +17,15 @@ pub enum Args {
     Transition(String, Result<transition::Param>),
 
     /// 他線座標
-    _Parallel,
+    Track,
 }
 
 impl Args {
     /// コマンドライン引数をパースする。
-    pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Self> {
+    pub fn parse(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<Self> {
         let args = args
             .into_iter()
-            .filter_map(|os| os.into_string().ok())
+            .filter_map(|os| os.as_ref().to_str().map(str::to_owned))
             .collect::<Vec<_>>();
 
         let args = args
@@ -36,6 +37,8 @@ impl Args {
             let file = args.get("FILE")?.as_str().to_owned();
             let param = transition::Param::parse(&formula, &args);
             Ok(Self::Transition(file, param))
+        } else if let Ok(track) = args.get("TRACK") {
+            Ok(Self::Track)
         } else {
             bail!("機能を指定してください")
         }
