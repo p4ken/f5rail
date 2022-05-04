@@ -3,7 +3,7 @@ mod transition;
 
 use std::ffi::OsStr;
 
-use anyhow::{ensure, Result};
+use anyhow::{Result};
 
 use agent::{
     bat::{Args, TrackArgs},
@@ -43,7 +43,7 @@ fn export(args: &TrackArgs) -> Result<()> {
     let mut map_path = jwc_temp.project_dir()?;
     map_path.push(args.map.as_str());
 
-    let map = MapFile::create(&map_path)?;
+    let _map = MapFile::create(&map_path)?;
 
     Ok(())
 }

@@ -29,7 +29,7 @@ fn relative(#[case] map_name: &str) -> Result<()> {
     f5rail::layout(args)?;
 
     println!("{}", project_dir.path().join(map_name).to_string_lossy());
-    assert_eq!(project_dir.path().join(map_name).exists(), true);
+    assert!(project_dir.path().join(map_name).exists());
     // TODO: ～～にファイルを作成しました表示、設計変更
 
     jwc_temp_0.close()?;

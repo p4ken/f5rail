@@ -1,8 +1,6 @@
 use std::{
-    ffi::OsString,
     fs::File,
-    ops::Not,
-    path::{Path, PathBuf},
+    path::{Path},
 };
 
 use anyhow::{ensure, Context, Result};
@@ -27,12 +25,12 @@ impl MapFile {
                 .with_context(|| format!("{} はすでに存在しています", path.to_string_lossy()))?
                 .to_os_string();
             name.push(format!("-{}.", i));
-            ext.map(|ext| name.push(ext));
+            if let Some(ext) = ext { name.push(ext) }
             path = dir.to_path_buf();
             path.push(name);
             i += 1;
         }
-        return Ok(Self(File::create(path)?));
+        Ok(Self(File::create(path)?))
     }
 }
 

@@ -130,7 +130,7 @@ impl Rad for Central {
 pub struct Tangential(f64);
 
 impl Tangential {
-    pub fn to_central(&self, k: Curvature) -> Central {
+    pub fn to_central(self, k: Curvature) -> Central {
         let gap = if k.is_right() { FRAC_PI_2 } else { -FRAC_PI_2 };
         Central(self.rad() + gap)
     }

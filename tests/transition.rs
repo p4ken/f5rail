@@ -51,12 +51,12 @@ fn transition(#[case] strv: Vec<&str>, #[case] expected: Vec<&str>) -> Result<()
 struct Args(Vec<OsString>);
 
 impl Args {
-    fn new(path: &impl AsRef<OsStr>, strv: &Vec<impl AsRef<OsStr>>) -> Self {
+    fn new(path: &impl AsRef<OsStr>, strv: &[impl AsRef<OsStr>]) -> Self {
         let mut arg_file = OsString::from("/FILE:");
         arg_file.push(path);
         let arg_file = arg_file;
         let args = strv
-            .into_iter()
+            .iter()
             .map(|s| s.into())
             .chain(iter::once(arg_file))
             .collect();

@@ -99,7 +99,7 @@ impl Distance<f64> {
 
 impl Distance<i32> {
     /// 小数の距離程
-    fn to_float(&self) -> Distance<f64> {
+    fn to_float(self) -> Distance<f64> {
         Distance(self.0 as f64)
     }
 
