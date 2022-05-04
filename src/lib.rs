@@ -35,7 +35,7 @@ fn plot(file: &str, param: &Result<transition::Param>) -> Result<()> {
 
 /// BVEマップに出力する
 fn export(args: &TrackArgs) -> Result<()> {
-    // temp_n以外のエラーをtemp_nに出力する層がほしい
+    // temp以外のエラーをtempに出力する層がほしい
     let jwc_temp = jwc_temp::read(&args.temp)?;
     let map_path = MapPath::new(&args.map);
     let map_path = match map_path.absolute() {
