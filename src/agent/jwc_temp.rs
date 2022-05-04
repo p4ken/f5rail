@@ -4,13 +4,14 @@
 //! http://mintleaf.sakura.ne.jp/cad/jwc_temp.html
 
 use std::{
+    ffi::OsString,
     fmt::Display,
     fs::{File, OpenOptions},
     io::{self, BufRead, BufReader},
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result};
+use anyhow::{ensure, Context, Result};
 use encoding_rs::SHIFT_JIS;
 use encoding_rs_io::DecodeReaderBytesBuilder;
 
@@ -34,7 +35,7 @@ pub fn create(path: &str) -> Result<Write> {
 
 #[derive(Default)]
 pub struct JwcTemp {
-    project_path: Option<PathBuf>,
+    project_path: Option<String>,
 }
 
 impl JwcTemp {
@@ -51,23 +52,32 @@ impl JwcTemp {
         let line_iter = BufReader::new(decoder).lines().filter_map(|l| l.ok());
         for line in line_iter {
             if let Some((_, path)) = line.split_once("file=") {
-                jwc_temp.project_path = Some(PathBuf::from(path));
+                jwc_temp.project_path = Some(path.to_string());
             }
         }
         Ok(jwc_temp)
+    }
+
+    pub fn project_path(&self) -> Option<&String> {
+        self.project_path.as_ref()
     }
 
     pub fn project_dir(&self) -> Result<PathBuf> {
         let path = self
             .project_path
             .as_ref()
-            .context("現在のJWWファイルを特定できませんでした")?;
+            .context("JWC_TEMPファイルにパスが出力されていません")?;
 
-        let dir = path
+        ensure!(
+            !path.is_empty(),
+            "作業中のファイルに名前をつけて保存してください"
+        );
+
+        let dir = Path::new(path)
             .parent()
-            .context("JWWファイルが存在するディレクトリを特定できませんでした")?;
+            .context("作業中のファイルがあるフォルダを開けませんでした")?;
 
-        Ok(dir.to_owned())
+        Ok(dir.to_path_buf())
     }
 }
 

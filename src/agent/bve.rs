@@ -1,9 +1,10 @@
 use std::{
     fs::File,
-    path::{Path},
+    path::{Path, PathBuf},
 };
 
 use anyhow::{ensure, Context, Result};
+use derive_more::Deref;
 
 /// BVEマップファイル
 pub struct MapFile(File);
@@ -25,7 +26,9 @@ impl MapFile {
                 .with_context(|| format!("{} はすでに存在しています", path.to_string_lossy()))?
                 .to_os_string();
             name.push(format!("-{}.", i));
-            if let Some(ext) = ext { name.push(ext) }
+            if let Some(ext) = ext {
+                name.push(ext)
+            }
             path = dir.to_path_buf();
             path.push(name);
             i += 1;
@@ -34,11 +37,22 @@ impl MapFile {
     }
 }
 
-// struct MapPath(PathBuf);
+pub struct MapPath<'a>(&'a Path);
 
-// // 「～～に作成しました」みたいにしやすい。
-// // パスを決めてからファイルを作成するまでにタイムラグがある問題は残る。
-// impl MapPath {
-//     pub fn new(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
-//     }
-// }
+// 「～～に作成しました」みたいにしたい。
+// パスを決めてからファイルを作成するまでにタイムラグがある問題は残る。
+impl<'a> MapPath<'a> {
+    pub fn new(map_name: &'a (impl AsRef<Path> + ?Sized)) -> Self {
+        Self(map_name.as_ref())
+    }
+
+    pub fn absolute(&self) -> Option<&Path> {
+        self.0.is_absolute().then(|| self.0)
+    }
+
+    pub fn relative(&self, project_dir: &(impl AsRef<Path> + ?Sized)) -> PathBuf {
+        let mut map_path = project_dir.as_ref().to_path_buf();
+        map_path.push(self.0);
+        map_path
+    }
+}

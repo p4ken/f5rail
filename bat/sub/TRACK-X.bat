@@ -9,6 +9,7 @@ REM #hc 他軌道を指定
 REM #g1
 REM #c  BVEのトラック名 /_/トラック名:
 REM #:2
+REM #h/sub/TRACK-SAVE.bat
 REM #e
 
 goto %1

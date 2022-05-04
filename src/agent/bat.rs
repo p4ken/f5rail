@@ -40,11 +40,11 @@ impl Args {
             let param = transition::Param::parse(&formula, &args);
             Ok(Self::Transition(file, param))
         } else if let Ok(track) = args.get("TRACK") {
-            ensure!(track.as_str() == "N");
-            let temp_0 = args.get("TEMP-0")?.into();
-            let temp_x = args.get("TEMP-X")?.into();
+            ensure!(track.as_str() == "X");
+            let temp_0 = args.get("TEMP_0")?.into();
+            let temp_x = args.get("TEMP_X")?.into();
             let temp = args.get("TEMP")?.into();
-            let map = args.get("MAP")?.into();
+            let map = args.get("出力ファイル名")?.into();
             Ok(Self::Track(TrackArgs {
                 temp_0,
                 temp_x,

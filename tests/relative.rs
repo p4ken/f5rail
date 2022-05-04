@@ -20,11 +20,11 @@ fn relative(#[case] map_name: &str) -> Result<()> {
     jwc_temp.write_path(&project_dir.path().join("foo.jww"))?;
 
     let args = vec![
-        Arg::new("/TRACK:N"),
-        Arg::new("/TEMP-0:").push(jwc_temp_0.path()),
-        Arg::new("/TEMP-X:").push(jwc_temp_x.path()),
+        Arg::new("/TRACK:X"),
+        Arg::new("/TEMP_0:").push(jwc_temp_0.path()),
+        Arg::new("/TEMP_X:").push(jwc_temp_x.path()),
         Arg::new("/TEMP:").push(jwc_temp.path()),
-        Arg::new("/MAP:").push(map_name),
+        Arg::new("/出力ファイル名:").push(map_name),
     ];
     f5rail::layout(args)?;
 

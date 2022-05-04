@@ -3,11 +3,11 @@ mod transition;
 
 use std::ffi::OsStr;
 
-use anyhow::{Result};
+use anyhow::Result;
 
 use agent::{
     bat::{Args, TrackArgs},
-    bve::MapFile,
+    bve::{MapFile, MapPath},
     jwc_temp,
 };
 
@@ -35,14 +35,13 @@ fn plot(file: &str, param: &Result<transition::Param>) -> Result<()> {
 
 /// BVEマップに出力する
 fn export(args: &TrackArgs) -> Result<()> {
-    // TODO: temp_xに記載されたパスに書き出す
     // temp_n以外のエラーをtemp_nに出力する層がほしい
     let jwc_temp = jwc_temp::read(&args.temp)?;
-
-    // TODO: 絶対パスならappendしない
-    let mut map_path = jwc_temp.project_dir()?;
-    map_path.push(args.map.as_str());
-
+    let map_path = MapPath::new(&args.map);
+    let map_path = match map_path.absolute() {
+        Some(map_path) => map_path.to_path_buf(),
+        None => map_path.relative(&jwc_temp.project_dir()?),
+    };
     let _map = MapFile::create(&map_path)?;
 
     Ok(())
