@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::ffi::OsStr;
+use std::path::PathBuf;
 use std::result::Result::Ok;
 
 use anyhow::{bail, ensure, Context, Result};
@@ -16,8 +17,8 @@ pub enum Args {
     /// 緩和曲線
     Transition(String, Result<transition::Param>),
 
-    /// 他線座標
-    Track,
+    /// 軌道の相対座標
+    Track(TrackArgs),
 }
 
 impl Args {
@@ -25,8 +26,9 @@ impl Args {
     pub fn parse(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<Self> {
         let args = args
             .into_iter()
-            .filter_map(|os| os.as_ref().to_str().map(str::to_owned))
-            .collect::<Vec<_>>();
+            .map(|os| os.as_ref().to_str().map(str::to_owned))
+            .collect::<Option<Vec<String>>>()
+            .context("非UTF-8文字は使えません")?;
 
         let args = args
             .iter()
@@ -34,15 +36,33 @@ impl Args {
             .collect::<ArgMap>();
 
         if let Ok(formula) = args.get("TRANSITION") {
-            let file = args.get("FILE")?.as_str().to_owned();
+            let file = args.get("FILE")?.into();
             let param = transition::Param::parse(&formula, &args);
             Ok(Self::Transition(file, param))
         } else if let Ok(track) = args.get("TRACK") {
-            Ok(Self::Track)
+            ensure!(track.as_str() == "N");
+            let temp_0 = args.get("TEMP-0")?.into();
+            let temp_x = args.get("TEMP-X")?.into();
+            let temp = args.get("TEMP")?.into();
+            let map = args.get("MAP")?.into();
+            Ok(Self::Track(TrackArgs {
+                temp_0,
+                temp_x,
+                temp,
+                map,
+            }))
         } else {
             bail!("機能を指定してください")
         }
     }
+}
+
+#[derive(Debug)]
+pub struct TrackArgs {
+    pub temp_0: PathBuf,
+    pub temp_x: PathBuf,
+    pub temp: PathBuf,
+    pub map: String,
 }
 
 impl transition::Param {
@@ -99,6 +119,18 @@ impl<'a> TryFrom<&ArgValue<'a>> for f64 {
             .1
             .parse()
             .with_context(|| format!("{}を数値で入力してください", value.0))
+    }
+}
+
+impl<'a> From<ArgValue<'a>> for String {
+    fn from(value: ArgValue<'a>) -> Self {
+        value.1.into()
+    }
+}
+
+impl<'a> From<ArgValue<'a>> for PathBuf {
+    fn from(value: ArgValue<'a>) -> Self {
+        value.1.into()
     }
 }
 

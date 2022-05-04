@@ -3,15 +3,23 @@
 REM #jww
 REM #cd
 REM #hm | 他軌道指定 | スキップ |
-REM #hf
 REM #:1
 REM #h1
 REM #hc 他軌道を指定
 REM #g1
-REM #c  BVEのトラック名 /_/trackKey:
+REM #c  BVEのトラック名 /_/トラック名:
 REM #:2
 REM #e
 
-REM TODO:出力間隔はここで指定
+goto %1
 
+:1
+MOVE JWC_TEMP.txt JWC_TEMP_X.txt
+echo %2 >> JWC_TEMP_X.txt
+goto END
+
+:2
+goto END
+
+:END
 echo heエラー2 > JWC_TEMP.txt

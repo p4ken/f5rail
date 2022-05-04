@@ -3,9 +3,13 @@ mod transition;
 
 use std::ffi::OsStr;
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
 
-use agent::{bat::Args, jwc_temp};
+use agent::{
+    bat::{Args, TrackArgs},
+    bve::MapFile,
+    jwc_temp,
+};
 
 /// 配線する
 pub fn layout(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<()> {
@@ -13,7 +17,7 @@ pub fn layout(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<()> {
 
     match &args {
         Args::Transition(file, args) => plot(file, args),
-        Args::Track => Ok(()),
+        Args::Track(args) => export(args),
     }
 }
 
@@ -27,4 +31,19 @@ fn plot(file: &str, param: &Result<transition::Param>) -> Result<()> {
         }
         Err(e) => jwc_temp.error(&e),
     }
+}
+
+/// BVEマップに出力する
+fn export(args: &TrackArgs) -> Result<()> {
+    // TODO: temp_xに記載されたパスに書き出す
+    // temp_n以外のエラーをtemp_nに出力する層がほしい
+    let jwc_temp = jwc_temp::read(&args.temp)?;
+
+    // TODO: 絶対パスならappendしない
+    let mut map_path = jwc_temp.project_dir()?;
+    map_path.push(args.map.as_str());
+
+    let map = MapFile::create(&map_path)?;
+
+    Ok(())
 }

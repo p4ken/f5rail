@@ -3,10 +3,16 @@
 //! JWC_TEMP.TXTのフォーマット（参考）
 //! http://mintleaf.sakura.ne.jp/cad/jwc_temp.html
 
-use std::{fmt::Display, fs::File, io};
+use std::{
+    fmt::Display,
+    fs::{File, OpenOptions},
+    io::{self, BufRead, BufReader},
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use encoding_rs::SHIFT_JIS;
+use encoding_rs_io::DecodeReaderBytesBuilder;
 
 use crate::transition::{
     canvas::{Point, Spiral},
@@ -14,12 +20,55 @@ use crate::transition::{
     unit::{Meter, Rad, Vector},
 };
 
+pub fn read(path: &(impl AsRef<Path> + ?Sized)) -> Result<JwcTemp> {
+    JwcTemp::read(path)
+}
+
 /// 出力用の座標ファイルを作成する。
 ///
 /// すでに存在する場合は上書きする。
 pub fn create(path: &str) -> Result<Write> {
     let file = File::create(path).context("JWC_TEMP.TXTを作成できませんでした。")?;
     Ok(Write { file })
+}
+
+#[derive(Default)]
+pub struct JwcTemp {
+    project_path: Option<PathBuf>,
+}
+
+impl JwcTemp {
+    fn new() -> Self {
+        Default::default()
+    }
+
+    fn read(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
+        let file = OpenOptions::new().read(true).open(path)?;
+        let decoder = DecodeReaderBytesBuilder::new()
+            .encoding(Some(SHIFT_JIS))
+            .build(file);
+        let mut jwc_temp = Self::new();
+        let line_iter = BufReader::new(decoder).lines().filter_map(|l| l.ok());
+        for line in line_iter {
+            if let Some((_, path)) = line.split_once("file=") {
+                jwc_temp.project_path = Some(PathBuf::from(path));
+            }
+        }
+        Ok(jwc_temp)
+    }
+
+    pub fn project_dir(&self) -> Result<PathBuf> {
+        let path = self
+            .project_path
+            .as_ref()
+            .context("現在のJWWファイルを特定できませんでした")?;
+
+        let dir = path
+            .parent()
+            .context("JWWファイルが存在するディレクトリを特定できませんでした")?;
+
+        Ok(dir.to_owned())
+    }
 }
 
 pub struct Write {

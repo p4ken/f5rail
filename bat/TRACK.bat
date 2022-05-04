@@ -9,14 +9,16 @@ REM #h1
 REM #hc 自軌道を指定
 REM #1  出力始点を指定
 REM #g1
+REM #c  出力始点のBVE距離程 /_/始点距離程:
 REM #:2
-REM #h/sub/TRACK-N.bat
+REM #h/sub/TRACK-X.bat
 REM #e
 
 goto %1
 
 :1
 MOVE JWC_TEMP.txt JWC_TEMP_0.txt
+echo %2 >> JWC_TEMP_0.txt
 goto END
 
 :2
