@@ -1,10 +1,10 @@
 use std::{
+    ffi::OsStr,
     fs::File,
     path::{Path, PathBuf},
 };
 
 use anyhow::{ensure, Context, Result};
-use derive_more::Deref;
 
 /// BVEマップファイル
 pub struct MapFile(File);
@@ -18,17 +18,20 @@ impl MapFile {
         ensure!(dir.exists(), "{} を開けません", dir.to_string_lossy());
 
         let stem = path.file_stem();
-        let ext = path.extension();
-        let mut path = path.to_path_buf();
+        let (mut path, ext) = match path.extension() {
+            Some(ext) => (path.to_path_buf(), ext),
+            None => {
+                let ext = OsStr::new("txt");
+                (path.with_extension(ext), ext)
+            }
+        };
         let mut i = 1;
         while path.exists() {
             let mut name = stem
                 .with_context(|| format!("{} はすでに存在しています", path.to_string_lossy()))?
                 .to_os_string();
             name.push(format!("-{}.", i));
-            if let Some(ext) = ext {
-                name.push(ext)
-            }
+            name.push(ext);
             path = dir.to_path_buf();
             path.push(name);
             i += 1;
@@ -56,3 +59,16 @@ impl<'a> MapPath<'a> {
         map_path
     }
 }
+
+// pub struct MapPath(PathBuf);
+
+// impl MapPath {
+//     fn new(path: &(impl AsRef<Path> + ?Sized)) {
+//         let mut path = path.as_ref().to_path_buf();
+//         match path.extension() {
+//             Some(ext) => Self { path, ext },
+//             None => path.set_extension("txt"),
+//         }
+//         let ext = path.extension().unwrap_or("txt");
+//     }
+// }
