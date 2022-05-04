@@ -4,7 +4,6 @@
 //! http://mintleaf.sakura.ne.jp/cad/jwc_temp.html
 
 use std::{
-    ffi::OsString,
     fmt::Display,
     fs::{File, OpenOptions},
     io::{self, BufRead, BufReader},
@@ -58,10 +57,6 @@ impl JwcTemp {
         Ok(jwc_temp)
     }
 
-    pub fn project_path(&self) -> Option<&String> {
-        self.project_path.as_ref()
-    }
-
     pub fn project_dir(&self) -> Result<PathBuf> {
         let path = self
             .project_path
@@ -75,7 +70,7 @@ impl JwcTemp {
 
         let dir = Path::new(path)
             .parent()
-            .context("作業中のファイルがあるフォルダを開けませんでした")?;
+            .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
 
         Ok(dir.to_path_buf())
     }

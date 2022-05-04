@@ -8,7 +8,7 @@ use crate::transition::{
     curve::{Curvature, Diminish, Radius, STRAIGHT},
 };
 
-use super::bat::*;
+use super::bat_0::*;
 
 #[test]
 fn コマンドライン引数をパースできる() {
