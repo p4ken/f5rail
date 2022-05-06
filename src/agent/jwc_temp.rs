@@ -5,14 +5,14 @@
 
 use std::{
     fmt::Display,
-    fs::{File, OpenOptions},
-    io::{self, BufRead, BufReader},
-    path::{Path, PathBuf},
+    fs::{File},
+    io::{self},
+    path::{Path},
 };
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{Context, Result};
 use encoding_rs::SHIFT_JIS;
-use encoding_rs_io::DecodeReaderBytesBuilder;
+
 
 use crate::transition::{
     canvas::{Point, Spiral},
@@ -20,60 +20,12 @@ use crate::transition::{
     unit::{Meter, Rad, Vector},
 };
 
-pub fn read(path: &(impl AsRef<Path> + ?Sized)) -> Result<JwcTemp> {
-    JwcTemp::read(path)
-}
-
 /// 出力用の座標ファイルを作成する。
 ///
 /// すでに存在する場合は上書きする。
-pub fn create(path: &str) -> Result<Write> {
+pub fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Write> {
     let file = File::create(path).context("JWC_TEMP.TXTを作成できませんでした。")?;
     Ok(Write { file })
-}
-
-#[derive(Default)]
-pub struct JwcTemp {
-    project_path: Option<String>,
-}
-
-impl JwcTemp {
-    fn new() -> Self {
-        Default::default()
-    }
-
-    fn read(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
-        let file = OpenOptions::new().read(true).open(path)?;
-        let decoder = DecodeReaderBytesBuilder::new()
-            .encoding(Some(SHIFT_JIS))
-            .build(file);
-        let mut jwc_temp = Self::new();
-        let line_iter = BufReader::new(decoder).lines().filter_map(|l| l.ok());
-        for line in line_iter {
-            if let Some((_, path)) = line.split_once("file=") {
-                jwc_temp.project_path = Some(path.to_string());
-            }
-        }
-        Ok(jwc_temp)
-    }
-
-    pub fn project_dir(&self) -> Result<PathBuf> {
-        let path = self
-            .project_path
-            .as_ref()
-            .context("JWC_TEMPファイルにパスが出力されていません")?;
-
-        ensure!(
-            !path.is_empty(),
-            "作業中のファイルに名前をつけて保存してください"
-        );
-
-        let dir = Path::new(path)
-            .parent()
-            .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
-
-        Ok(dir.to_path_buf())
-    }
 }
 
 pub struct Write {

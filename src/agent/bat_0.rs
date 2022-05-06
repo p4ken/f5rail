@@ -8,6 +8,8 @@ use anyhow::{bail, ensure, Context, Result};
 use crate::transition;
 use crate::transition::curve::{Curvature, Diminish, Radius, Subtension, STRAIGHT};
 
+
+
 /// コマンドライン引数
 ///
 /// BATファイルの起動オプション（参考）
@@ -41,6 +43,7 @@ impl Args {
             Ok(Self::Transition(file, param))
         } else if let Ok(track) = args.get("TRACK") {
             ensure!(track.as_str() == "X");
+            // return Ok(Self::Track(bat::Args::new(args)));
             let temp_0 = args.get("TEMP_0")?.into();
             let temp_x = args.get("TEMP_X")?.into();
             let temp = args.get("TEMP")?.into();

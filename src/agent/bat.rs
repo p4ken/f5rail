@@ -3,15 +3,18 @@ use std::{
 };
 
 use anyhow::{Context, Result};
+use derive_more::Constructor;
 
-
+#[derive(Constructor)]
 /// TODO: OsString
-pub struct Args(HashMap<String, String>);
+pub struct Args{
+    map: HashMap<String, String>
+}
 
 impl Args {
     fn get<'a, 'b>(&'b self, key: &'a str) -> Result<ArgValue<'a, 'b>> {
         let value = self
-            .0
+            .map
             .get(key)
             .with_context(|| format!("{}を指定してください", key))?;
         Ok(ArgValue(key, value))

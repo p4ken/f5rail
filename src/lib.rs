@@ -6,11 +6,8 @@ use std::ffi::OsStr;
 
 use anyhow::Result;
 
-use agent::{
-    bat_0::{Args, TrackArgs},
-    bve::{MapFile, MapPath},
-    jwc_temp,
-};
+use agent::{bat_0::Args, jwc_temp};
+use track::app::Track;
 
 /// 配線する
 pub fn layout(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<()> {
@@ -18,7 +15,7 @@ pub fn layout(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<()> {
 
     match &args {
         Args::Transition(file, args) => plot(file, args),
-        Args::Track(args) => export(args),
+        Args::Track(args) => Track::export(args),
     }
 }
 
@@ -32,18 +29,4 @@ fn plot(file: &str, param: &Result<transition::Param>) -> Result<()> {
         }
         Err(e) => jwc_temp.error(&e),
     }
-}
-
-/// BVEマップに出力する
-fn export(args: &TrackArgs) -> Result<()> {
-    // temp以外のエラーをtempに出力する層がほしい
-    let jwc_temp = jwc_temp::read(&args.temp)?;
-    let map_path = MapPath::new(&args.map);
-    let map_path = match map_path.absolute() {
-        Some(map_path) => map_path.to_path_buf(),
-        None => map_path.relative(&jwc_temp.project_dir()?),
-    };
-    let _map = MapFile::create(&map_path)?;
-
-    Ok(())
 }
