@@ -1,12 +1,10 @@
-use std::{collections::HashMap, ffi::OsStr, path::PathBuf};
+use std::{collections::HashMap, ffi::OsStr};
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result};
 
-use crate::transition::{
-    self,
-    curve::{Curvature, Diminish, Radius, Subtension, STRAIGHT},
-};
 
+
+#[derive(Debug)]
 /// コマンドライン引数
 ///
 /// (参考) BATファイルの起動オプション
@@ -38,7 +36,7 @@ impl Args {
         let value = self
             .buf
             .get(key)
-            .with_context(|| format!("{}を指定してください", key))?;
+            .with_context(|| format!("{key}を指定してください"))?;
         Ok(ArgValue(key, value))
     }
 }
@@ -62,88 +60,8 @@ impl<'k, 'v> ArgValue<'k, 'v> {
     pub fn str(&self) -> &'v str {
         self.1
     }
-}
 
-// ---------------------------------------------
-// 過去の遺物
-
-impl transition::Param {
-    /// コマンドライン引数を緩和曲線パラメータにパースする。
-    pub fn parse(diminish: &ArgValue, args: &Args) -> Result<Self> {
-        Ok(Self {
-            diminish: diminish.try_into()?,
-            // 半径は無くてもよいが、あるなら適切な値でなければならない。
-            k0: args.get("R0").ok().try_into()?,
-            k1: args.get("R1").ok().try_into()?,
-            l0: 0.0.into(),
-            tcl: args.get("TCL")?.try_into()?,
-            p0: (0.0, 0.0).into(),
-            t0: 0.0.into(),
-        })
-    }
-}
-
-impl TryFrom<&ArgValue<'_, '_>> for f64 {
-    type Error = anyhow::Error;
-    /// 小数に変換する。
-    fn try_from(value: &ArgValue) -> Result<Self, Self::Error> {
-        value
-            .1
-            .parse()
-            .with_context(|| format!("{}を数値で入力してください", value.0))
-    }
-}
-
-impl From<ArgValue<'_, '_>> for String {
-    fn from(value: ArgValue) -> Self {
-        value.1.into()
-    }
-}
-
-impl From<ArgValue<'_, '_>> for PathBuf {
-    fn from(value: ArgValue) -> Self {
-        value.1.into()
-    }
-}
-
-impl TryFrom<Option<ArgValue<'_, '_>>> for Curvature {
-    type Error = anyhow::Error;
-
-    fn try_from(value: Option<ArgValue>) -> Result<Self, Self::Error> {
-        let v = match value {
-            Some(v) => v,
-            None => return Ok(STRAIGHT),
-        };
-        let r = Radius((&v).try_into()?);
-        ensure!(r != Radius(0.0), "{}に0を指定できません", v.0);
-        Ok(r.into())
-    }
-}
-
-impl TryFrom<ArgValue<'_, '_>> for Subtension {
-    type Error = anyhow::Error;
-
-    fn try_from(value: ArgValue) -> Result<Self, Self::Error> {
-        let tcl: f64 = (&value).try_into()?;
-        ensure!(tcl > 0.0, "{}に0より大きい値を入力してください", value.0);
-        Ok(tcl.into())
-    }
-}
-
-impl TryFrom<&ArgValue<'_, '_>> for Diminish {
-    type Error = anyhow::Error;
-    /// 緩和曲線関数に変換する。
-    fn try_from(pair: &ArgValue<'_, '_>) -> Result<Self, Self::Error> {
-        match pair.1 {
-            "1" => Ok(Diminish::Sine),
-            "2" => Ok(Diminish::Linear),
-            _ => bail!("緩和曲線関数に正しい値を入力してください"),
-        }
-    }
-}
-
-impl From<Radius> for Curvature {
-    fn from(r: Radius) -> Self {
-        r.0.recip().into()
+    pub fn key(&self) -> &'k str {
+        self.0
     }
 }
