@@ -1,33 +1,34 @@
-use std::{ffi::OsStr};
+use std::ffi::OsStr;
 
 use anyhow::{Error, Result};
 use derive_more::Constructor;
 
 use crate::agent::{
-    bat, bat_0,
+    bat::{self, Args},
     bve::{MapFile, MapPath},
     jww::JwcTemp,
 };
 
-#[derive(Constructor)]
 pub struct Track<'a> {
-    args: &'a Args<'a>,
+    args: &'a Args,
 }
 
 impl<'a> Track<'a> {
+    pub fn new(args: &'a Args) -> Self {
+        Self { args }
+    }
+
     /// 外部変形のエントリーポイント。
     ///
     /// JWC_TEMPファイルへの出力に失敗したらエラーを返す。
     /// それ以外のエラーはJWC_TEMPファイルに出力される。
-    pub fn export(args: &bat_0::TrackArgs /* TODO: bat::Args */) -> Result<()> {
-        let args = Args::new(&args);
-        let app = Track::new(&args);
-        app.make_map().or_else(|e| app.show_error(&e))
+    pub fn export(&self) -> Result<()> {
+        self.make_map().or_else(|e| self.show_err(&e))
     }
 
     /// 他線座標をBVEマップに出力する。
     fn make_map(&self) -> Result<()> {
-        let jwc_temp = JwcTemp::read(self.args.temp_path())?;
+        let jwc_temp = JwcTemp::read(self.args.temp_path()?)?;
         let map_path = MapPath::new(self.args.map_name()?);
         let map_path = match map_path.absolute() {
             Some(map_path) => map_path.to_path_buf(),
@@ -38,40 +39,46 @@ impl<'a> Track<'a> {
     }
 
     /// 成功メッセージをJWC_TEMPファイルに出力する。
-    fn show_success() {}
+    fn show_path() {}
 
     /// エラーをJWC_TEMPファイルに出力する。
-    fn show_error(&self, e: &Error) -> Result<()> {
-        JwcTemp::create(self.args.temp_path())?.error(e)
+    fn show_err(&self, e: &Error) -> Result<()> {
+        JwcTemp::create(self.args.temp_path()?)?.error(e)
     }
 
     /// 他線座標を計算する。
     fn plot(&self) {}
 }
 
-#[derive(Constructor)]
-pub struct Args<'a> {
-    args: &'a bat_0::TrackArgs, /* TODO: bat::Args */
-}
+// pub struct Args<'a> {
+//     // temp_path: &'a str,
+//     args: &'a bat::Args,
+// }
 
-impl<'a> Args<'a> {
-    // これは必須
-    fn temp_path(&self) -> &OsStr {
-        self.args.temp.as_os_str() // 一時的な実装
+impl Args {
+    // pub fn new(args: &'a bat::Args) -> Result<Self> {
+    //     // let temp_path = args.get("TEMP")?.str();
+    //     Ok(Self { args })
+    // }
+
+    fn temp_path(&self) -> Result<&str> {
+        self.try_get("TEMP")
     }
 
-    fn parse(_buf: bat::Args) {}
-    // ↑ 全部まとめてパースする案
-    // ↓ 個別にオンザフライでパースする案
-    fn temp_0_path(&self) -> Result<&OsStr> {
-        Ok(OsStr::new(""))
+    fn temp_0_path(&self) -> Result<&str> {
+        self.try_get("TEMP_0")
     }
 
-    fn temp_x_path(&self) -> Result<&OsStr> {
-        Ok(OsStr::new(""))
+    fn temp_x_path(&self) -> Result<&str> {
+        self.try_get("TEMP_Z")
     }
 
-    fn map_name(&self) -> Result<&OsStr> {
-        Ok(&OsStr::new(&self.args.map)) // 一時的
+    fn map_name(&self) -> Result<&str> {
+        self.try_get("出力ファイル名")
+    }
+
+    fn try_get(&self, s: &str) -> Result<&str> {
+        let val = self.get(s)?;
+        Ok(val.str())
     }
 }

@@ -1,4 +1,5 @@
 mod agent;
+mod app;
 mod track;
 mod transition;
 
@@ -6,16 +7,17 @@ use std::ffi::OsStr;
 
 use anyhow::Result;
 
-use agent::{bat_0::Args, jwc_temp};
-use track::app::Track;
+use agent::{jwc_temp, bat::Args};
+use app::App;
 
 /// 配線する
 pub fn layout(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<()> {
     let args = Args::parse(args)?;
+    let app = App::new(&args)?;
 
-    match &args {
-        Args::Transition(file, args) => plot(file, args),
-        Args::Track(args) => Track::export(args),
+    match &app {
+        App::Transition(file, args) => plot(file, args),
+        App::Track(track) => track.export(),
     }
 }
 
