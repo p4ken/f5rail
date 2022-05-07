@@ -11,6 +11,13 @@ pub trait Meter {
 pub trait Rad {
     /// 一般角。反時計回りが正。
     fn rad(&self) -> f64;
+}
+
+pub trait Deg {
+    fn deg(&self) -> f64;
+}
+
+impl<T: Rad> Deg for T {
     /// 度
     fn deg(&self) -> f64 {
         self.rad().to_degrees()

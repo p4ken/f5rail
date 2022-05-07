@@ -9,20 +9,22 @@ use anyhow::{ensure, Context, Result};
 use encoding_rs::SHIFT_JIS;
 use encoding_rs_io::DecodeReaderBytesBuilder;
 
-/// create -> 書き込む
-/// open -> 開く＆書き込む
-/// どのみち書き込むので、どのみちmutでもいい
+use crate::transition::unit::{Deg, Meter, Vector};
 
+/// 入出力用の座標ファイル。
+///
+/// (参考) JWC_TEMP.TXTのフォーマット
+/// http://mintleaf.sakura.ne.jp/cad/jwc_temp.html
 pub struct JwcTemp {
     file: File,
-    // cache: Option<Cache>,
 }
 
 impl JwcTemp {
+    /// 座標ファイルを読み込む。
     pub fn read(path: &(impl AsRef<Path> + ?Sized)) -> Result<Cache> {
         let file = OpenOptions::new().read(true).open(path).with_context(|| {
             format!(
-                "JWC_TEMPファイル {} を開けませんでした。",
+                "JWC_TEMPファイル {} を開けませんでした",
                 path.as_ref().to_string_lossy()
             )
         })?;
@@ -39,10 +41,11 @@ impl JwcTemp {
         Ok(cache)
     }
 
+    /// 座標ファイルを作成する。
     pub fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
         let file = File::create(path).with_context(|| {
             format!(
-                "JWC_TEMPファイル {} に書き込めませんでした。",
+                "JWC_TEMPファイル {} に書き込めませんでした",
                 path.as_ref().to_string_lossy()
             )
         })?;
@@ -64,6 +67,32 @@ impl JwcTemp {
     /// 座標の間に出力すると、座標が途切れてしまう。
     pub fn notice<T: AsRef<str>>(&mut self, s: T) -> Result<()> {
         self.puts(format!("h#{}", s.as_ref()))
+    }
+
+    /// 曲線を出力する。
+    pub fn curve(
+        &mut self,
+        c: &impl Vector,
+        r: &impl Meter,
+        a0: &impl Deg,
+        a1: &impl Deg,
+    ) -> Result<()> {
+        let (a0, a1) = (a0.deg(), a1.deg());
+        let (a0, a1) = if a0 < a1 { (a0, a1) } else { (a1, a0) };
+
+        self.puts(format!(
+            "ci {} {} {} {} {}",
+            c.x(),
+            c.y(),
+            r.meter().abs(),
+            a0,
+            a1,
+        ))
+    }
+
+    /// 直線を出力する。
+    pub fn straight(&mut self, p0: &impl Vector, p1: &impl Vector) -> Result<()> {
+        self.puts(format!("{} {} {} {}", p0.x(), p0.y(), p1.x(), p1.y()))
     }
 
     /// 文字列と改行を出力する。
