@@ -37,9 +37,9 @@ impl<'a> Track<'a> {
         Ok(map_path)
     }
 
-    /// BVEマップのパスを決める。
+    /// BVEマップのパスを生成する。
     fn map_path(&self) -> Result<PathBuf> {
-        let map_path = MapPath::new(self.args.map_name()?);
+        let map_path = self.args.map_name().map(MapPath::new).unwrap_or_default();
         if let Some(map_path) = map_path.absolute() {
             Ok(map_path.to_path_buf())
         } else {
@@ -65,38 +65,23 @@ impl<'a> Track<'a> {
     }
 
     /// 他線座標を計算する。
-    fn plot(&self) {}
+    fn _plot(&self) {}
 }
 
-// pub struct Args<'a> {
-//     // temp_path: &'a str,
-//     args: &'a bat::Args,
-// }
-
 impl Args {
-    // pub fn new(args: &'a bat::Args) -> Result<Self> {
-    //     // let temp_path = args.get("TEMP")?.str();
-    //     Ok(Self { args })
-    // }
-
     fn temp_path(&self) -> Result<&str> {
-        self.try_get("TEMP")
+        self.get_str("TEMP")
     }
 
-    fn temp_0_path(&self) -> Result<&str> {
-        self.try_get("TEMP_0")
+    fn _temp_0_path(&self) -> Result<&str> {
+        self.get_str("TEMP_0")
     }
 
-    fn temp_x_path(&self) -> Result<&str> {
-        self.try_get("TEMP_Z")
+    fn _temp_x_path(&self) -> Result<&str> {
+        self.get_str("TEMP_Z")
     }
 
     fn map_name(&self) -> Result<&str> {
-        self.try_get("出力ファイル名")
-    }
-
-    fn try_get(&self, s: &str) -> Result<&str> {
-        let val = self.get(s)?;
-        Ok(val.str())
+        self.get_str("出力ファイル名")
     }
 }

@@ -2,8 +2,6 @@ use std::{collections::HashMap, ffi::OsStr};
 
 use anyhow::{Context, Result};
 
-
-
 #[derive(Debug)]
 /// コマンドライン引数
 ///
@@ -38,6 +36,11 @@ impl Args {
             .get(key)
             .with_context(|| format!("{key}を指定してください"))?;
         Ok(ArgValue(key, value))
+    }
+
+    pub fn get_str(&self, key: &str) -> Result<&str> {
+        let val = self.get(key)?;
+        Ok(val.str())
     }
 }
 
