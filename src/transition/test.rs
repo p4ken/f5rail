@@ -6,6 +6,7 @@ use crate::transition::unit::Vector;
 
 use super::canvas::Point;
 use super::curve::*;
+use super::param::Param;
 use super::unit::Deg;
 use super::*;
 

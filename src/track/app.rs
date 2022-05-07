@@ -9,6 +9,7 @@ use crate::agent::{
 };
 
 #[derive(Debug)]
+/// 外部変形 "TRACK"
 pub struct Track<'a> {
     args: &'a Args,
 }
