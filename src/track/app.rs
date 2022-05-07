@@ -19,31 +19,37 @@ impl<'a> Track<'a> {
         Self { args }
     }
 
-    /// 外部変形のエントリーポイント。
+    /// エントリーポイント。
     ///
     /// JWC_TEMPファイルへの出力に失敗したらエラーを返す。
     /// それ以外のエラーはJWC_TEMPファイルに出力される。
     pub fn export(&self) -> Result<()> {
         match self.make_map_file() {
-            Ok(map_path) => self.show_path(&map_path),
+            Ok(map_path) => self.show_map_path(&map_path),
             Err(e) => self.show_err(&e),
         }
     }
 
     /// 他線座標をBVEマップに出力する。
     fn make_map_file(&self) -> Result<PathBuf> {
-        let jwc_temp = JwcTemp::read(self.args.temp_path()?)?;
-        let map_path = MapPath::new(self.args.map_name()?);
-        let map_path = match map_path.absolute() {
-            Some(map_path) => map_path.to_path_buf(),
-            None => map_path.relative(&jwc_temp.project_dir()?),
-        };
+        let map_path = self.map_path()?;
         let _map = MapFile::create(&map_path)?;
         Ok(map_path)
     }
 
+    /// BVEマップのパスを決める。
+    fn map_path(&self) -> Result<PathBuf> {
+        let map_path = MapPath::new(self.args.map_name()?);
+        if let Some(map_path) = map_path.absolute() {
+            Ok(map_path.to_path_buf())
+        } else {
+            let project_dir = JwcTemp::read(self.args.temp_path()?)?.project_dir()?;
+            Ok(map_path.relative(&project_dir))
+        }
+    }
+
     /// 成功メッセージをJWC_TEMPファイルに出力する。
-    fn show_path(&self, path: &Path) -> Result<()> {
+    fn show_map_path(&self, path: &Path) -> Result<()> {
         self.create_temp_file()?
             .notice(format!("{} に出力しました", path.to_string_lossy()))
     }

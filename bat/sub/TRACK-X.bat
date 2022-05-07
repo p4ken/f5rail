@@ -23,4 +23,4 @@ goto END
 goto END
 
 :END
-echo heエラー2 > JWC_TEMP.txt
+@REM echo heここに他軌道のエラー > JWC_TEMP.txt

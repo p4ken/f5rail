@@ -10,7 +10,7 @@ use rstest::rstest;
 use tempfile::{NamedTempFile, TempDir, TempPath};
 
 #[rstest]
-#[case("map.txt")]
+#[case("ascii.txt")]
 #[case("日本語.txt")]
 fn relative(#[case] map_name: &str) -> Result<()> {
     let jwc_temp_0 = TestFile::create()?;
@@ -28,9 +28,7 @@ fn relative(#[case] map_name: &str) -> Result<()> {
     ];
     f5rail::layout(args)?;
 
-    println!("{}", project_dir.path().join(map_name).to_string_lossy());
     assert!(project_dir.path().join(map_name).exists());
-    // TODO: ～～にファイルを作成しました表示、設計変更
 
     jwc_temp_0.close()?;
     jwc_temp_x.close()?;

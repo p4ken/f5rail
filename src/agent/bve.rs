@@ -15,7 +15,11 @@ impl MapFile {
         let dir = path
             .parent()
             .with_context(|| format!("{} の上位フォルダがありません", path.to_string_lossy()))?;
-        ensure!(dir.exists(), "フォルダ {} を開けません", dir.to_string_lossy());
+        ensure!(
+            dir.exists(),
+            "フォルダ {} を開けません",
+            dir.to_string_lossy()
+        );
 
         let stem = path.file_stem();
         let (mut path, ext) = match path.extension() {
@@ -53,22 +57,32 @@ impl<'a> MapPath<'a> {
         self.0.is_absolute().then(|| self.0)
     }
 
-    pub fn relative(&self, project_dir: &(impl AsRef<Path> + ?Sized)) -> PathBuf {
-        let mut map_path = project_dir.as_ref().to_path_buf();
-        map_path.push(self.0);
-        map_path
+    pub fn relative(&self, dir: &(impl AsRef<Path> + ?Sized)) -> PathBuf {
+        let mut path = dir.as_ref().to_path_buf();
+        path.push(self.0);
+        if path.extension().is_none() {
+            path.set_extension("txt");
+        }
+        path
     }
 }
 
-// pub struct MapPath(PathBuf);
+#[cfg(test)]
+mod test {
+    use rstest::rstest;
 
-// impl MapPath {
-//     fn new(path: &(impl AsRef<Path> + ?Sized)) {
-//         let mut path = path.as_ref().to_path_buf();
-//         match path.extension() {
-//             Some(ext) => Self { path, ext },
-//             None => path.set_extension("txt"),
-//         }
-//         let ext = path.extension().unwrap_or("txt");
-//     }
-// }
+    use super::*;
+
+    #[rstest]
+    #[case(r"abc.txt", r"dir\to\proj\abc.txt")]
+    #[case(r"abc", r"dir\to\proj\abc.txt")]
+    fn パス判断(#[case] name: &str, #[case] exp: &str) {
+        let path = MapPath::new(name);
+        if let Some(path) = path.absolute() {
+            assert_eq!(path.as_os_str(), exp);
+        } else {
+            let path = path.relative(r"dir\to\proj");
+            assert_eq!(path.as_os_str(), exp)
+        }
+    }
+}

@@ -15,7 +15,7 @@ pub enum App<'a> {
 }
 
 impl<'a> App<'a> {
-    /// 機能のファクトリ
+    /// 機能のファクトリ関数。
     pub fn new(args: &'a Args) -> Result<Self> {
         if let Ok(formula) = args.get("TRANSITION") {
             let file = args.get("FILE")?.into();
