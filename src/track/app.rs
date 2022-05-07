@@ -1,10 +1,9 @@
-
+use std::path::{Path, PathBuf};
 
 use anyhow::{Error, Result};
 
-
 use crate::agent::{
-    bat::{Args},
+    bat::Args,
     bve::{MapFile, MapPath},
     jww::JwcTemp,
 };
@@ -24,11 +23,14 @@ impl<'a> Track<'a> {
     /// JWC_TEMPファイルへの出力に失敗したらエラーを返す。
     /// それ以外のエラーはJWC_TEMPファイルに出力される。
     pub fn export(&self) -> Result<()> {
-        self.make_map().or_else(|e| self.show_err(&e))
+        match self.make_map_file() {
+            Ok(map_path) => self.show_path(&map_path),
+            Err(e) => self.show_err(&e),
+        }
     }
 
     /// 他線座標をBVEマップに出力する。
-    fn make_map(&self) -> Result<()> {
+    fn make_map_file(&self) -> Result<PathBuf> {
         let jwc_temp = JwcTemp::read(self.args.temp_path()?)?;
         let map_path = MapPath::new(self.args.map_name()?);
         let map_path = match map_path.absolute() {
@@ -36,15 +38,23 @@ impl<'a> Track<'a> {
             None => map_path.relative(&jwc_temp.project_dir()?),
         };
         let _map = MapFile::create(&map_path)?;
-        Ok(())
+        Ok(map_path)
     }
 
     /// 成功メッセージをJWC_TEMPファイルに出力する。
-    fn show_path() {}
+    fn show_path(&self, path: &Path) -> Result<()> {
+        self.create_temp_file()?
+            .notice(format!("{} に出力しました", path.to_string_lossy()))
+    }
 
     /// エラーをJWC_TEMPファイルに出力する。
     fn show_err(&self, e: &Error) -> Result<()> {
-        JwcTemp::create(self.args.temp_path()?)?.error(e)
+        self.create_temp_file()?.error(e)
+    }
+
+    /// JWC_TEMP.TXTを作成する。
+    fn create_temp_file(&self) -> Result<JwcTemp> {
+        JwcTemp::create(self.args.temp_path()?)
     }
 
     /// 他線座標を計算する。

@@ -19,16 +19,6 @@ pub struct JwcTemp {
 }
 
 impl JwcTemp {
-    pub fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
-        let file = File::create(path).with_context(|| {
-            format!(
-                "JWC_TEMPファイル {} に書き込めませんでした。",
-                path.as_ref().to_string_lossy()
-            )
-        })?;
-        Ok(Self { file })
-    }
-
     pub fn read(path: &(impl AsRef<Path> + ?Sized)) -> Result<Cache> {
         let file = OpenOptions::new().read(true).open(path).with_context(|| {
             format!(
@@ -49,6 +39,16 @@ impl JwcTemp {
         Ok(cache)
     }
 
+    pub fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
+        let file = File::create(path).with_context(|| {
+            format!(
+                "JWC_TEMPファイル {} に書き込めませんでした。",
+                path.as_ref().to_string_lossy()
+            )
+        })?;
+        Ok(Self { file })
+    }
+
     /// エラー `e` を書き込む。
     ///
     /// - 最初のエラーのみが表示される。
@@ -57,11 +57,19 @@ impl JwcTemp {
         self.puts(&format!("he{}", e))
     }
 
+    /// 注意を出力する。
+    ///
+    /// 最後の注意のみ表示される。
+    ///
+    /// 座標の間に出力すると、座標が途切れてしまう。
+    pub fn notice<T: AsRef<str>>(&mut self, s: T) -> Result<()> {
+        self.puts(format!("h#{}", s.as_ref()))
+    }
+
     /// 文字列と改行を出力する。
     fn puts<T: AsRef<str>>(&mut self, s: T) -> Result<()> {
         // TODO:
         // SHIFT_JISではなくCP932にしたほうがいい。
-        // 外部からの入力ファイルを読みだす場合は必須と思われる。
         // - https://crates.io/crates/codepage
         // - https://crates.io/search?q=windows%20encoding&sort=downloads
         let (sjis, _, _) = SHIFT_JIS.encode(s.as_ref());

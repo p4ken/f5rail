@@ -15,7 +15,7 @@ impl MapFile {
         let dir = path
             .parent()
             .with_context(|| format!("{} の上位フォルダがありません", path.to_string_lossy()))?;
-        ensure!(dir.exists(), "{} を開けません", dir.to_string_lossy());
+        ensure!(dir.exists(), "フォルダ {} を開けません", dir.to_string_lossy());
 
         let stem = path.file_stem();
         let (mut path, ext) = match path.extension() {
