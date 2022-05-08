@@ -9,7 +9,6 @@ REM #hc 他軌道を指定
 REM #g1
 REM #c  BVEのトラック名 /_/トラック名:
 REM #:2
-REM #h/sub/TRACK-SAVE.bat
 REM #e
 
 goto %1
@@ -23,4 +22,5 @@ goto END
 goto END
 
 :END
-@REM echo heここに他軌道のエラー > JWC_TEMP.txt
+echo h/sub/TRACK-SAVE.bat > JWC_TEMP.txt
+@REM echo he他軌道のエラーチェック > JWC_TEMP.txt
