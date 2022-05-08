@@ -53,10 +53,10 @@ impl<'a> Track<'a> {
     fn map_path(&self) -> Result<PathBuf> {
         let map_path = self.args.map_name().map(MapPath::new).unwrap_or_default();
         if let Some(map_path) = map_path.absolute() {
-            Ok(map_path.to_path_buf())
+            Ok(PathBuf::from(map_path))
         } else {
             let project_dir = JwcTemp::read(self.args.temp_path()?)?.project_dir()?;
-            Ok(map_path.relative(&project_dir))
+            Ok(map_path.relative(&project_dir)?)
         }
     }
 
