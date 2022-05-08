@@ -5,8 +5,10 @@ use anyhow::{Error, Result};
 use crate::agent::{
     bat::Args,
     bve::{MapFile, MapPath},
-    jww::JwcTemp,
+    jww::{self, JwcTemp},
 };
+
+use super::space::{Polyline, Relative};
 
 #[derive(Debug)]
 /// 外部変形 "TRACK"
@@ -31,9 +33,19 @@ impl<'a> Track<'a> {
     }
 
     /// 他線座標をBVEマップに出力する。
+    ///
+    /// ファイル入出力を行なう。それ以外は下層へ移譲する。
     fn make_map_file(&self) -> Result<PathBuf> {
         let map_path = self.map_path()?;
         let _map = MapFile::create(&map_path)?;
+        // TODO: トラック名を取得
+        // TRACK_X.batの引数を保存しておく必要がある
+        // let track_name = self.args.track_name()?;
+
+        // let relative = self.plot_relative()?;
+
+        // TODO: トラック名と座標リストをBVEマップに書き込む
+
         Ok(map_path)
     }
 
@@ -46,6 +58,17 @@ impl<'a> Track<'a> {
             let project_dir = JwcTemp::read(self.args.temp_path()?)?.project_dir()?;
             Ok(map_path.relative(&project_dir))
         }
+    }
+
+    /// トラック名と座標リストをBVEマップに書き込む。
+    ///
+    /// JWC_TEMPファイルから読み込む。それ以外は下層へ移譲する。マップファイルへの書き込みは上層へ移譲する。
+    fn plot_relative(&self) -> Result<Vec<Relative>> {
+        // 図形から、自線・他線それぞれの連続線を見つける
+        let track_0 = JwcTemp::read_polyline(self.args.temp_0_path()?)?;
+        let track_x = JwcTemp::read_polyline(self.args.temp_x_path()?)?;
+
+        Relative::between(&track_0, &track_x)
     }
 
     /// 成功メッセージをJWC_TEMPファイルに出力する。
@@ -63,9 +86,6 @@ impl<'a> Track<'a> {
     fn create_temp_file(&self) -> Result<JwcTemp> {
         JwcTemp::create(self.args.temp_path()?)
     }
-
-    /// 他線座標を計算する。
-    fn _plot(&self) {}
 }
 
 impl Args {
@@ -73,15 +93,26 @@ impl Args {
         self.get_str("TEMP")
     }
 
-    fn _temp_0_path(&self) -> Result<&str> {
+    fn temp_0_path(&self) -> Result<&str> {
         self.get_str("TEMP_0")
     }
 
-    fn _temp_x_path(&self) -> Result<&str> {
+    fn temp_x_path(&self) -> Result<&str> {
         self.get_str("TEMP_Z")
     }
 
     fn map_name(&self) -> Result<&str> {
         self.get_str("出力ファイル名")
     }
+}
+
+impl JwcTemp {
+    fn read_polyline(path: &(impl AsRef<Path> + ?Sized)) -> Result<Polyline> {
+        let cache = JwcTemp::read(path)?;
+        todo!()
+    }
+}
+
+trait WriteRelative {
+    fn write(&self, relative: &Relative) -> Result<()>;
 }
