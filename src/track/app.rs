@@ -35,8 +35,8 @@ impl<'a> Track<'a> {
     /// 他線座標をBVEマップに出力する。
     ///
     /// ファイル入出力を行なう。それ以外は下層へ移譲する。
-    fn make_map_file(&self) -> Result<PathBuf> {
-        let map_path = self.map_path()?;
+    fn make_map_file(&self) -> Result<MapPath> {
+        let map_path = self.build_map_path()?;
         let _map = MapFile::create(&map_path)?;
         // TODO: トラック名を取得
         // TRACK_X.batの引数を保存しておく必要がある
@@ -50,14 +50,11 @@ impl<'a> Track<'a> {
     }
 
     /// BVEマップのパスを生成する。
-    fn map_path(&self) -> Result<PathBuf> {
-        let map_path = self.args.map_name().map(MapPath::new).unwrap_or_default();
-        if let Some(map_path) = map_path.absolute() {
-            Ok(PathBuf::from(map_path))
-        } else {
-            let project_dir = JwcTemp::read(self.args.temp_path()?)?.project_dir()?;
-            Ok(map_path.relative(&project_dir)?)
-        }
+    fn build_map_path(&self) -> Result<MapPath> {
+        let given = self.args.map_name().unwrap_or("");
+        let proj_dir = JwcTemp::read(self.args.temp_path()?)?.project_dir()?;
+        let map_path = MapPath::new(given, &proj_dir);
+        Ok(map_path)
     }
 
     /// トラック名と座標リストをBVEマップに書き込む。
@@ -72,9 +69,11 @@ impl<'a> Track<'a> {
     }
 
     /// 成功メッセージをJWC_TEMPファイルに出力する。
-    fn show_map_path(&self, path: &Path) -> Result<()> {
-        self.create_temp_file()?
-            .notice(format!("{} に出力しました", path.to_string_lossy()))
+    fn show_map_path(&self, path: &(impl AsRef<Path> + ?Sized)) -> Result<()> {
+        self.create_temp_file()?.notice(format!(
+            "{} に出力しました",
+            path.as_ref().to_string_lossy()
+        ))
     }
 
     /// エラーをJWC_TEMPファイルに出力する。
