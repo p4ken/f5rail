@@ -119,22 +119,25 @@ impl Cache {
     pub fn project_dir(&self) -> Result<PathBuf> {
         let path = self.project_path()?;
 
-        ensure!(
-            !path.is_empty(),
-            "作業中のファイルに名前をつけて保存してください。"
-        );
-
         let dir = Path::new(path)
             .parent()
-            .with_context(|| format!("{} と同じフォルダに出力できません。", path))?;
+            .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
 
         Ok(dir.to_path_buf())
     }
 
     /// 作業中のファイルパス
     fn project_path(&self) -> Result<&String> {
-        self.project_path
+        let path = self
+            .project_path
             .as_ref()
-            .context("JWC_TEMPファイルにパスが出力されていません。")
+            .context("JWC_TEMPファイルにパスが出力されていません")?;
+
+        ensure!(
+            !path.is_empty(),
+            "作業中のファイルに名前をつけて保存してください"
+        );
+
+        Ok(path)
     }
 }

@@ -1,11 +1,11 @@
-use std::path::{Path};
+use std::path::Path;
 
 use anyhow::{Error, Result};
 
 use crate::agent::{
     bat::Args,
     bve::{MapFile, MapPath},
-    jww::{JwcTemp},
+    jww::JwcTemp,
 };
 
 use super::space::{Polyline, Relative};
@@ -36,7 +36,9 @@ impl<'a> Track<'a> {
     ///
     /// ファイル入出力を行なう。それ以外は下層へ移譲する。
     fn make_map_file(&self) -> Result<MapPath> {
-        let map_path = self.build_map_path()?;
+        let map_path = MapPath::build(self.args.map_name(), || {
+            JwcTemp::read(self.args.temp_path()?)?.project_dir()
+        })?;
         let _map = MapFile::create(&map_path)?;
         // TODO: トラック名を取得
         // TRACK_X.batの引数を保存しておく必要がある
@@ -47,15 +49,6 @@ impl<'a> Track<'a> {
         // TODO: トラック名と座標リストをBVEマップに書き込む
 
         Ok(map_path)
-    }
-
-    /// BVEマップのパスを生成する。
-    fn build_map_path(&self) -> Result<MapPath> {
-        let given = self.args.map_name().unwrap_or("");
-        MapPath::build(given, || {
-            // TODO: キャッシュを保存する
-            JwcTemp::read(self.args.temp_path()?)?.project_dir()
-        })
     }
 
     /// トラック名と座標リストをBVEマップに書き込む。
@@ -101,8 +94,8 @@ impl Args {
         self.get_str("TEMP_Z")
     }
 
-    fn map_name(&self) -> Result<&str> {
-        self.get_str("出力ファイル名")
+    fn map_name(&self) -> &str {
+        self.get_str("出力ファイル名").unwrap_or("")
     }
 }
 
