@@ -1,11 +1,11 @@
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 
 use anyhow::{Error, Result};
 
 use crate::agent::{
     bat::Args,
     bve::{MapFile, MapPath},
-    jww::{self, JwcTemp},
+    jww::{JwcTemp},
 };
 
 use super::space::{Polyline, Relative};
@@ -52,9 +52,10 @@ impl<'a> Track<'a> {
     /// BVEマップのパスを生成する。
     fn build_map_path(&self) -> Result<MapPath> {
         let given = self.args.map_name().unwrap_or("");
-        let proj_dir = JwcTemp::read(self.args.temp_path()?)?.project_dir()?;
-        let map_path = MapPath::new(given, &proj_dir);
-        Ok(map_path)
+        MapPath::build(given, || {
+            // TODO: キャッシュを保存する
+            JwcTemp::read(self.args.temp_path()?)?.project_dir()
+        })
     }
 
     /// トラック名と座標リストをBVEマップに書き込む。
@@ -107,7 +108,7 @@ impl Args {
 
 impl JwcTemp {
     fn read_polyline(path: &(impl AsRef<Path> + ?Sized)) -> Result<Polyline> {
-        let cache = JwcTemp::read(path)?;
+        let _cache = JwcTemp::read(path)?;
         todo!()
     }
 }

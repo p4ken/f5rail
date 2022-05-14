@@ -1,11 +1,10 @@
 use std::{
-    ffi::{OsStr, OsString},
-    fmt::format,
+    ffi::OsString,
     fs::File,
-    path::{self, Path, PathBuf},
+    path::{Path, PathBuf},
 };
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{ensure, Result};
 use derive_more::{Deref, DerefMut};
 
 /// BVEマップファイル
@@ -34,14 +33,17 @@ pub struct MapPath {
 // 「～～に作成しました」みたいにしたい。
 // パスを決めてからファイルを作成するまでにタイムラグがある問題は残る。
 impl MapPath {
-    pub fn new(
+    pub fn build<T>(
         given: &(impl AsRef<Path> + ?Sized),
-        proj_dir: &(impl AsRef<Path> + ?Sized), // 空だったらプロジェクトを保存してくださいエラー
-    ) -> Self {
+        proj_dir: impl Fn() -> Result<T>,
+    ) -> Result<Self>
+    where
+        PathBuf: From<T>,
+    {
         let given = given.as_ref();
         let buf = match given.is_absolute() {
             true => PathBuf::new(),
-            false => proj_dir.as_ref().to_path_buf(),
+            false => PathBuf::from(proj_dir()?),
         };
         let mut path = Self { buf };
         path.push(given);
@@ -54,7 +56,7 @@ impl MapPath {
         if path.exists() {
             path.add_number();
         }
-        path
+        Ok(path)
     }
 
     fn add_number(&mut self) {
@@ -99,8 +101,8 @@ mod test {
     #[case::dir2("e", r"e\map-1.txt")]
     #[case::absolute(r"C:\dir\file.txt", r"C:\dir\file.txt")]
     fn パス判断(#[case] given: &str, #[case] expected: &str) {
-        let test_dir = TestDir::new().unwrap();
-        let path = MapPath::new(given, &test_dir.0);
+        let proj = TestDir::new().unwrap();
+        let path = MapPath::build(given, || Ok(proj.path())).unwrap();
         assert!(
             path.ends_with(expected),
             "{} vs. {expected}",
@@ -108,6 +110,7 @@ mod test {
         );
     }
 
+    #[derive(Deref)]
     struct TestDir(TempDir);
 
     impl TestDir {
