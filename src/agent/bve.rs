@@ -1,10 +1,12 @@
 use std::{
+    ffi::{OsStr, OsString},
+    fmt::format,
     fs::File,
     path::{self, Path, PathBuf},
 };
 
-use anyhow::{ensure, Result};
-use derive_more::Deref;
+use anyhow::{ensure, Context, Result};
+use derive_more::{Deref, DerefMut};
 
 /// BVEマップファイル
 pub struct MapFile {
@@ -24,41 +26,57 @@ impl MapFile {
     }
 }
 
+#[derive(Debug, PartialEq, Deref, DerefMut)]
 pub struct MapPath {
-    path: PathBuf,
+    buf: PathBuf,
 }
 
 // 「～～に作成しました」みたいにしたい。
 // パスを決めてからファイルを作成するまでにタイムラグがある問題は残る。
 impl MapPath {
-    // クロージャを受け取りたい
     pub fn new(
         given: &(impl AsRef<Path> + ?Sized),
-        proj_dir: &(impl AsRef<Path> + ?Sized),
+        proj_dir: &(impl AsRef<Path> + ?Sized), // 空だったらプロジェクトを保存してくださいエラー
     ) -> Self {
-        let builder = PathBuilder::new(given.as_ref());
-        let path = builder.build();
-        Self { path }
+        let given = given.as_ref();
+        let buf = match given.is_absolute() {
+            true => PathBuf::new(),
+            false => proj_dir.as_ref().to_path_buf(),
+        };
+        let mut path = Self { buf };
+        path.push(given);
+        if given.file_name().is_none() || path.is_dir() {
+            path.push("map");
+        }
+        if path.extension().is_none() {
+            path.set_extension("txt");
+        }
+        if path.exists() {
+            path.add_number();
+        }
+        path
+    }
+
+    fn add_number(&mut self) {
+        let stem = self.file_stem().unwrap().to_os_string();
+        let ext = self.extension().unwrap().to_os_string();
+        let mut i = 1;
+        while self.exists() {
+            let mut name = OsString::new();
+            name.push(&stem);
+            name.push(format!("-{i}."));
+            name.push(&ext);
+
+            self.pop();
+            self.push(name);
+            i += 1;
+        }
     }
 }
 
 impl AsRef<Path> for MapPath {
     fn as_ref(&self) -> &Path {
-        &self.path
-    }
-}
-
-struct PathBuilder {
-    buf: PathBuf,
-}
-
-impl PathBuilder {
-    fn new(given: &(impl AsRef<Path> + ?Sized)) -> Self {
-        let buf = given.as_ref().to_path_buf();
-        Self { buf }
-    }
-    fn build(mut self) -> PathBuf {
-        self.buf
+        &self.buf
     }
 }
 
@@ -72,12 +90,22 @@ mod test {
     use super::*;
 
     #[rstest]
-    #[case("", "map.txt")]
-    #[case("a", "a.txt")]
-    fn パス判断(#[case] given: &str, #[case] exp: &str) {
+    #[case::empty("", "map.txt")]
+    #[case::extension("a", "a.txt")]
+    #[case::numbering("b", "b-1.txt")]
+    #[case::numbering2("c", "c-2.txt")]
+    #[case::numbering3("c-1", "c-1-1.txt")]
+    #[case::dir("d", r"d\map.txt")]
+    #[case::dir2("e", r"e\map-1.txt")]
+    #[case::absolute(r"C:\dir\file.txt", r"C:\dir\file.txt")]
+    fn パス判断(#[case] given: &str, #[case] expected: &str) {
         let test_dir = TestDir::new().unwrap();
         let path = MapPath::new(given, &test_dir.0);
-        assert_eq!(path.as_ref(), Path::new(exp));
+        assert!(
+            path.ends_with(expected),
+            "{} vs. {expected}",
+            path.to_string_lossy()
+        );
     }
 
     struct TestDir(TempDir);
