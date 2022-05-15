@@ -79,15 +79,12 @@ impl Args {
     fn temp_path(&self) -> Result<&str> {
         self.get_str("TEMP")
     }
-
     fn temp_0_path(&self) -> Result<&str> {
         self.get_str("TEMP_0")
     }
-
     fn temp_x_path(&self) -> Result<&str> {
         self.get_str("TEMP_X")
     }
-
     fn map_name(&self) -> &str {
         self.get_str("出力ファイル名").unwrap_or("")
     }

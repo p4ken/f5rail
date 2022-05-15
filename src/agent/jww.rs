@@ -40,24 +40,10 @@ impl JwcTemp {
         let decoder = DecodeReaderBytesBuilder::new()
             .encoding(Some(SHIFT_JIS))
             .build(file);
-        let mut cache = Cache::default();
-        let line_iter = BufReader::new(decoder).lines().filter_map(|l| l.ok());
-        for line in line_iter {
-            if let Some(s) = line.strip_prefix("file=") {
-                cache.project_path = Some(s.to_string());
-            } else if let Some(a) = line.strip_prefix("ci ") {
-                let v = a.split(" ").collect::<Vec<_>>();
-                if let [a, b, c, d, e, f, g] = v.as_slice() {
-                    // cache.curve.push()
-                }
-            } else if let Some(straight) = line.strip_prefix(" ") {
-                //
-            } else if let Some(s) = line.strip_prefix("/トラック名:") {
-                cache.track_name = Some(s.to_string());
-            } else if let Some(z0) = line.strip_prefix("/始点距離程:") {
-                //
-            }
-        }
+        let cache = BufReader::new(decoder)
+            .lines()
+            .filter_map(|l| l.ok())
+            .collect::<Cache>();
         Ok(cache)
     }
 
@@ -131,6 +117,7 @@ pub struct Cache {
 }
 
 impl Cache {
+    /// トラック名
     pub fn track_name(&self) -> &str {
         self.track_name.as_ref().map_or(" ", |s| s.as_str())
     }
@@ -159,5 +146,28 @@ impl Cache {
         );
 
         Ok(path)
+    }
+}
+
+impl FromIterator<String> for Cache {
+    fn from_iter<T: IntoIterator<Item = String>>(iter: T) -> Self {
+        let mut cache = Self::default();
+        for line in iter {
+            if let Some(s) = line.strip_prefix("file=") {
+                cache.project_path = Some(s.to_string());
+            } else if let Some(a) = line.strip_prefix("ci ") {
+                let v = a.split(" ").collect::<Vec<_>>();
+                if let [a, b, c, d, e, f, g] = v.as_slice() {
+                    // cache.curve.push()
+                }
+            } else if let Some(straight) = line.strip_prefix(" ") {
+                //
+            } else if let Some(s) = line.strip_prefix("/トラック名:") {
+                cache.track_name = Some(s.to_string());
+            } else if let Some(z0) = line.strip_prefix("/始点距離程:") {
+                //
+            }
+        }
+        cache
     }
 }
