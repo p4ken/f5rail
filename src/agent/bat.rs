@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ffi::OsStr, path::PathBuf};
+use std::{collections::HashMap, ffi::OsStr};
 
 use anyhow::{ensure, Context, Result};
 
@@ -30,6 +30,12 @@ impl Args {
         Ok(args)
     }
 
+    pub fn track(&self) -> Result<&str> {
+        self.get_str("TRACK")
+    }
+    pub fn transition(&self) -> Result<&str> {
+        self.get_str("TRANSITION")
+    }
     pub fn temp_path(&self) -> Result<&str> {
         self.get_str("TEMP")
     }
@@ -54,51 +60,19 @@ impl Args {
         Ok(tcl.into())
     }
 
-    pub fn get<'k>(&self, key: &'k str) -> Result<ArgValue<'k, '_>> {
+    fn get<'k>(&self, key: &'k str) -> Result<ArgValue<'k, '_>> {
         let value = self
             .buf
             .get(key)
             .with_context(|| format!("{key}を指定してください"))?;
         Ok(ArgValue(key, value))
     }
-    pub fn get_str(&self, key: &str) -> Result<&str> {
+    fn get_str(&self, key: &str) -> Result<&str> {
         self.get(key).map(|val| val.str())
     }
     fn get_radius(&self, key: &str) -> Result<Option<f64>> {
-        match self.get(key).ok() {
-            // 半径は無くてもよい
-            None => Ok(None),
-
-            // あるなら適切な値でなければならない
-            Some(val) => {
-                let r = val.float()?;
-                ensure!(r != 0.0, "{key}に0を指定できません");
-                Ok(Some(r))
-            }
-        }
-    }
-}
-
-impl TryFrom<&ArgValue<'_, '_>> for f64 {
-    type Error = anyhow::Error;
-    /// 小数に変換する。
-    fn try_from(value: &ArgValue) -> Result<Self, Self::Error> {
-        value
-            .str()
-            .parse()
-            .with_context(|| format!("{}を数値で入力してください", value.key()))
-    }
-}
-
-impl From<ArgValue<'_, '_>> for String {
-    fn from(value: ArgValue) -> Self {
-        value.str().into()
-    }
-}
-
-impl From<ArgValue<'_, '_>> for PathBuf {
-    fn from(value: ArgValue) -> Self {
-        value.str().into()
+        // 半径は無くてもよいが、あるなら適切な値でなければならない
+        self.get(key).map_or(Ok(None), |val| val.radius())
     }
 }
 
@@ -118,7 +92,7 @@ impl<'a> FromIterator<(&'a str, &'a str)> for Args {
 pub struct ArgValue<'k, 'v>(&'k str, &'v str);
 
 impl<'k, 'v> ArgValue<'k, 'v> {
-    pub fn str(&self) -> &'v str {
+    fn str(&self) -> &'v str {
         self.1
     }
     fn float(&self) -> Result<f64> {

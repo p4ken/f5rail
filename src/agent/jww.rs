@@ -157,14 +157,14 @@ impl FromIterator<String> for Cache {
                 cache.project_path = Some(s.to_string());
             } else if let Some(a) = line.strip_prefix("ci ") {
                 let v = a.split(" ").collect::<Vec<_>>();
-                if let [a, b, c, d, e, f, g] = v.as_slice() {
+                if let [_a, _b, _c, _d, _e, _f, _g] = v.as_slice() {
                     // cache.curve.push()
                 }
-            } else if let Some(straight) = line.strip_prefix(" ") {
+            } else if let Some(_straight) = line.strip_prefix(" ") {
                 //
             } else if let Some(s) = line.strip_prefix("/トラック名:") {
                 cache.track_name = Some(s.to_string());
-            } else if let Some(z0) = line.strip_prefix("/始点距離程:") {
+            } else if let Some(_z0) = line.strip_prefix("/始点距離程:") {
                 //
             }
         }

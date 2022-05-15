@@ -17,12 +17,12 @@ pub enum App<'a> {
 impl<'a> App<'a> {
     /// 機能のファクトリ関数。
     pub fn new(args: &'a Args) -> Result<Self> {
-        if let Ok(formula) = args.get("TRANSITION") {
+        if let Ok(formula) = args.transition() {
             let file = args.temp_path()?;
             let param = TrParam::parse(&formula, &args);
             Ok(Self::Transition(Transition::new(file, param)))
-        } else if let Ok(track) = args.get("TRACK") {
-            ensure!(track.str() == "X");
+        } else if let Ok(track) = args.track() {
+            ensure!(track == "X");
             Ok(Self::Track(Track::new(&args)))
         } else {
             bail!("機能を指定してください")

@@ -28,8 +28,8 @@ impl MapFile {
     /// トラック名と相対座標をマップファイルに書き込む
     pub fn write_track(
         &mut self,
-        name: &str,
-        relative: &impl IntoIterator<Item = (i32, i32)>,
+        _name: &str,
+        _relative: &impl IntoIterator<Item = (i32, i32)>,
     ) -> Result<()> {
         todo!()
     }

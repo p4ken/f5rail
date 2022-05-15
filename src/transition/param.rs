@@ -1,11 +1,11 @@
-use std::path::PathBuf;
+
 
 use crate::{
-    agent::bat::{ArgValue, Args},
+    agent::bat::{Args},
     transition::curve::{Radius, STRAIGHT},
 };
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{bail, Result};
 
 use super::{
     canvas::Point,
@@ -40,7 +40,7 @@ pub struct Param {
 
 impl Param {
     /// コマンドライン引数を緩和曲線パラメータにパースする。
-    pub fn parse(diminish: &ArgValue, args: &Args) -> Result<Self> {
+    pub fn parse(diminish: &str, args: &Args) -> Result<Self> {
         Ok(Self {
             diminish: Diminish::parse(diminish)?,
             k0: args.r0()?.map_or(STRAIGHT, |r| Curvature::from(Radius(r))),
@@ -55,8 +55,8 @@ impl Param {
 
 impl Diminish {
     /// 緩和曲線関数に変換する。
-    fn parse(pair: &ArgValue<'_, '_>) -> Result<Self> {
-        match pair.str() {
+    fn parse(pair: &str) -> Result<Self> {
+        match pair {
             "1" => Ok(Diminish::Sine),
             "2" => Ok(Diminish::Linear),
             _ => bail!("緩和曲線関数に正しい値を入力してください"),
@@ -176,8 +176,8 @@ mod test {
 
     impl Args {
         fn unwrap_transition(&self) -> (String, Result<transition::Param>) {
-            if let Ok(formula) = self.get("TRANSITION") {
-                let file = self.get("TEMP").unwrap().into();
+            if let Ok(formula) = self.transition() {
+                let file = self.temp_path().unwrap().into();
                 let param = Param::parse(&formula, &self);
                 (file, param)
             } else {

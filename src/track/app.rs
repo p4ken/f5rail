@@ -8,7 +8,7 @@ use crate::agent::{
     jww::{self, JwcTemp},
 };
 
-use super::relative::{Polyline, Relative_, Stroke};
+use super::relative::{Polyline, Relative_};
 
 #[derive(Debug)]
 /// 外部変形 "TRACK"
@@ -37,9 +37,9 @@ impl<'a> Track<'a> {
     /// ファイル入出力を行なう。それ以外は下層へ移譲する。
     fn make_map_file(&self) -> Result<MapPath> {
         // トラック名と図形を読み取る
-        let temp_0_file = JwcTemp::read(self.args.temp_0_path()?)?;
+        let _temp_0_file = JwcTemp::read(self.args.temp_0_path()?)?;
         let temp_x_file = JwcTemp::read(self.args.temp_x_path()?)?;
-        let track_name = temp_x_file.track_name();
+        let _track_name = temp_x_file.track_name();
         // let track_0 = temp_0_file.read_polyline()?;
         // let track_x = temp_x_file.read_polyline()?;
 
@@ -50,7 +50,7 @@ impl<'a> Track<'a> {
         let map_path = MapPath::build(self.args.map_name(), || {
             JwcTemp::read(self.args.temp_path()?)?.project_dir()
         })?;
-        let mut map_file = MapFile::create(&map_path)?;
+        let _map_file = MapFile::create(&map_path)?;
         // map_file.write_track(track_name, &relative)?;
 
         Ok(map_path)
