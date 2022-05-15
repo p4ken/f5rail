@@ -1,5 +1,5 @@
 mod agent;
-mod app;
+mod factory;
 mod track;
 mod transition;
 
@@ -8,7 +8,7 @@ use std::{ffi::OsStr};
 use anyhow::Result;
 
 use agent::{bat::Args};
-use app::App;
+use factory::App;
 
 
 /// 配線する
