@@ -13,6 +13,7 @@ pub trait Rad {
     fn rad(&self) -> f64;
 }
 
+/// 度
 pub trait Deg {
     fn deg(&self) -> f64;
 }

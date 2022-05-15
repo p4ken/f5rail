@@ -1,7 +1,7 @@
 use std::{
     fmt::Display,
     fs::{File, OpenOptions},
-    io::{BufRead, BufReader, Write},
+    io::{self, BufRead, BufReader},
     path::{Path, PathBuf},
 };
 
@@ -19,6 +19,15 @@ pub struct JwcTemp {
     file: File,
 }
 
+// struct Write {
+//     file: File,
+// }
+
+// struct Read {
+//     path: Path,
+//     cache: Option<Cache>
+// }
+
 impl JwcTemp {
     /// 座標ファイルを読み込む。
     pub fn read(path: &(impl AsRef<Path> + ?Sized)) -> Result<Cache> {
@@ -34,8 +43,19 @@ impl JwcTemp {
         let mut cache = Cache::default();
         let line_iter = BufReader::new(decoder).lines().filter_map(|l| l.ok());
         for line in line_iter {
-            if let Some((_, path)) = line.split_once("file=") {
+            if let Some(path) = line.strip_prefix("file=") {
                 cache.project_path = Some(path.to_string());
+            } else if let Some(a) = line.strip_prefix("ci ") {
+                let v = a.split(" ").collect::<Vec<_>>();
+                if let [a, b, c, d, e, f, g] = v.as_slice() {
+                    // cache.curve.push()
+                }
+            } else if let Some(straight) = line.strip_prefix(" ") {
+                //
+            } else if let Some(track_key) = line.strip_prefix("/トラック名:") {
+                //
+            } else if let Some(z0) = line.strip_prefix("/始点距離程:") {
+                //
             }
         }
         Ok(cache)
@@ -77,17 +97,11 @@ impl JwcTemp {
         a0: &impl Deg,
         a1: &impl Deg,
     ) -> Result<()> {
+        let (cx, cy) = (c.x(), c.y());
+        let r = r.meter().abs();
         let (a0, a1) = (a0.deg(), a1.deg());
         let (a0, a1) = if a0 < a1 { (a0, a1) } else { (a1, a0) };
-
-        self.puts(format!(
-            "ci {} {} {} {} {}",
-            c.x(),
-            c.y(),
-            r.meter().abs(),
-            a0,
-            a1,
-        ))
+        self.puts(format!("ci {cx} {cy} {r} {a0} {a1}"))
     }
 
     /// 直線を出力する。
@@ -103,7 +117,7 @@ impl JwcTemp {
         // - https://crates.io/search?q=windows%20encoding&sort=downloads
         let (sjis, _, _) = SHIFT_JIS.encode(s.as_ref());
         for bytes in [&sjis[..], b"\r\n"] {
-            Write::write_all(&mut self.file, bytes)
+            io::Write::write_all(&mut self.file, bytes)
                 .context("JWC_TEMP.TXTへの書き込みに失敗しました。")?;
         }
         Ok(())
@@ -112,10 +126,16 @@ impl JwcTemp {
 
 #[derive(Default)]
 pub struct Cache {
+    track_name: Option<String>,
     project_path: Option<String>,
 }
 
 impl Cache {
+    pub fn track_name(&self) -> &str {
+        self.track_name.as_ref().map_or(" ", |s| s.as_str())
+    }
+
+    /// 作業中のファイルがあるディレクトリ
     pub fn project_dir(&self) -> Result<PathBuf> {
         let path = self.project_path()?;
 

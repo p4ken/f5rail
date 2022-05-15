@@ -9,10 +9,11 @@ use derive_more::{Deref, DerefMut};
 
 /// BVEマップファイル
 pub struct MapFile {
-    _file: File,
+    file: File,
 }
 
 impl MapFile {
+    /// ファイルシステムにマップファイルを作成する
     pub fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
         let path = path.as_ref();
         ensure!(
@@ -21,7 +22,16 @@ impl MapFile {
             path.to_string_lossy()
         );
         let file = File::create(&path)?;
-        Ok(Self { _file: file })
+        Ok(Self { file })
+    }
+
+    /// トラック名と相対座標をマップファイルに書き込む
+    pub fn write_track(
+        &mut self,
+        name: &str,
+        relative: &impl IntoIterator<Item = (i32, i32)>,
+    ) -> Result<()> {
+        todo!()
     }
 }
 
