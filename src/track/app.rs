@@ -85,7 +85,7 @@ impl Args {
     }
 
     fn temp_x_path(&self) -> Result<&str> {
-        self.get_str("TEMP_Z")
+        self.get_str("TEMP_X")
     }
 
     fn map_name(&self) -> &str {

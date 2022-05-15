@@ -43,8 +43,8 @@ impl JwcTemp {
         let mut cache = Cache::default();
         let line_iter = BufReader::new(decoder).lines().filter_map(|l| l.ok());
         for line in line_iter {
-            if let Some(path) = line.strip_prefix("file=") {
-                cache.project_path = Some(path.to_string());
+            if let Some(s) = line.strip_prefix("file=") {
+                cache.project_path = Some(s.to_string());
             } else if let Some(a) = line.strip_prefix("ci ") {
                 let v = a.split(" ").collect::<Vec<_>>();
                 if let [a, b, c, d, e, f, g] = v.as_slice() {
@@ -52,8 +52,8 @@ impl JwcTemp {
                 }
             } else if let Some(straight) = line.strip_prefix(" ") {
                 //
-            } else if let Some(track_key) = line.strip_prefix("/トラック名:") {
-                //
+            } else if let Some(s) = line.strip_prefix("/トラック名:") {
+                cache.track_name = Some(s.to_string());
             } else if let Some(z0) = line.strip_prefix("/始点距離程:") {
                 //
             }

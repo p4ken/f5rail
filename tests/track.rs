@@ -1,23 +1,23 @@
 use std::{
     ffi::{OsStr, OsString},
-    fs::OpenOptions,
-    io::Write,
+    fs::{File, OpenOptions},
+    io::{self, Write},
     path::Path,
 };
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use rstest::rstest;
 use tempfile::{NamedTempFile, TempDir, TempPath};
 
 #[rstest]
 #[case("ascii.txt")]
-#[case("日本語.txt")]
 fn relative(#[case] map_name: &str) -> Result<()> {
     let jwc_temp_0 = TestFile::create()?;
     let jwc_temp_x = TestFile::create()?;
     let jwc_temp = TestFile::create()?;
     let project_dir = TestDir::create()?;
     jwc_temp.write_path(&project_dir.path().join("foo.jww"))?;
+    jwc_temp_x.write_track_name("1")?;
 
     let args = vec![
         Arg::new("/TRACK:X"),
@@ -46,14 +46,15 @@ impl TestFile {
     fn path(&self) -> &Path {
         &self.0
     }
-    fn write_path(&self, path: &impl AsRef<Path>) -> Result<()> {
-        let path = path
-            .as_ref()
-            .to_str()
-            .context("The directory contains non-UTF-8 strings.")?;
-        let mut file = OpenOptions::new().write(true).open(&self.0)?;
-        writeln!(file, "file={}", path)?;
-        Ok(())
+    fn write_path(&self, path: &impl AsRef<Path>) -> io::Result<()> {
+        let path = path.as_ref().to_str().unwrap();
+        writeln!(self.open()?, "file={}", path)
+    }
+    fn write_track_name(&self, s: &str) -> io::Result<()> {
+        writeln!(self.open()?, "/トラック名:{}", s)
+    }
+    fn open(&self) -> io::Result<File> {
+        OpenOptions::new().append(true).open(&self.0)
     }
     fn close(self) -> Result<()> {
         Ok(self.0.close()?)
