@@ -52,7 +52,7 @@ struct Args(Vec<OsString>);
 
 impl Args {
     fn new(path: &impl AsRef<OsStr>, strv: &[impl AsRef<OsStr>]) -> Self {
-        let mut arg_file = OsString::from("/FILE:");
+        let mut arg_file = OsString::from("/TEMP:");
         arg_file.push(path);
         let arg_file = arg_file;
         let args = strv

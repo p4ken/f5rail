@@ -11,4 +11,4 @@ REM #c  【終了半径】R1 (m) ※マイナスは左曲線, 無指定は直線
 REM #c  【緩和曲線長】TCL (m)/_/TCL:
 REM #e
 
-f5rail.exe /TRANSITION:%1 %2 %3 %4 /L0:0 /FILE:./JWC_TEMP.TXT 2> log.txt REM 1>&2
+f5rail.exe /TRANSITION:%1 %2 %3 %4 /L0:0 /TEMP:./JWC_TEMP.TXT 2> log.txt REM 1>&2

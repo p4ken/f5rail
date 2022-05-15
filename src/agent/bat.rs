@@ -1,6 +1,6 @@
-use std::{collections::HashMap, ffi::OsStr};
+use std::{collections::HashMap, ffi::OsStr, path::PathBuf};
 
-use anyhow::{Context, Result};
+use anyhow::{ensure, Context, Result};
 
 #[derive(Debug)]
 /// コマンドライン引数
@@ -30,6 +30,30 @@ impl Args {
         Ok(args)
     }
 
+    pub fn temp_path(&self) -> Result<&str> {
+        self.get_str("TEMP")
+    }
+    pub fn temp_0_path(&self) -> Result<&str> {
+        self.get_str("TEMP_0")
+    }
+    pub fn temp_x_path(&self) -> Result<&str> {
+        self.get_str("TEMP_X")
+    }
+    pub fn map_name(&self) -> &str {
+        self.get_str("出力ファイル名").unwrap_or("")
+    }
+    pub fn r0(&self) -> Result<Option<f64>> {
+        self.get_radius("R0")
+    }
+    pub fn r1(&self) -> Result<Option<f64>> {
+        self.get_radius("R1")
+    }
+    pub fn tcl(&self) -> Result<f64> {
+        let tcl = self.get("TCL")?.float()?;
+        ensure!(tcl > 0.0, "TCLに0より大きい値を入力してください");
+        Ok(tcl.into())
+    }
+
     pub fn get<'k>(&self, key: &'k str) -> Result<ArgValue<'k, '_>> {
         let value = self
             .buf
@@ -37,10 +61,44 @@ impl Args {
             .with_context(|| format!("{key}を指定してください"))?;
         Ok(ArgValue(key, value))
     }
-
     pub fn get_str(&self, key: &str) -> Result<&str> {
-        let val = self.get(key)?;
-        Ok(val.str())
+        self.get(key).map(|val| val.str())
+    }
+    fn get_radius(&self, key: &str) -> Result<Option<f64>> {
+        match self.get(key).ok() {
+            // 半径は無くてもよい
+            None => Ok(None),
+
+            // あるなら適切な値でなければならない
+            Some(val) => {
+                let r = val.float()?;
+                ensure!(r != 0.0, "{key}に0を指定できません");
+                Ok(Some(r))
+            }
+        }
+    }
+}
+
+impl TryFrom<&ArgValue<'_, '_>> for f64 {
+    type Error = anyhow::Error;
+    /// 小数に変換する。
+    fn try_from(value: &ArgValue) -> Result<Self, Self::Error> {
+        value
+            .str()
+            .parse()
+            .with_context(|| format!("{}を数値で入力してください", value.key()))
+    }
+}
+
+impl From<ArgValue<'_, '_>> for String {
+    fn from(value: ArgValue) -> Self {
+        value.str().into()
+    }
+}
+
+impl From<ArgValue<'_, '_>> for PathBuf {
+    fn from(value: ArgValue) -> Self {
+        value.str().into()
     }
 }
 
@@ -63,8 +121,18 @@ impl<'k, 'v> ArgValue<'k, 'v> {
     pub fn str(&self) -> &'v str {
         self.1
     }
+    fn float(&self) -> Result<f64> {
+        self.str()
+            .parse()
+            .with_context(|| format!("{}を数値で入力してください", self.key()))
+    }
+    fn radius(&self) -> Result<Option<f64>> {
+        let r = self.float()?;
+        ensure!(r != 0.0, "{}に0を指定できません", self.key());
+        Ok(Some(r))
+    }
 
-    pub fn key(&self) -> &'k str {
+    fn key(&self) -> &'k str {
         self.0
     }
 }

@@ -14,7 +14,8 @@ pub struct Transition {
 }
 
 impl Transition {
-    pub fn new(file: String, param: Result<Param>) -> Self {
+    pub fn new(file: &str, param: Result<Param>) -> Self {
+        let file = file.to_string();
         Self { file, param }
     }
 

@@ -18,7 +18,7 @@ impl<'a> App<'a> {
     /// 機能のファクトリ関数。
     pub fn new(args: &'a Args) -> Result<Self> {
         if let Ok(formula) = args.get("TRANSITION") {
-            let file = args.get("FILE")?.into();
+            let file = args.temp_path()?;
             let param = TrParam::parse(&formula, &args);
             Ok(Self::Transition(Transition::new(file, param)))
         } else if let Ok(track) = args.get("TRACK") {
@@ -44,6 +44,6 @@ mod test {
         ];
         let args = Args::parse(args).unwrap();
         let e = App::new(&args).unwrap_err();
-        assert_eq!(e.to_string(), "FILEを指定してください")
+        assert_eq!(e.to_string(), "TEMPを指定してください")
     }
 }

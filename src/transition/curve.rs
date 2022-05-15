@@ -115,6 +115,12 @@ impl Meter for Radius {
     }
 }
 
+impl From<Radius> for Curvature {
+    fn from(r: Radius) -> Self {
+        r.0.recip().into()
+    }
+}
+
 /// 中心角 (rad)
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, From, Add, Sub)]
 pub struct Central(f64);
