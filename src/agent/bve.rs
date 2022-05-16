@@ -45,7 +45,7 @@ pub struct MapPath {
 impl MapPath {
     pub fn build<T>(
         given: &(impl AsRef<Path> + ?Sized),
-        proj_dir: impl Fn() -> Result<T>,
+        mut proj_dir: impl FnMut() -> Result<T>,
     ) -> Result<Self>
     where
         PathBuf: From<T>,

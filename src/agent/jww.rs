@@ -1,8 +1,10 @@
 use std::{
+    cell::{Ref, RefCell},
     fmt::Display,
     fs::{File, OpenOptions},
     io::{self, BufRead, BufReader},
     path::{Path, PathBuf},
+    rc::Rc,
 };
 
 use anyhow::{ensure, Context, Result};
@@ -19,32 +21,10 @@ pub struct JwcTemp {
     file: File,
 }
 
-// struct Write {
-//     file: File,
-// }
-
-// struct Read {
-//     path: Path,
-//     cache: Option<Cache>
-// }
-
 impl JwcTemp {
     /// 座標ファイルを読み込む。
-    pub fn read(path: &(impl AsRef<Path> + ?Sized)) -> Result<Cache> {
-        let file = OpenOptions::new().read(true).open(path).with_context(|| {
-            format!(
-                "JWC_TEMPファイル {} を開けませんでした",
-                path.as_ref().to_string_lossy()
-            )
-        })?;
-        let decoder = DecodeReaderBytesBuilder::new()
-            .encoding(Some(SHIFT_JIS))
-            .build(file);
-        let cache = BufReader::new(decoder)
-            .lines()
-            .filter_map(|l| l.ok())
-            .collect::<Cache>();
-        Ok(cache)
+    pub fn at(path: &(impl AsRef<Path> + ?Sized)) -> Read {
+        Read::new(path.as_ref())
     }
 
     /// 座標ファイルを作成する。
@@ -110,6 +90,79 @@ impl JwcTemp {
     }
 }
 
+pub struct Read<'a> {
+    path: &'a Path,
+    cache: Option<Cache>,
+}
+
+impl<'a> Read<'a> {
+    fn new(path: &'a (impl AsRef<Path> + ?Sized)) -> Self {
+        let path = path.as_ref();
+        let cache = None;
+        Self { path, cache }
+    }
+
+    /// トラック名
+    pub fn track_name(&mut self) -> Result<&str> {
+        let given = self.cache()?.track_name.as_ref();
+        Ok(given.map_or(" ", |s| s.as_str()))
+    }
+
+    /// 作業中のファイルがあるディレクトリ
+    pub fn project_dir(&mut self) -> Result<PathBuf> {
+        let path = self.project_path()?;
+
+        let dir = Path::new(path)
+            .parent()
+            .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
+
+        Ok(dir.to_path_buf())
+    }
+
+    /// 作業中のファイルパス
+    fn project_path(&mut self) -> Result<&String> {
+        let path = self
+            .cache()?
+            .project_path
+            .as_ref()
+            .context("JWC_TEMPファイルにパスが出力されていません")?;
+
+        ensure!(
+            !path.is_empty(),
+            "作業中のファイルに名前をつけて保存してください"
+        );
+
+        Ok(path)
+    }
+
+    fn cache(&mut self) -> Result<&Cache> {
+        if self.cache.is_none() {
+            self.cache = Some(self.read()?);
+        }
+        Ok(self.cache.as_ref().unwrap())
+    }
+
+    fn read(&self) -> Result<Cache> {
+        let file = OpenOptions::new()
+            .read(true)
+            .open(self.path)
+            .with_context(|| {
+                format!(
+                    "JWC_TEMPファイル {} を開けませんでした",
+                    self.path.to_string_lossy()
+                )
+            })?;
+        let decoder = DecodeReaderBytesBuilder::new()
+            .encoding(Some(SHIFT_JIS))
+            .build(file);
+        let cache = BufReader::new(decoder)
+            .lines()
+            .filter_map(|l| l.ok())
+            .collect::<Cache>();
+        Ok(cache)
+    }
+}
+
 #[derive(Default)]
 pub struct Cache {
     track_name: Option<String>,
@@ -170,4 +223,8 @@ impl FromIterator<String> for Cache {
         }
         cache
     }
+}
+
+pub struct Write {
+    file: File,
 }

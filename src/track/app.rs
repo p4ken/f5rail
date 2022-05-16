@@ -37,9 +37,10 @@ impl<'a> Track<'a> {
     /// ファイル入出力を行なう。それ以外は下層へ移譲する。
     fn make_map_file(&self) -> Result<MapPath> {
         // トラック名と図形を読み取る
-        let _temp_0_file = JwcTemp::read(self.args.temp_0_path()?)?;
-        let temp_x_file = JwcTemp::read(self.args.temp_x_path()?)?;
-        let _track_name = temp_x_file.track_name();
+        let mut temp_file = JwcTemp::at(self.args.temp_path()?);
+        let mut temp_0_file = JwcTemp::at(self.args.temp_0_path()?);
+        let mut temp_x_file = JwcTemp::at(self.args.temp_x_path()?);
+        let track_name = temp_x_file.track_name()?;
         // let track_0 = temp_0_file.read_polyline()?;
         // let track_x = temp_x_file.read_polyline()?;
 
@@ -47,10 +48,8 @@ impl<'a> Track<'a> {
         // let _ = Relative_::between(&track_0, &track_x)?;
 
         // マップファイルに書き込む
-        let map_path = MapPath::build(self.args.map_name(), || {
-            JwcTemp::read(self.args.temp_path()?)?.project_dir()
-        })?;
-        let _map_file = MapFile::create(&map_path)?;
+        let map_path = MapPath::build(self.args.map_name(), || temp_file.project_dir())?;
+        let mut map_file = MapFile::create(&map_path)?;
         // map_file.write_track(track_name, &relative)?;
 
         Ok(map_path)
