@@ -37,19 +37,21 @@ impl<'a> Track<'a> {
     /// ファイル入出力を行なう。それ以外は下層へ移譲する。
     fn make_map_file(&self) -> Result<MapPath> {
         // トラック名と図形を読み取る
-        let mut temp_file = JwcTemp::at(self.args.temp_path()?);
-        let mut temp_0_file = JwcTemp::at(self.args.temp_0_path()?);
-        let mut temp_x_file = JwcTemp::at(self.args.temp_x_path()?);
-        let track_name = temp_x_file.track_name()?;
+        let mut temp_file = JwcTemp::open(self.args.temp_path()?)?;
+        let _temp_0_file = JwcTemp::open(self.args.temp_0_path()?)?;
+        let mut temp_x_file = JwcTemp::open(self.args.temp_x_path()?)?;
+        let _track_name = temp_x_file.track_name();
         // let track_0 = temp_0_file.read_polyline()?;
         // let track_x = temp_x_file.read_polyline()?;
+
+        // 始点を読み込む
 
         // 相対座標を計算する
         // let _ = Relative_::between(&track_0, &track_x)?;
 
         // マップファイルに書き込む
         let map_path = MapPath::build(self.args.map_name(), || temp_file.project_dir())?;
-        let mut map_file = MapFile::create(&map_path)?;
+        let _map_file = MapFile::create(&map_path)?;
         // map_file.write_track(track_name, &relative)?;
 
         Ok(map_path)
@@ -69,7 +71,7 @@ impl<'a> Track<'a> {
     }
 
     /// JWC_TEMP.TXTを作成する。
-    fn create_temp_file(&self) -> Result<JwcTemp> {
+    fn create_temp_file(&self) -> Result<jww::Write> {
         JwcTemp::create(self.args.temp_path()?)
     }
 }

@@ -1,10 +1,8 @@
 use std::{
-    cell::{Ref, RefCell},
     fmt::Display,
     fs::{File, OpenOptions},
     io::{self, BufRead, BufReader},
     path::{Path, PathBuf},
-    rc::Rc,
 };
 
 use anyhow::{ensure, Context, Result};
@@ -17,27 +15,125 @@ use crate::transition::unit::{Deg, Meter, Vector};
 ///
 /// (参考) JWC_TEMP.TXTのフォーマット
 /// http://mintleaf.sakura.ne.jp/cad/jwc_temp.html
-pub struct JwcTemp {
-    file: File,
-}
+pub struct JwcTemp;
 
 impl JwcTemp {
     /// 座標ファイルを読み込む。
-    pub fn at(path: &(impl AsRef<Path> + ?Sized)) -> Read {
-        Read::new(path.as_ref())
+    pub fn open(path: &(impl AsRef<Path> + ?Sized)) -> Result<Read> {
+        let path = path.as_ref();
+        let file = OpenOptions::new().read(true).open(path).with_context(|| {
+            format!(
+                "JWC_TEMPファイル {} を開けませんでした",
+                path.to_string_lossy()
+            )
+        })?;
+        let cache = None;
+        Ok(Read { file, cache })
     }
 
     /// 座標ファイルを作成する。
-    pub fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
+    pub fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Write> {
         let file = File::create(path).with_context(|| {
             format!(
-                "JWC_TEMPファイル {} に書き込めませんでした",
+                "JWC_TEMPファイル {} を作成できませんでした",
                 path.as_ref().to_string_lossy()
             )
         })?;
-        Ok(Self { file })
+        Ok(Write { file })
+    }
+}
+
+pub struct Read {
+    file: File,
+    cache: Option<Cache>,
+}
+
+impl Read {
+    /// トラック名
+    pub fn track_name(&mut self) -> &str {
+        let given = self.cache().track_name.as_ref();
+        given.map_or(" ", |s| s.as_str())
     }
 
+    /// 作業中のファイルがあるディレクトリ
+    pub fn project_dir(&mut self) -> Result<PathBuf> {
+        let path = self.project_path()?;
+
+        let dir = Path::new(path)
+            .parent()
+            .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
+
+        Ok(dir.to_path_buf())
+    }
+
+    /// 作業中のファイルパス
+    fn project_path(&mut self) -> Result<&String> {
+        let path = self
+            .cache()
+            .project_path
+            .as_ref()
+            .context("JWC_TEMPファイルにパスが出力されていません")?;
+
+        ensure!(
+            !path.is_empty(),
+            "作業中のファイルに名前をつけて保存してください"
+        );
+
+        Ok(path)
+    }
+
+    fn cache(&mut self) -> &Cache {
+        if self.cache.is_none() {
+            self.cache = Some(self.read());
+        }
+        self.cache.as_ref().unwrap()
+    }
+
+    fn read(&self) -> Cache {
+        let decoder = DecodeReaderBytesBuilder::new()
+            .encoding(Some(SHIFT_JIS))
+            .build(&self.file);
+        BufReader::new(decoder)
+            .lines()
+            .filter_map(|l| l.ok())
+            .collect::<Cache>()
+    }
+}
+
+#[derive(Default)]
+pub struct Cache {
+    track_name: Option<String>,
+    project_path: Option<String>,
+}
+
+impl FromIterator<String> for Cache {
+    fn from_iter<T: IntoIterator<Item = String>>(iter: T) -> Self {
+        let mut cache = Self::default();
+        for line in iter {
+            if let Some(s) = line.strip_prefix("file=") {
+                cache.project_path = Some(s.to_string());
+            } else if let Some(a) = line.strip_prefix("ci ") {
+                let v = a.split(" ").collect::<Vec<_>>();
+                if let [_a, _b, _c, _d, _e, _f, _g] = v.as_slice() {
+                    // cache.curve.push()
+                }
+            } else if let Some(_straight) = line.strip_prefix(" ") {
+                //
+            } else if let Some(s) = line.strip_prefix("/トラック名:") {
+                cache.track_name = Some(s.to_string());
+            } else if let Some(_z0) = line.strip_prefix("/始点距離程:") {
+                //
+            }
+        }
+        cache
+    }
+}
+
+pub struct Write {
+    file: File,
+}
+
+impl Write {
     /// エラー `e` を書き込む。
     ///
     /// - 最初のエラーのみが表示される。
@@ -88,143 +184,4 @@ impl JwcTemp {
         }
         Ok(())
     }
-}
-
-pub struct Read<'a> {
-    path: &'a Path,
-    cache: Option<Cache>,
-}
-
-impl<'a> Read<'a> {
-    fn new(path: &'a (impl AsRef<Path> + ?Sized)) -> Self {
-        let path = path.as_ref();
-        let cache = None;
-        Self { path, cache }
-    }
-
-    /// トラック名
-    pub fn track_name(&mut self) -> Result<&str> {
-        let given = self.cache()?.track_name.as_ref();
-        Ok(given.map_or(" ", |s| s.as_str()))
-    }
-
-    /// 作業中のファイルがあるディレクトリ
-    pub fn project_dir(&mut self) -> Result<PathBuf> {
-        let path = self.project_path()?;
-
-        let dir = Path::new(path)
-            .parent()
-            .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
-
-        Ok(dir.to_path_buf())
-    }
-
-    /// 作業中のファイルパス
-    fn project_path(&mut self) -> Result<&String> {
-        let path = self
-            .cache()?
-            .project_path
-            .as_ref()
-            .context("JWC_TEMPファイルにパスが出力されていません")?;
-
-        ensure!(
-            !path.is_empty(),
-            "作業中のファイルに名前をつけて保存してください"
-        );
-
-        Ok(path)
-    }
-
-    fn cache(&mut self) -> Result<&Cache> {
-        if self.cache.is_none() {
-            self.cache = Some(self.read()?);
-        }
-        Ok(self.cache.as_ref().unwrap())
-    }
-
-    fn read(&self) -> Result<Cache> {
-        let file = OpenOptions::new()
-            .read(true)
-            .open(self.path)
-            .with_context(|| {
-                format!(
-                    "JWC_TEMPファイル {} を開けませんでした",
-                    self.path.to_string_lossy()
-                )
-            })?;
-        let decoder = DecodeReaderBytesBuilder::new()
-            .encoding(Some(SHIFT_JIS))
-            .build(file);
-        let cache = BufReader::new(decoder)
-            .lines()
-            .filter_map(|l| l.ok())
-            .collect::<Cache>();
-        Ok(cache)
-    }
-}
-
-#[derive(Default)]
-pub struct Cache {
-    track_name: Option<String>,
-    project_path: Option<String>,
-}
-
-impl Cache {
-    /// トラック名
-    pub fn track_name(&self) -> &str {
-        self.track_name.as_ref().map_or(" ", |s| s.as_str())
-    }
-
-    /// 作業中のファイルがあるディレクトリ
-    pub fn project_dir(&self) -> Result<PathBuf> {
-        let path = self.project_path()?;
-
-        let dir = Path::new(path)
-            .parent()
-            .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
-
-        Ok(dir.to_path_buf())
-    }
-
-    /// 作業中のファイルパス
-    fn project_path(&self) -> Result<&String> {
-        let path = self
-            .project_path
-            .as_ref()
-            .context("JWC_TEMPファイルにパスが出力されていません")?;
-
-        ensure!(
-            !path.is_empty(),
-            "作業中のファイルに名前をつけて保存してください"
-        );
-
-        Ok(path)
-    }
-}
-
-impl FromIterator<String> for Cache {
-    fn from_iter<T: IntoIterator<Item = String>>(iter: T) -> Self {
-        let mut cache = Self::default();
-        for line in iter {
-            if let Some(s) = line.strip_prefix("file=") {
-                cache.project_path = Some(s.to_string());
-            } else if let Some(a) = line.strip_prefix("ci ") {
-                let v = a.split(" ").collect::<Vec<_>>();
-                if let [_a, _b, _c, _d, _e, _f, _g] = v.as_slice() {
-                    // cache.curve.push()
-                }
-            } else if let Some(_straight) = line.strip_prefix(" ") {
-                //
-            } else if let Some(s) = line.strip_prefix("/トラック名:") {
-                cache.track_name = Some(s.to_string());
-            } else if let Some(_z0) = line.strip_prefix("/始点距離程:") {
-                //
-            }
-        }
-        cache
-    }
-}
-
-pub struct Write {
-    file: File,
 }
