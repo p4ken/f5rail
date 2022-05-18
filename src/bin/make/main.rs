@@ -10,15 +10,17 @@ use std::{
 
 use anyhow::Result;
 
-use crate::{dir::Dir, make::Make};
+use crate::{dir::Dir, make::Make, zip::Package};
 
 mod bat;
 mod dir;
 mod make;
+mod zip;
 
 fn main() -> Result<()> {
     let in_dir = &Dir::open("./bat")?;
     let out_dir = Path::new("./外部変形");
+    let mut zip = Package::new("./外部変形/BVE座標計算.zip")?;
 
     // .batファイル
     for bat in in_dir.bats()? {
@@ -48,6 +50,7 @@ fn main() -> Result<()> {
     println!("Copying {} -> {}", from_path.display(), to_path.display());
     fs::copy(from_path, to_path)?;
 
+    zip.finish()?;
     println!("Successfully built distributable package.");
     Ok(())
 }
