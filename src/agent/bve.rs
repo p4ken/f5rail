@@ -102,22 +102,27 @@ mod test {
     use super::*;
 
     #[rstest]
-    #[case::empty("", "map.txt")]
-    #[case::extension("a", "a.txt")]
-    #[case::numbering("b", "b-1.txt")]
-    #[case::numbering2("c", "c-2.txt")]
-    #[case::numbering3("c-1", "c-1-1.txt")]
-    #[case::dir("d", r"d\map.txt")]
-    #[case::dir2("e", r"e\map-1.txt")]
-    #[case::absolute(r"C:\dir\file.txt", r"C:\dir\file.txt")]
-    fn パス判断(#[case] given: &str, #[case] expected: &str) {
+    #[case::empty("", vec!["map.txt"])]
+    #[case::extension("a", vec!["a.txt"])]
+    #[case::numbering("b", vec!["b-1.txt"])]
+    #[case::numbering2("c", vec!["c-2.txt"])]
+    #[case::numbering3("c-1", vec!["c-1-1.txt"])]
+    #[case::dir("d", vec!["d", "map.txt"])]
+    #[case::dir2("e", vec!["e", "map-1.txt"])]
+    fn 相対パス判断(#[case] given: &str, #[case] relative: Vec<&str>) {
         let proj = TestDir::new().unwrap();
-        let path = MapPath::build(given, || Ok(proj.path())).unwrap();
-        assert!(
-            path.ends_with(expected),
-            "{} vs. {expected}",
-            path.to_string_lossy()
-        );
+        let mut expected = proj.path().to_path_buf();
+        expected.push(relative.iter().collect::<PathBuf>());
+        let actual = MapPath::build(given, || Ok(proj.path())).unwrap();
+        assert_eq!(actual.as_ref(), expected);
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn 絶対パス判断() {
+        let given = r"C:\dir\file.txt";
+        let path = MapPath::build(given, || Ok("dir")).unwrap();
+        assert_eq!(path.as_ref(), Path::new(given));
     }
 
     #[derive(Deref)]
@@ -126,19 +131,19 @@ mod test {
     impl TestDir {
         fn new() -> Result<Self> {
             let dir = Self(TempDir::new_in(".")?);
-            File::create(dir.path_with("a"))?;
-            File::create(dir.path_with("b.txt"))?;
-            File::create(dir.path_with("c.txt"))?;
-            File::create(dir.path_with("c-1.txt"))?;
-            fs::create_dir(dir.path_with("d"))?;
-            fs::create_dir(dir.path_with("e"))?;
-            File::create(dir.path_with(r"e\map.txt"))?;
+            File::create(dir.path_with(vec!["a"]))?;
+            File::create(dir.path_with(vec!["b.txt"]))?;
+            File::create(dir.path_with(vec!["c.txt"]))?;
+            File::create(dir.path_with(vec!["c-1.txt"]))?;
+            fs::create_dir(dir.path_with(vec!["d"]))?;
+            fs::create_dir(dir.path_with(vec!["e"]))?;
+            File::create(dir.path_with(vec!["e", "map.txt"]))?;
             Ok(dir)
         }
 
-        fn path_with(&self, s: &str) -> PathBuf {
+        fn path_with(&self, s: Vec<&str>) -> PathBuf {
             let mut path = self.0.path().to_path_buf();
-            path.push(s);
+            path.push(s.iter().collect::<PathBuf>());
             path
         }
     }
