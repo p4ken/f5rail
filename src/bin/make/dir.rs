@@ -8,7 +8,7 @@ use std::{
 use anyhow::{ensure, Result};
 use derive_more::{Deref, From, IntoIterator};
 
-use crate::bat::Bat;
+use crate::bat::BatFile;
 
 #[derive(Deref)]
 pub struct Dir {
@@ -22,7 +22,7 @@ impl Dir {
         Ok(dir)
     }
 
-    pub fn bats(&self) -> Result<Bats> {
+    pub fn all_bats(&self) -> Result<Bats> {
         let root = self.read_dir()?;
         let sub = self.sub().read_dir()?;
         Ok(root.chain(sub).collect::<io::Result<_>>()?)
@@ -45,13 +45,13 @@ impl AsRef<Path> for Dir {
 }
 
 #[derive(IntoIterator, From)]
-pub struct Bats(Vec<Bat>);
+pub struct Bats(Vec<BatFile>);
 
 impl FromIterator<DirEntry> for Bats {
     fn from_iter<T: IntoIterator<Item = DirEntry>>(iter: T) -> Self {
         iter.into_iter()
-            .filter_map(|entry| Bat::try_from(entry).ok())
-            .collect::<Vec<Bat>>()
+            .filter_map(|entry| BatFile::try_from(entry).ok())
+            .collect::<Vec<BatFile>>()
             .into()
     }
 }

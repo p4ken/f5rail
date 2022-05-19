@@ -6,17 +6,21 @@ use std::{
 };
 
 use anyhow::{ensure, Error, Result};
-use derive_more::Deref;
 use encoding_rs::SHIFT_JIS;
 
 use crate::make::Make;
 
-#[derive(Deref)]
-pub struct Bat {
+pub struct BatFile {
     path: PathBuf,
 }
 
-impl TryFrom<DirEntry> for Bat {
+impl BatFile {
+    pub fn path_str(&self) -> &str {
+        self.path.to_str().unwrap()
+    }
+}
+
+impl TryFrom<DirEntry> for BatFile {
     type Error = Error;
 
     fn try_from(entry: DirEntry) -> Result<Self, Self::Error> {
@@ -26,8 +30,8 @@ impl TryFrom<DirEntry> for Bat {
     }
 }
 
-impl Make for Bat {
-    fn make(&self, out: &impl AsRef<Path>) -> Result<()> {
+impl Make for BatFile {
+    fn make(&self, writer: &mut impl Write) -> Result<()> {
         // 読み込み
         let mut utf8 = String::new();
         File::open(&self.path)?.read_to_string(&mut utf8)?;
@@ -39,10 +43,7 @@ impl Make for Bat {
         let (sjis, _, _) = SHIFT_JIS.encode(&utf8);
 
         // 書き込み
-        if let Some(out_dir) = out.as_ref().parent() {
-            fs::create_dir_all(out_dir)?;
-        }
-        File::create(out)?.write_all(&sjis[..])?;
+        writer.write_all(&sjis[..])?;
 
         Ok(())
     }

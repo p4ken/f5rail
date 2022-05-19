@@ -10,29 +10,28 @@ use std::{
 
 use anyhow::Result;
 
-use crate::{dir::Dir, make::Make, zip::Package};
+use crate::{dir::Dir, make::Make, package::Package};
 
 mod bat;
 mod dir;
 mod make;
-mod zip;
+mod package;
 
 fn main() -> Result<()> {
-    let in_dir = &Dir::open("./bat")?;
-    let out_dir = Path::new("./外部変形");
-    let mut zip = Package::new("./外部変形/BVE座標計算.zip")?;
+    let mut zip = Package::new_in("./外部変形")?;
 
     // .batファイル
-    for bat in in_dir.bats()? {
-        let out = out_dir.join(bat.strip_prefix(in_dir)?);
-        println!("Encoding {} -> {}", bat.display(), out.display());
-        bat.make(&out)?;
+    for bat in Dir::open("./bat")?.all_bats()? {
+        let bat_path = bat.path_str();
+        println!("Encoding {}", bat_path);
+        let file = &mut zip.create_file(bat_path)?;
+        bat.make(file)?;
     }
 
     // README
-    let readme_path = out_dir.join("readme.txt");
-    println!("Creating {}", readme_path.display());
-    let mut readme_file = File::create(readme_path)?;
+    let readme_path = "readme.txt";
+    println!("Creating {}", readme_path);
+    let mut readme_file = zip.create_file(readme_path)?;
     write!(
         &mut readme_file,
         "f5rail v{}\r\n\r\n",
@@ -45,10 +44,11 @@ fn main() -> Result<()> {
     readme_file.write_all(&license)?;
 
     // 実行ファイル
-    let from_path = Path::new("./target/release/f5rail.exe");
-    let to_path = out_dir.join(from_path.file_name().unwrap());
-    println!("Copying {} -> {}", from_path.display(), to_path.display());
-    fs::copy(from_path, to_path)?;
+    // Read / Writeが必要
+    // let from_path = "./target/release/f5rail.exe";
+    // let to_path = out_dir.join(from_path.file_name().unwrap());
+    // println!("Copying {} -> {}", from_path.display(), to_path.display());
+    // fs::copy(from_path, to_path)?;
 
     zip.finish()?;
     println!("Successfully built distributable package.");
