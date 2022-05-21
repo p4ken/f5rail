@@ -60,7 +60,7 @@ impl<'a> Track<'a> {
     /// 成功メッセージをJWC_TEMPファイルに出力する。
     fn show_map_path(&self, path: &(impl AsRef<Path> + ?Sized)) -> Result<()> {
         self.create_temp_file()?.notice(format!(
-            "{} に出力しました",
+            "{} を作成しました",
             path.as_ref().to_string_lossy()
         ))
     }

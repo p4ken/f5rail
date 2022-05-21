@@ -1,4 +1,4 @@
-@REM BVEマップに出力します
+@REM 【未実装】BVEの他線座標を計算します
 @echo off
 REM #jww
 REM #cd

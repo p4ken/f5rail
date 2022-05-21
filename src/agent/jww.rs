@@ -23,7 +23,7 @@ impl JwcTemp {
         let path = path.as_ref();
         let file = OpenOptions::new().read(true).open(path).with_context(|| {
             format!(
-                "JWC_TEMPファイル {} を開けませんでした",
+                "ファイル {} を開けませんでした",
                 path.to_string_lossy()
             )
         })?;
