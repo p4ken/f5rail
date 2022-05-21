@@ -1,53 +1,66 @@
-//! Makefileの代わり。
-//! RustにすることでWindowsで実行できるようになったが、
-//! ファイル操作の開発効率はMakefileのほうが優れている思われる。
-
 use std::{
-    fs::{self, File},
-    io::{Read, Write},
-    path::Path,
+    fs::File,
+    io::{BufReader, Read, Write},
 };
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
+use encoding_rs::SHIFT_JIS;
 
-use crate::{dir::Dir, make::Make};
+use crate::{dir::Dir, zip::Package};
 
-mod bat;
 mod dir;
-mod make;
+mod zip;
 
 fn main() -> Result<()> {
-    let in_dir = &Dir::open("./bat")?;
-    let out_dir = Path::new("./外部変形");
+    let mut zip = Package::new_in("./外部変形")?;
 
-    // .batファイル
-    for bat in in_dir.bats()? {
-        let out = out_dir.join(bat.strip_prefix(in_dir)?);
-        println!("Encoding {} -> {}", bat.display(), out.display());
-        bat.make(&out)?;
+    // batファイル
+    let bat_dir = "./bat";
+    for bat_path in Dir::open(bat_dir)?.bat_iter() {
+        print!("Encoding {} -> ", bat_path.display());
+
+        // 読み込み
+        let mut utf8 = String::new();
+        File::open(bat_path)?.read_to_string(&mut utf8)?;
+
+        // 文字列展開
+        utf8 = utf8.replace("(VERSION)", env!("CARGO_PKG_VERSION"));
+
+        // 文字コード変換
+        let (sjis, _, unmappable) = SHIFT_JIS.encode(&utf8);
+        ensure!(!unmappable, "SHIFT_JISに変換できない文字が含まれています");
+
+        // 書き込み
+        let mut out = zip.create_file(bat_path.strip_prefix(bat_dir)?)?;
+        out.write_all(&sjis[..])?;
+        out.flush()?;
     }
 
-    // README
-    let readme_path = out_dir.join("readme.txt");
-    println!("Creating {}", readme_path.display());
-    let mut readme_file = File::create(readme_path)?;
+    // READMEファイル
+    let readme_path = "readme.txt";
+    print!("Creating ");
+    let mut out_readme = zip.create_file(readme_path)?;
     write!(
-        &mut readme_file,
+        &mut out_readme,
         "f5rail v{}\r\n\r\n",
         // f5railと同じパッケージとしてビルドされている必要がある
         env!("CARGO_PKG_VERSION")
     )?;
-    write!(&mut readme_file, "BVE layout tool for Jw_cad.\r\n\r\n")?;
+    write!(&mut out_readme, "BVE layout tool for Jw_cad.\r\n\r\n")?;
     let mut license = Vec::<u8>::new();
     File::open("./LICENSE")?.read_to_end(&mut license)?;
-    readme_file.write_all(&license)?;
+    out_readme.write_all(&license)?;
 
     // 実行ファイル
-    let from_path = Path::new("./target/release/f5rail.exe");
-    let to_path = out_dir.join(from_path.file_name().unwrap());
-    println!("Copying {} -> {}", from_path.display(), to_path.display());
-    fs::copy(from_path, to_path)?;
+    let out_exe_path = "f5rail.exe";
+    let in_exe_path = format!("./target/release/{}", out_exe_path);
+    print!("Copying {} -> ", in_exe_path);
+    let mut out_exe = zip.create_file(out_exe_path)?;
+    for byte in BufReader::new(File::open(in_exe_path)?).bytes() {
+        out_exe.write_all(&[byte?])?;
+    }
 
+    zip.finish()?;
     println!("Successfully built distributable package.");
     Ok(())
 }

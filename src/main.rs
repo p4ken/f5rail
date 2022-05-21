@@ -4,6 +4,6 @@ use anyhow::Result;
 
 fn main() -> Result<()> {
     let args = env::args_os();
-    dbg!(&args);
+    // dbg!(&args);
     f5rail::layout(args)
 }

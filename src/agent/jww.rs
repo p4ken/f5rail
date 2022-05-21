@@ -21,12 +21,10 @@ impl JwcTemp {
     /// 座標ファイルを読み込む。
     pub fn open(path: &(impl AsRef<Path> + ?Sized)) -> Result<Read> {
         let path = path.as_ref();
-        let file = OpenOptions::new().read(true).open(path).with_context(|| {
-            format!(
-                "ファイル {} を開けませんでした",
-                path.to_string_lossy()
-            )
-        })?;
+        let file = OpenOptions::new()
+            .read(true)
+            .open(path)
+            .with_context(|| format!("ファイル {} を開けませんでした", path.display()))?;
         let cache = None;
         Ok(Read { file, cache })
     }
@@ -36,7 +34,7 @@ impl JwcTemp {
         let file = File::create(path).with_context(|| {
             format!(
                 "JWC_TEMPファイル {} を作成できませんでした",
-                path.as_ref().to_string_lossy()
+                path.as_ref().display()
             )
         })?;
         Ok(Write { file })

@@ -16,11 +16,7 @@ impl MapFile {
     /// ファイルシステムにマップファイルを作成する
     pub fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
         let path = path.as_ref();
-        ensure!(
-            !path.exists(),
-            "{} はすでに存在しています",
-            path.to_string_lossy()
-        );
+        ensure!(!path.exists(), "{} はすでに存在しています", path.display());
         let file = File::create(&path)?;
         Ok(Self { file })
     }
