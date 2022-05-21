@@ -24,7 +24,7 @@ impl JwcTemp {
         let file = OpenOptions::new()
             .read(true)
             .open(path)
-            .with_context(|| format!("JWC_TEMPファイル {} を開けませんでした", path.display()))?;
+            .with_context(|| format!("ファイル {} を開けませんでした", path.display()))?;
         let cache = None;
         Ok(Read { file, cache })
     }

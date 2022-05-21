@@ -1,4 +1,4 @@
-@REM BVEマップに出力します
+@REM ひとつ上のフォルダをご覧ください
 @echo off
 REM #jww
 REM #cd
