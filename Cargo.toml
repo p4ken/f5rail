@@ -13,7 +13,7 @@ anyhow = "1.0.54"
 derive_more = "0.99.17"
 encoding_rs = "0.8.30" # +165KB
 encoding_rs_io = "0.1.7"
-zip = "0.6.2"
+zip = { version = "0.6.2", default-features = false, features = ["deflate", "time"] }
 
 [dev-dependencies]
 rstest = "0.12.0"

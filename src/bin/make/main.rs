@@ -1,9 +1,5 @@
-//! Makefileの代わり。
-//! RustにすることでWindowsで実行できるようになったが、
-//! ファイル操作の開発効率はMakefileのほうが優れている思われる。
-
 use std::{
-    fs::{File},
+    fs::File,
     io::{BufReader, Read, Write},
 };
 
@@ -19,12 +15,13 @@ fn main() -> Result<()> {
     let mut zip = Package::new_in("./外部変形")?;
 
     // batファイル
-    for bat_path in &Dir::open("./bat")?.bat_paths()? {
-        println!("Encoding {}", bat_path);
+    let bat_dir = "./bat";
+    for bat_path in Dir::open(bat_dir)?.bat_iter() {
+        print!("Encoding {} -> ", bat_path.display());
 
         // 読み込み
         let mut utf8 = String::new();
-        File::open(&bat_path)?.read_to_string(&mut utf8)?;
+        File::open(bat_path)?.read_to_string(&mut utf8)?;
 
         // 文字列展開
         utf8 = utf8.replace("(VERSION)", env!("CARGO_PKG_VERSION"));
@@ -34,14 +31,14 @@ fn main() -> Result<()> {
         ensure!(!unmappable, "SHIFT_JISに変換できない文字が含まれています");
 
         // 書き込み
-        let mut out = zip.create_file(bat_path)?;
+        let mut out = zip.create_file(bat_path.strip_prefix(bat_dir)?)?;
         out.write_all(&sjis[..])?;
         out.flush()?;
     }
 
     // READMEファイル
     let readme_path = "readme.txt";
-    println!("Creating {}", readme_path);
+    print!("Creating ");
     let mut out_readme = zip.create_file(readme_path)?;
     write!(
         &mut out_readme,
@@ -57,7 +54,7 @@ fn main() -> Result<()> {
     // 実行ファイル
     let out_exe_path = "f5rail.exe";
     let in_exe_path = format!("./target/release/{}", out_exe_path);
-    println!("Copying {} -> {}", in_exe_path, out_exe_path);
+    print!("Copying {} -> ", in_exe_path);
     let mut out_exe = zip.create_file(out_exe_path)?;
     for byte in BufReader::new(File::open(in_exe_path)?).bytes() {
         out_exe.write_all(&[byte?])?;
