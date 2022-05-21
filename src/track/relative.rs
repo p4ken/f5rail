@@ -1,7 +1,13 @@
 use anyhow::Result;
 
-/// BVE相対座標
-pub struct Relative();
+/// Bveの相対座標
+pub trait Relative{
+    // agentに持たせていいかも？ BVE特有なので。
+    // track特有でもあるのでtrackでいい。ドメイン中心。
+    fn distance(&self) -> f64;
+    fn spacing(&self) -> f64;
+    fn radius(&self) -> f64;
+}
 
 // impl IntoIterator for Relative {
 //     type Item = ();
