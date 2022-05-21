@@ -5,7 +5,8 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use zip::{write::FileOptions, CompressionMethod};
+use time::{macros::offset, OffsetDateTime};
+use zip::{write::FileOptions, CompressionMethod, DateTime};
 
 type FileBuf = BufWriter<fs::File>;
 type ZipBuf = zip::ZipWriter<FileBuf>;
@@ -19,7 +20,7 @@ pub struct Package {
 impl Package {
     pub fn new_in(dir: &str) -> Result<Self> {
         let zip = Self::create_zip(dir)?;
-        let option = FileOptions::default().compression_method(CompressionMethod::Deflated);
+        let option = Self::create_option();
         let parent = PathBuf::from(dir);
         Ok(Self {
             zip,
@@ -61,6 +62,13 @@ impl Package {
         println!("Creating {}", zip_path);
         let zip_file = BufWriter::new(fs::File::create(zip_path)?);
         Ok(ZipBuf::new(zip_file))
+    }
+
+    fn create_option() -> FileOptions {
+        let timestamp = OffsetDateTime::now_utc().to_offset(offset!(+9));
+        FileOptions::default()
+            .compression_method(CompressionMethod::Deflated)
+            .last_modified_time(DateTime::from_time(timestamp).unwrap())
     }
 
     fn create_zipped_file(&mut self, name: &str) -> Result<&mut ZipBuf> {
