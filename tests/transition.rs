@@ -17,8 +17,8 @@ use tempfile::NamedTempFile;
 #[rstest]
 #[case(vec!["/TRANSITION:1"], vec!["heTCLを指定してください"])]
 #[case(vec!["/TRANSITION:1", "/R1:-123.4", "/TCL:1"],
-       vec!["h#サイン半波長逓減曲線を描画しました。",
-            "ci 0.00000000000001511214150147834 246.8 246.8 -90 -89.76784530181085"])]
+       vec!["ci 0.00000000000001511214150147834 246.8 246.8 -90 -89.76784530181085",
+            "h#サイン半波長逓減曲線を描画しました。"])]
 fn transition(#[case] strv: Vec<&str>, #[case] expected: Vec<&str>) -> Result<()> {
     let path = NamedTempFile::new_in("./tests")?.into_temp_path();
     f5rail::layout(Args::new(&path, &strv))?;
@@ -51,12 +51,12 @@ fn transition(#[case] strv: Vec<&str>, #[case] expected: Vec<&str>) -> Result<()
 struct Args(Vec<OsString>);
 
 impl Args {
-    fn new(path: &impl AsRef<OsStr>, strv: &Vec<impl AsRef<OsStr>>) -> Self {
-        let mut arg_file = OsString::from("/FILE:");
+    fn new(path: &impl AsRef<OsStr>, strv: &[impl AsRef<OsStr>]) -> Self {
+        let mut arg_file = OsString::from("/TEMP:");
         arg_file.push(path);
         let arg_file = arg_file;
         let args = strv
-            .into_iter()
+            .iter()
             .map(|s| s.into())
             .chain(iter::once(arg_file))
             .collect();

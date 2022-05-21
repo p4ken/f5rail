@@ -2,6 +2,7 @@
 name = "f5rail"
 version = "0.1.1"
 edition = "2021"
+default-run = "make"
 
 [profile.release]
 # lto = true      # -22KB (slow)
@@ -11,8 +12,8 @@ edition = "2021"
 anyhow = "1.0.54"
 derive_more = "0.99.17"
 encoding_rs = "0.8.30" # +165KB
+encoding_rs_io = "0.1.7"
 
 [dev-dependencies]
-encoding_rs_io = "0.1.7"
 rstest = "0.12.0"
 tempfile = "3.3.0"

@@ -115,6 +115,12 @@ impl Meter for Radius {
     }
 }
 
+impl From<Radius> for Curvature {
+    fn from(r: Radius) -> Self {
+        r.0.recip().into()
+    }
+}
+
 /// 中心角 (rad)
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, From, Add, Sub)]
 pub struct Central(f64);
@@ -130,7 +136,7 @@ impl Rad for Central {
 pub struct Tangential(f64);
 
 impl Tangential {
-    pub fn to_central(&self, k: Curvature) -> Central {
+    pub fn to_central(self, k: Curvature) -> Central {
         let gap = if k.is_right() { FRAC_PI_2 } else { -FRAC_PI_2 };
         Central(self.rad() + gap)
     }

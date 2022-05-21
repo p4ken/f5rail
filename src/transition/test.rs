@@ -6,7 +6,8 @@ use crate::transition::unit::Vector;
 
 use super::canvas::Point;
 use super::curve::*;
-use super::unit::Rad;
+use super::param::Param;
+use super::unit::Deg;
 use super::*;
 
 fn 緩和曲線(r0 :f64, r1: f64, tcl: f64, btc: f64) -> Param {

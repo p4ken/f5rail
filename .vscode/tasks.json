@@ -14,7 +14,7 @@
       "dependsOn": [
         "リリースビルド"
       ],
-      "command": "cargo run --bin distribution",
+      "command": "cargo run --bin make",
       "group":  "build"
     },
     {
@@ -26,8 +26,11 @@
     },
     {
       "label": "テスト実行",
-      "command": "cargo test --lib --test *",
-      "group": "test"
+      "command": "cargo test --lib --test '*'",
+      "group":{
+        "kind": "test",
+        "isDefault": true
+      }
     }
   ]
 }

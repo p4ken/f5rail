@@ -1,9 +1,8 @@
+pub mod app;
 pub mod canvas;
 pub mod curve;
 pub mod param;
 pub mod unit;
-
-pub use param::Param;
 
 mod distance;
 #[cfg(test)]
@@ -11,6 +10,7 @@ mod test;
 
 use canvas::{Spiral, Stroke};
 use distance::Ruler;
+use param::Param;
 
 /// 緩和曲線を描画する。
 pub fn plot(param: &Param) -> Spiral {

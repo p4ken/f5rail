@@ -1,142 +1,112 @@
-use std::result::Result::Ok;
-use std::{collections::HashMap, ffi::OsString};
+use std::{collections::HashMap, ffi::OsStr};
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 
-use crate::transition;
-use crate::transition::curve::{Curvature, Diminish, Radius, Subtension, STRAIGHT};
-
+#[derive(Debug)]
 /// コマンドライン引数
 ///
-/// BATファイルの起動オプション（参考）
+/// (参考) BATファイルの起動オプション
 /// https://www.tmk-s.com/jww/bat-file.html#c
-#[derive(Debug)]
-pub enum Args {
-    /// 緩和曲線
-    Transition(String, Result<transition::Param>),
-
-    /// 他線座標
-    _Parallel,
+// TODO: OsString
+pub struct Args {
+    buf: HashMap<String, String>,
 }
 
 impl Args {
-    /// コマンドライン引数をパースする。
-    pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Self> {
+    pub fn parse(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<Self> {
+        // let args = args.into_iter().map(|s| s.as_ref()).collect::<Vec<_>>();
+
         let args = args
             .into_iter()
-            .filter_map(|os| os.into_string().ok())
-            .collect::<Vec<_>>();
+            .map(|os| os.as_ref().to_str().map(str::to_owned))
+            .collect::<Option<Vec<String>>>()
+            .context("非UTF-8文字は使えません")?;
 
         let args = args
             .iter()
             .filter_map(|s| s.trim_start_matches('/').split_once(":"))
-            .collect::<ArgMap>();
+            .collect::<Self>();
 
-        if let Ok(formula) = args.get("TRANSITION") {
-            let file = args.get("FILE")?.as_str().to_owned();
-            let param = transition::Param::parse(&formula, &args);
-            Ok(Self::Transition(file, param))
-        } else {
-            bail!("機能を指定してください")
-        }
+        Ok(args)
     }
-}
 
-impl transition::Param {
-    /// コマンドライン引数を緩和曲線パラメータにパースする。
-    fn parse(diminish: &ArgValue, args: &ArgMap) -> Result<Self> {
-        Ok(Self {
-            diminish: diminish.try_into()?,
-            // 半径は無くてもOKだが、あるなら適切な値でなければならない。
-            k0: args.get("R0").ok().try_into()?,
-            k1: args.get("R1").ok().try_into()?,
-            l0: 0.0.into(),
-            tcl: args.get("TCL")?.try_into()?,
-            p0: (0.0, 0.0).into(),
-            t0: 0.0.into(),
-        })
+    pub fn track(&self) -> Result<&str> {
+        self.get_str("TRACK")
     }
-}
-
-/// 引数の配列
-struct ArgMap<'a>(HashMap<&'a str, &'a str>);
-
-impl<'a> FromIterator<(&'a str, &'a str)> for ArgMap<'a> {
-    /// イテレータから変換する。
-    fn from_iter<I: IntoIterator<Item = (&'a str, &'a str)>>(iter: I) -> Self {
-        Self(HashMap::from_iter(iter))
+    pub fn transition(&self) -> Result<&str> {
+        self.get_str("TRANSITION")
     }
-}
-
-impl<'a> ArgMap<'a> {
-    /// 値を取得する。
-    fn get(&self, key: &'a str) -> Result<ArgValue> {
-        let value = self
-            .0
-            .get(key)
-            .with_context(|| format!("{}を指定してください", key))?;
-        Ok(ArgValue(key, value))
+    pub fn temp_path(&self) -> Result<&str> {
+        self.get_str("TEMP")
     }
-}
-
-/// 引数の値
-struct ArgValue<'a>(&'a str, &'a str);
-
-impl<'a> ArgValue<'a> {
-    fn as_str(&self) -> &str {
-        self.1
+    pub fn temp_0_path(&self) -> Result<&str> {
+        self.get_str("TEMP_0")
     }
-}
-
-impl<'a> TryFrom<&ArgValue<'a>> for f64 {
-    type Error = anyhow::Error;
-    /// 小数に変換する。
-    fn try_from(value: &ArgValue<'a>) -> Result<Self, Self::Error> {
-        value
-            .1
-            .parse()
-            .with_context(|| format!("{}を数値で入力してください", value.0))
+    pub fn temp_x_path(&self) -> Result<&str> {
+        self.get_str("TEMP_X")
     }
-}
-
-impl<'a> TryFrom<Option<ArgValue<'a>>> for Curvature {
-    type Error = anyhow::Error;
-    /// 曲率に変換する。
-    fn try_from(value: Option<ArgValue<'a>>) -> Result<Self, Self::Error> {
-        let v = match value {
-            Some(v) => v,
-            None => return Ok(STRAIGHT),
-        };
-        let r = Radius((&v).try_into()?);
-        ensure!(r != Radius(0.0), "{}に0を指定できません", v.0);
-        Ok(r.into())
+    pub fn map_name(&self) -> &str {
+        self.get_str("出力ファイル名").unwrap_or("")
     }
-}
-
-impl<'a> TryFrom<ArgValue<'a>> for Subtension {
-    type Error = anyhow::Error;
-    /// 緩和曲線長に変換する。
-    fn try_from(value: ArgValue<'a>) -> Result<Self, Self::Error> {
-        let tcl: f64 = (&value).try_into()?;
-        ensure!(tcl > 0.0, "{}に0より大きい値を入力してください", value.0);
+    pub fn r0(&self) -> Result<Option<f64>> {
+        self.get_radius("R0")
+    }
+    pub fn r1(&self) -> Result<Option<f64>> {
+        self.get_radius("R1")
+    }
+    pub fn tcl(&self) -> Result<f64> {
+        let tcl = self.get("TCL")?.float()?;
+        ensure!(tcl > 0.0, "TCLに0より大きい値を入力してください");
         Ok(tcl.into())
     }
+
+    fn get<'k>(&self, key: &'k str) -> Result<ArgValue<'k, '_>> {
+        let value = self
+            .buf
+            .get(key)
+            .with_context(|| format!("{key}を指定してください"))?;
+        Ok(ArgValue(key, value))
+    }
+    fn get_str(&self, key: &str) -> Result<&str> {
+        self.get(key).map(|val| val.str())
+    }
+    fn get_radius(&self, key: &str) -> Result<Option<f64>> {
+        // 半径は無くてもよいが、あるなら適切な値でなければならない
+        self.get(key).map_or(Ok(None), |val| val.radius())
+    }
 }
 
-impl<'a> TryFrom<&ArgValue<'a>> for Diminish {
-    type Error = anyhow::Error;
-    /// 緩和曲線関数に変換する。
-    fn try_from(pair: &ArgValue<'a>) -> Result<Self, Self::Error> {
-        match pair.1 {
-            "1" => Ok(Diminish::Sine),
-            "2" => Ok(Diminish::Linear),
-            _ => bail!("緩和曲線関数に正しい値を入力してください"),
+impl<'a> FromIterator<(&'a str, &'a str)> for Args {
+    fn from_iter<I: IntoIterator<Item = (&'a str, &'a str)>>(iter: I) -> Self {
+        let iter = iter
+            .into_iter()
+            .map(|(key, value)| (key.to_owned(), value.to_owned()));
+        Self {
+            buf: HashMap::from_iter(iter),
         }
     }
 }
 
-impl From<Radius> for Curvature {
-    fn from(r: Radius) -> Self {
-        r.0.recip().into()
+/// ひとつの引数の値
+// エラーメッセージ生成用にキーの参照も持っている
+pub struct ArgValue<'k, 'v>(&'k str, &'v str);
+
+impl<'k, 'v> ArgValue<'k, 'v> {
+    fn str(&self) -> &'v str {
+        self.1
+    }
+    fn float(&self) -> Result<f64> {
+        self.str()
+            .parse()
+            .with_context(|| format!("{}を数値で入力してください", self.key()))
+    }
+    fn radius(&self) -> Result<Option<f64>> {
+        let r = self.float()?;
+        ensure!(r != 0.0, "{}に0を指定できません", self.key());
+        Ok(Some(r))
+    }
+
+    fn key(&self) -> &'k str {
+        self.0
     }
 }
