@@ -2,10 +2,10 @@
 @echo off
 REM #jww
 REM #cd
-REM #hm | 自軌道指定 | スキップ |
+REM #hm | 自軌道選択 | スキップ |
 REM #:1
 REM #h1
-REM #hc 自軌道を指定
+REM #hc 自軌道を選択
 REM #1  出力始点を指定
 REM #g1
 REM #c  出力始点のBVE距離程 (m)/_/始点距離程:

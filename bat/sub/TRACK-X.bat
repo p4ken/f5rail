@@ -2,10 +2,10 @@
 @echo off
 REM #jww
 REM #cd
-REM #hm | 他軌道指定 | スキップ |
+REM #hm | 他軌道選択 | スキップ |
 REM #:1
 REM #h1
-REM #hc 他軌道を指定
+REM #hc 他軌道を選択
 REM #g1
 REM #c  BVEのトラック名 /_/トラック名:
 REM #:2

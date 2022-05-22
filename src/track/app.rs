@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use anyhow::{Error, Result};
+use anyhow::{Context, Error, Result};
 
 use crate::agent::{
     bat::Args,
@@ -38,8 +38,10 @@ impl<'a> Track<'a> {
     fn make_map_file(&self) -> Result<MapPath> {
         // トラック名と図形を読み取る
         let mut temp_file = JwcTemp::open(self.args.temp_path()?)?;
-        let _temp_0_file = JwcTemp::open(self.args.temp_0_path()?)?;
-        let mut temp_x_file = JwcTemp::open(self.args.temp_x_path()?)?;
+        let _temp_0_file =
+            JwcTemp::open(self.args.temp_0_path()?).context("自軌道を選択してください")?;
+        let mut temp_x_file =
+            JwcTemp::open(self.args.temp_x_path()?).context("他軌道を選択してください")?;
         let _track_name = temp_x_file.track_name();
         // let track_0 = temp_0_file.read_polyline()?;
         // let track_x = temp_x_file.read_polyline()?;
