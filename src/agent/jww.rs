@@ -9,7 +9,7 @@ use anyhow::{ensure, Context, Result};
 use encoding_rs::SHIFT_JIS;
 use encoding_rs_io::DecodeReaderBytesBuilder;
 
-use crate::transition::unit::{Deg, Meter, Vector};
+use crate::{transition::unit::{Deg, Meter, Vector}, track::polyline::Stroke};
 
 /// 入出力用の座標ファイル。
 ///
@@ -181,5 +181,20 @@ impl Write {
                 .context("JWC_TEMP.TXTへの書き込みに失敗しました。")?;
         }
         Ok(())
+    }
+}
+
+/// JWW_TEMPファイルの図形データ
+pub enum Figure {
+    /// 単線
+    Line([f64; 4]),
+
+    /// 正円弧
+    Arc([f64; 5]),
+}
+
+impl From<Figure> for Stroke {
+    fn from(_: Figure) -> Self {
+        todo!()
     }
 }
