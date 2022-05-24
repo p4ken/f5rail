@@ -9,7 +9,10 @@ use anyhow::{ensure, Context, Result};
 use encoding_rs::SHIFT_JIS;
 use encoding_rs_io::DecodeReaderBytesBuilder;
 
-use crate::{transition::unit::{Deg, Meter, Vector}, track::polyline::Stroke};
+use crate::{
+    track::polyline::Stroke,
+    transition::unit::{Deg, Meter, Vector},
+};
 
 /// 入出力用の座標ファイル。
 ///
@@ -65,8 +68,11 @@ impl Read {
     }
 
     /// 図形データ
-    pub fn figures(&mut self) -> Result<Vec<Figure>> {
-        Ok(vec![])
+    pub fn figures(&mut self) -> Result<&Vec<Figure>> {
+        self.cache()
+            .figures
+            .as_ref()
+            .context("軌道を選択してください")
     }
 
     /// 作業中のファイルパス
@@ -107,6 +113,7 @@ impl Read {
 struct Cache {
     track_name: Option<String>,
     project_path: Option<String>,
+    figures: Option<Vec<Figure>>,
 }
 
 impl FromIterator<String> for Cache {
@@ -128,6 +135,7 @@ impl FromIterator<String> for Cache {
                 //
             }
         }
+        cache.figures = Some(vec![Figure::Line([1.0, 1.0, 1.0, 1.0])]); // TODO
         cache
     }
 }
@@ -198,8 +206,9 @@ pub enum Figure {
     Arc([f64; 5]),
 }
 
-impl From<Figure> for Stroke {
-    fn from(_: Figure) -> Self {
-        todo!()
+impl From<&Figure> for Stroke {
+    fn from(_: &Figure) -> Self {
+        // TODO
+        Stroke::ToDo
     }
 }

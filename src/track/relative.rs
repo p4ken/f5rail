@@ -1,5 +1,7 @@
 use anyhow::Result;
 
+use super::polyline::{Stroke, Polyline};
+
 /// Bveの相対座標
 pub trait Relative{
     // agentに持たせていいかも？ BVE特有なので。
@@ -36,15 +38,6 @@ impl Relative_ {
 
         todo!()
     }
-}
-
-pub struct Polyline {
-    v: Vec<Stroke>,
-}
-
-pub enum Stroke {
-    Straight,
-    Curve,
 }
 
 impl Stroke {

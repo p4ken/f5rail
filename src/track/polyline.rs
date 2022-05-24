@@ -3,9 +3,10 @@ use anyhow::Result;
 /// 1つの軌道を表す連続線
 pub struct Polyline(Vec<Stroke>);
 
-impl Polyline {
-    pub fn new() -> Result<Self> {
-        Ok(Self(vec![]))
+impl FromIterator<Stroke> for Result<Polyline> {
+    fn from_iter<T: IntoIterator<Item = Stroke>>(iter: T) -> Self {
+        // TODO
+        Ok(Polyline(vec![Stroke::ToDo]))
     }
 }
 
@@ -19,6 +20,8 @@ pub enum Stroke {
 
     // 円弧
     Arc(Point, Radius, Degree, Degree),
+
+    ToDo,
 }
 
 pub struct Point(pub f64, pub f64);
