@@ -109,7 +109,7 @@ impl Read {
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, PartialEq, Default)]
 struct Cache {
     track_name: Option<String>,
     project_path: Option<String>,
@@ -198,6 +198,7 @@ impl Write {
 }
 
 /// JWW_TEMPファイルの図形データ
+#[derive(Debug, PartialEq)]
 pub enum Figure {
     /// 単線
     Line([f64; 4]),
@@ -210,5 +211,19 @@ impl From<&Figure> for Stroke {
     fn from(_: &Figure) -> Self {
         // TODO
         Stroke::ToDo
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rstest::rstest;
+
+    use super::*;
+
+    #[rstest]
+    #[case::トラック名(vec!["/トラック名:文字"], Cache{track_name:Some("文字".to_owned()), ..Default::default()})]
+    fn キャッシュにパースする(#[case] contents: Vec<&str>, #[case] expected: Cache) {
+        let cache = contents.into_iter().map(&str::to_owned).collect::<Cache>();
+        assert_eq!(cache, expected);
     }
 }
