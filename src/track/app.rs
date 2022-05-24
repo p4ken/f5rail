@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use anyhow::{Context, Error, Result};
+use anyhow::{anyhow, Context, Error, Result};
 
 use crate::agent::{
     bat::Args,
@@ -46,8 +46,8 @@ impl<'a> Track<'a> {
         let mut temp_x_file =
             JwcTemp::open(self.args.temp_x_path()?).context("他軌道を選択してください")?;
         let _track_name = temp_x_file.track_name();
-        let track_0 = temp_0_file.polyline()?;
-        let track_x = temp_x_file.polyline()?;
+        let track_0 = temp_0_file.polyline().map_err(|e| anyhow!("自軌道：{}", e))?;
+        let track_x = temp_x_file.polyline().map_err(|e| anyhow!("他軌道：{}", e))?;
 
         // 始点を読み込む
 
@@ -81,6 +81,6 @@ impl<'a> Track<'a> {
 
 impl jww::Read {
     fn polyline(&mut self) -> Result<Polyline> {
-        self.figures()?.iter().map(Stroke::from).collect()
+        self.figures().iter().map(Stroke::from).collect()
     }
 }

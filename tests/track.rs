@@ -18,6 +18,8 @@ fn relative(#[case] map_name: &str) -> Result<()> {
     let project_dir = TestDir::create()?;
     jwc_temp.write_path(&project_dir.path().join("foo.jww"))?;
     jwc_temp_x.write_track_name("1")?;
+    jwc_temp_0.write_line(" 0 0 100 100")?;
+    jwc_temp_x.write_line(" 100 100 200 200")?;
 
     let args = vec![
         Arg::new("/TRACK:X"),
@@ -52,6 +54,9 @@ impl TestFile {
     }
     fn write_track_name(&self, s: &str) -> io::Result<()> {
         writeln!(self.open()?, "/トラック名:{}", s)
+    }
+    fn write_line(&self, s: &str) -> io::Result<()> {
+        writeln!(self.open()?, "{}", s)
     }
     fn open(&self) -> io::Result<File> {
         OpenOptions::new().append(true).open(&self.0)

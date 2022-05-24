@@ -68,11 +68,8 @@ impl Read {
     }
 
     /// 図形データ
-    pub fn figures(&mut self) -> Result<&Vec<Figure>> {
-        self.cache()
-            .figures
-            .as_ref()
-            .context("軌道を選択してください")
+    pub fn figures(&mut self) -> &Vec<Figure> {
+        &self.cache().figures
     }
 
     /// 作業中のファイルパス
@@ -113,7 +110,7 @@ impl Read {
 struct Cache {
     track_name: Option<String>,
     project_path: Option<String>,
-    figures: Option<Vec<Figure>>,
+    figures: Vec<Figure>,
 }
 
 impl FromIterator<String> for Cache {
@@ -122,20 +119,26 @@ impl FromIterator<String> for Cache {
         for line in iter {
             if let Some(s) = line.strip_prefix("file=") {
                 cache.project_path = Some(s.to_string());
+            } else if let Some(s) = line.strip_prefix(" ") {
+                if let Ok(&[a, b, c, d]) = s
+                    .split(" ")
+                    .map(&str::parse)
+                    .collect::<std::result::Result<Vec<f64>, _>>()
+                    .as_deref()
+                {
+                    cache.figures.push(Figure::Line([a, b, c, d]));
+                }
             } else if let Some(a) = line.strip_prefix("ci ") {
                 let v = a.split(" ").collect::<Vec<_>>();
                 if let [_a, _b, _c, _d, _e, _f, _g] = v.as_slice() {
-                    // cache.curve.push()
+                    // cache.figures.push()
                 }
-            } else if let Some(_straight) = line.strip_prefix(" ") {
-                //
             } else if let Some(s) = line.strip_prefix("/トラック名:") {
                 cache.track_name = Some(s.to_string());
             } else if let Some(_z0) = line.strip_prefix("/始点距離程:") {
                 //
             }
         }
-        cache.figures = Some(vec![Figure::Line([1.0, 1.0, 1.0, 1.0])]); // TODO
         cache
     }
 }

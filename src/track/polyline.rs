@@ -1,10 +1,12 @@
-use anyhow::Result;
+use anyhow::{Result, ensure};
 
 /// 1つの軌道を表す連続線
 pub struct Polyline(Vec<Stroke>);
 
 impl FromIterator<Stroke> for Result<Polyline> {
     fn from_iter<T: IntoIterator<Item = Stroke>>(iter: T) -> Self {
+        let mut iter = iter.into_iter().peekable();
+        ensure!(iter.peek().is_some(), "線データが選択されていません");
         // TODO
         Ok(Polyline(vec![Stroke::ToDo]))
     }
