@@ -76,8 +76,9 @@ impl<'a> Track<'a> {
     }
 }
 
-impl jww::Cache {
-    fn read_polyline(&self) -> Result<Polyline> {
+impl jww::Read {
+    fn polyline(&self) -> Result<Polyline> {
+        // jww::Figure -> Polyline 変換
         todo!()
     }
 }

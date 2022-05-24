@@ -9,7 +9,10 @@ impl Polyline {
     }
 }
 
-// 連続線が保持する具体的な情報
+// 連続線を作成するために必要な情報
+//
+
+// 連続線が保持する具体的な情報 これはimpl？
 pub enum Stroke {
     // 直線
     Straight(Point, Point),

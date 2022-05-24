@@ -64,6 +64,11 @@ impl Read {
         Ok(dir.to_path_buf())
     }
 
+    /// 図形データ
+    pub fn figures(&mut self) -> Result<Vec<Figure>> {
+        Ok(vec![])
+    }
+
     /// 作業中のファイルパス
     fn project_path(&mut self) -> Result<&String> {
         let path = self
@@ -99,7 +104,7 @@ impl Read {
 }
 
 #[derive(Default)]
-pub struct Cache {
+struct Cache {
     track_name: Option<String>,
     project_path: Option<String>,
 }
