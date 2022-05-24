@@ -27,7 +27,8 @@ impl MapFile {
         _name: &str,
         _relative: &impl IntoIterator<Item = (i32, i32)>,
     ) -> Result<()> {
-        todo!()
+        // TODO
+        Ok(())
     }
 }
 
@@ -89,7 +90,7 @@ impl AsRef<Path> for MapPath {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use std::fs;
 
     use rstest::rstest;

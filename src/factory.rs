@@ -31,7 +31,7 @@ impl<'a> App<'a> {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use std::ffi::OsString;
 
     use super::*;

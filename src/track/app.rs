@@ -84,7 +84,3 @@ impl jww::Read {
         self.figures()?.iter().map(Stroke::from).collect()
     }
 }
-
-trait WriteRelative {
-    fn write(&self, relative: &Relative_) -> Result<()>;
-}

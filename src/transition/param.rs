@@ -65,7 +65,7 @@ impl Diminish {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use std::ffi::OsString;
 
     use anyhow::Result;

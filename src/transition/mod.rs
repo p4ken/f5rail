@@ -6,7 +6,7 @@ pub mod unit;
 
 mod distance;
 #[cfg(test)]
-mod test;
+mod tests;
 
 use canvas::{Spiral, Stroke};
 use distance::Ruler;
