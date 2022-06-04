@@ -8,10 +8,7 @@ use crate::agent::{
     jww::{self, JwcTemp},
 };
 
-use super::{
-    polyline::{Polyline, Stroke},
-    relative::Relative_,
-};
+use super::polyline::{Polyline, Stroke};
 
 #[derive(Debug)]
 /// 外部変形 "TRACK"
@@ -46,8 +43,12 @@ impl<'a> Track<'a> {
         let mut temp_x_file =
             JwcTemp::open(self.args.temp_x_path()?).context("他軌道を選択してください")?;
         let _track_name = temp_x_file.track_name();
-        let track_0 = temp_0_file.polyline().map_err(|e| anyhow!("自軌道：{}", e))?;
-        let track_x = temp_x_file.polyline().map_err(|e| anyhow!("他軌道：{}", e))?;
+        let track_0 = temp_0_file
+            .figures()
+            .map_err(|e| anyhow!("自軌道：{}", e))?;
+        let track_x = temp_x_file
+            .figures()
+            .map_err(|e| anyhow!("他軌道：{}", e))?;
 
         // 始点を読み込む
 
@@ -76,11 +77,5 @@ impl<'a> Track<'a> {
     /// JWC_TEMP.TXTを作成する。
     fn create_temp_file(&self) -> Result<jww::Write> {
         JwcTemp::create(self.args.temp_path()?)
-    }
-}
-
-impl jww::Read {
-    fn polyline(&mut self) -> Result<Polyline> {
-        self.figures().iter().map(Stroke::from).collect()
     }
 }
