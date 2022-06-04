@@ -114,33 +114,12 @@ impl Read {
 
     /// 作業中のファイルがあるディレクトリ
     pub fn project_dir(&mut self) -> Result<PathBuf> {
-        let path = self.project_path()?;
-
-        let dir = Path::new(path)
-            .parent()
-            .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
-
-        Ok(dir.to_path_buf())
+        self.cache()?.project_dir()
     }
 
     /// 図形データ
     pub fn figures(&mut self) -> Result<Vec<Figure>> {
         self.cache()?.figures()
-    }
-
-    /// 作業中のファイルパス
-    fn project_path(&mut self) -> Result<&str> {
-        let path = self
-            .cache()?
-            .project_path()
-            .context("JWC_TEMPファイルにパスが出力されていません")?;
-
-        ensure!(
-            !path.is_empty(),
-            "作業中のファイルに名前をつけて保存してください"
-        );
-
-        Ok(path)
     }
 
     fn cache(&mut self) -> Result<&Cache> {
@@ -178,19 +157,7 @@ impl FromIterator<String> for Cache {
 }
 
 impl Cache {
-    // 一度に全部パースする必要はない。エラーハンドリングしにくい。
-    fn parse(iter: impl IntoIterator<Item = String>) -> Result<Self> {
-        let mut cache = Self::default();
-        for line in iter {
-            if let Some(s) = line.strip_prefix("file=") {
-                cache.project_path = Some(s.to_string());
-            } else if let Some(_z0) = line.strip_prefix("/始点距離程:") {
-                //
-            }
-        }
-        Ok(cache)
-    }
-
+    /// トラック名
     fn track_name(&self) -> &str {
         for line in &self.buf {
             if let Some(s) = line.strip_prefix("/トラック名:") {
@@ -200,10 +167,37 @@ impl Cache {
         " "
     }
 
-    fn project_path(&self) -> Option<&str> {
-        self.project_path.as_ref().map(&String::as_str)
+    fn project_dir(&self) -> Result<PathBuf> {
+        let path = self
+            .buf
+            .iter()
+            .find_map(|line| line.strip_prefix("file="))
+            .context("JWC_TEMPファイルにパスが出力されていません")?;
+
+        ensure!(
+            !path.is_empty(),
+            "作業中のファイルに名前をつけて保存してください"
+        );
+
+        let dir = Path::new(path)
+            .parent()
+            .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
+
+        Ok(dir.to_path_buf())
     }
 
+    /// 始点距離程
+    fn distance_0(&self) -> Result<f64> {
+        let s = self
+            .buf
+            .iter()
+            .find_map(|line| line.strip_prefix("/始点距離程:"))
+            .context("始点距離程を指定してください")?;
+        s.parse()
+            .with_context(|| format!("始点距離程 {} を数値にパースできません", s))
+    }
+
+    /// 図形データ
     fn figures(&self) -> Result<Vec<Figure>> {
         self.buf
             .iter()
@@ -255,28 +249,6 @@ impl Figure {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct StraightLine([f64; 4]);
-
-impl StraightLine {
-    pub fn x0(&self) -> f64 {
-        self.0[0]
-    }
-}
-
-impl StraightLine {
-    fn parse(line: &str) -> Option<Self> {
-        // 数値でない -> エラー
-        // 要素数4以外 -> エラー
-        line.split(" ")
-            .filter_map(|s| s.parse().ok())
-            .collect::<Vec<f64>>()
-            .try_into()
-            .ok()
-            .map(|array| Self(array))
-    }
-}
-
 impl From<&Figure> for Stroke {
     fn from(_: &Figure) -> Self {
         // TODO
@@ -285,14 +257,45 @@ impl From<&Figure> for Stroke {
 }
 
 #[cfg(test)]
-mod tests {
+mod 座標ファイルをパースする {
     use rstest::rstest;
 
     use super::*;
 
     #[rstest]
+    #[case(vec!["file=parent/child/file"], Ok("parent/child"))]
+    #[case(vec!["file=/"], Err("/ と同じフォルダに出力できません"))]
+    #[case(vec!["file="], Err("作業中のファイルに名前をつけて保存してください"))]
+    #[case(vec![""], Err("JWC_TEMPファイルにパスが出力されていません"))]
+    fn プロジェクトファイル名(
+        #[case] contents: Vec<&str>,
+        #[case] expected: Result<&str, &str>,
+    ) {
+        let cache = contents.into_iter().map(&str::to_string).collect::<Cache>();
+        match (cache.project_dir(), expected) {
+            (Ok(x), Ok(expected)) => assert_eq!(x, PathBuf::from(expected)),
+            (Err(e), Err(expected)) => assert_eq!(e.to_string(), expected.to_string()),
+            (lhs, rhs) => panic!("{:?} vs {:?}", lhs, rhs),
+        }
+    }
+
+    #[rstest]
+    #[case(vec!["/始点距離程:5"], Ok(5.0))]
+    #[case(vec!["/始点距離程:-5.1"], Ok(-5.1))]
+    #[case(vec!["/始点距離程:a"], Err("始点距離程 a を数値にパースできません"))]
+    #[case(vec![""], Err("始点距離程を指定してください"))]
+    fn 始点距離程(#[case] contents: Vec<&str>, #[case] expected: Result<f64, &str>) {
+        let cache = contents.into_iter().map(&str::to_string).collect::<Cache>();
+        match (cache.distance_0(), expected) {
+            (Ok(x), Ok(expected)) => assert_eq!(x, expected),
+            (Err(e), Err(expected)) => assert_eq!(e.to_string(), expected.to_string()),
+            _ => panic!(""),
+        }
+    }
+
+    #[rstest]
     #[case(vec!["/トラック名:文字"], "文字")]
-    fn トラック名をパースする(#[case] contents: Vec<&str>, #[case] expected: &str) {
+    fn トラック名(#[case] contents: Vec<&str>, #[case] expected: &str) {
         let cache = contents.into_iter().map(&str::to_string).collect::<Cache>();
         assert_eq!(cache.track_name(), expected);
     }
@@ -302,10 +305,7 @@ mod tests {
     #[case::円弧(vec!["ci 1 2 3 4 5 1 0"], vec![Figure::Arc([1.,2.,3.,4.,5.])])]
     #[case::楕円弧(vec!["ci 1 2 3 4 5 1.5 5"], vec![Figure::Ellipse])]
     #[case::円(vec!["ci 1 2 3"], vec![Figure::Circle])]
-    fn 図形データをパースする(
-        #[case] contents: Vec<&str>,
-        #[case] expected: Vec<Figure>,
-    ) {
+    fn 図形データ(#[case] contents: Vec<&str>, #[case] expected: Vec<Figure>) {
         let cache = contents.into_iter().map(&str::to_string).collect::<Cache>();
         let figures = cache.figures();
         assert!(figures.is_ok());
