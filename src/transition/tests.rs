@@ -2,7 +2,7 @@ use std::f64::consts::FRAC_2_PI;
 
 use rstest::rstest;
 
-use crate::transition::unit::Vector;
+use crate::transition::unit::XY;
 
 use super::canvas::Point;
 use super::curve::*;

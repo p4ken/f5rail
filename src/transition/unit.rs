@@ -25,15 +25,15 @@ impl<T: Rad> Deg for T {
     }
 }
 
-/// ベクトル
+/// 直交座標
 ///
 /// 極座標 `(Meter, Rad)` に自動で実装される。
-pub trait Vector {
+pub trait XY {
     fn x(&self) -> f64;
     fn y(&self) -> f64;
 }
 
-impl<T: Meter + Copy, U: Rad + Copy> Vector for (T, U) {
+impl<T: Meter + Copy, U: Rad + Copy> XY for (T, U) {
     fn x(&self) -> f64 {
         self.0.meter().abs() * self.1.rad().cos()
     }

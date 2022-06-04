@@ -12,7 +12,7 @@ use encoding_rs_io::DecodeReaderBytesBuilder;
 
 use crate::{
     track::polyline::Stroke,
-    transition::unit::{Deg, Meter, Vector},
+    transition::unit::{Deg, Meter, XY},
 };
 
 use super::figure::Figure;
@@ -72,7 +72,7 @@ impl Write {
     /// 曲線を出力する。
     pub fn curve(
         &mut self,
-        c: &impl Vector,
+        c: &impl XY,
         r: &impl Meter,
         a0: &impl Deg,
         a1: &impl Deg,
@@ -85,7 +85,7 @@ impl Write {
     }
 
     /// 直線を出力する。
-    pub fn straight(&mut self, p0: &impl Vector, p1: &impl Vector) -> Result<()> {
+    pub fn straight(&mut self, p0: &impl XY, p1: &impl XY) -> Result<()> {
         self.puts(format!("{} {} {} {}", p0.x(), p0.y(), p1.x(), p1.y()))
     }
 

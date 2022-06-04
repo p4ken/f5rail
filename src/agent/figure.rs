@@ -1,4 +1,4 @@
-use crate::track::polyline::Edge;
+use crate::{track::polyline::{Edge, Point}, transition::unit::XY};
 
 /// JWW_TEMPファイルの図形データ
 #[derive(Debug, PartialEq)]
@@ -20,15 +20,16 @@ pub enum Figure {
 }
 
 impl Edge for Figure {
-    fn start(&self) -> Option<(f64, f64)> {
-        let pair = match self {
+    fn start(&self) -> Option<Point> {
+        let (x, y) = match self {
             Self::Straight([x, y, ..]) => (*x, *y),
+            // Self::Arc([cx, cy, r, a0, _]) => (xy + ),
             _ => return None,
         };
-        Some(pair)
+        Some(Point(x, y))
     }
 
-    fn end(&self) -> Option<(f64, f64)> {
+    fn end(&self) -> Option<Point> {
         todo!()
     }
 }

@@ -2,7 +2,7 @@ use derive_more::{Deref, From};
 
 use super::{
     curve::{Central, Curvature, Radius, Subtension, Tangential},
-    unit::{Rad, Vector},
+    unit::{Rad, XY},
 };
 use std::{f64::consts::PI, ops::Add};
 
@@ -86,7 +86,7 @@ impl Stroke {
 #[derive(Debug, Copy, Clone, PartialEq, From)]
 pub struct Point(f64, f64);
 
-impl Vector for Point {
+impl XY for Point {
     fn x(&self) -> f64 {
         self.0
     }
@@ -95,7 +95,7 @@ impl Vector for Point {
     }
 }
 
-impl<T: Vector + Copy> Add<T> for Point {
+impl<T: XY + Copy> Add<T> for Point {
     type Output = Self;
 
     /// 足し算
