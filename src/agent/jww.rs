@@ -220,15 +220,18 @@ pub enum Figure {
     /// 円弧
     Arc([f64; 5]),
 
-    /// 円
-    Circle,
-
-    /// 楕円弧
+    /// 円・楕円・楕円弧
     Ellipse,
-    // TODO: ソリッド図形とか
+
+    /// ブロック図形
+    Block,
+
+    /// ソリッド（線形・円周）
+    Solid,
 }
 
 impl Figure {
+    /// 図形データをパースする
     fn parse(line: &str) -> Result<Option<Self>> {
         let str_v = line.split_whitespace().collect::<Vec<_>>();
         let figure = match str_v[..] {
@@ -240,13 +243,15 @@ impl Figure {
                 Ok(array) => Self::Arc(array),
                 _ => bail!("円弧 {} を数値にパースできません", line),
             },
-            ["ci", _, _, _, _, _, _, _] => Self::Ellipse,
-            ["ci", _, _, _] => Self::Circle,
+            ["ci", ..] => Self::Ellipse,
+            ["BL", ..] => Self::Block,
+            ["sl", _, _, _, _] | ["se", ..] => Self::Solid,
             _ => return Ok(None),
         };
         return Ok(Some(figure));
     }
 
+    /// 数値にパースする
     fn parse_num(v: &[&str]) -> Vec<f64> {
         v.iter()
             .filter_map(|s| s.parse().ok())
@@ -309,8 +314,10 @@ mod 座標ファイルをパースする {
     #[case::直線(vec![" -47275.9875573158 -46216.5741820161 93751.1092168777 -72084.3161175"], vec![Figure::Straight([-47275.9875573158, -46216.5741820161, 93751.1092168777, -72084.3161175])])]
     #[case::円弧(vec!["ci 26701.9673429692 8497.03095908351 48568.3678393406 39.3304039946051 138.775693111848 1 0"], vec![Figure::Arc([26701.9673429692,8497.03095908351,48568.3678393406,39.3304039946051,138.775693111848])])]
     #[case::楕円弧(vec!["ci 1 2 3 4 5 1.5 5"], vec![Figure::Ellipse])]
-    #[case::円(vec!["ci 1 2 3"], vec![Figure::Circle])]
-    #[case::ソリッド図形(vec!["sl 1"], vec![])] // TODO: ソリッド図形
+    #[case::円(vec!["ci 1 2 3"], vec![Figure::Ellipse])]
+    #[case::ブロック図形(vec!["BL 0 0 \"aaa"], vec![Figure::Block])]
+    #[case::線形ソリッド(vec!["sl -11022.8155339806 26740.5339805825 11022.8155339806 -26740.5339805825"], vec![Figure::Solid])]
+    #[case::円周ソリッド(vec!["se 0 0 18917.6057536967 1 0 2.99371813587285 2.42761894570543 0"], vec![Figure::Solid])]
     fn 図形データ(#[case] contents: Vec<&str>, #[case] expected: Vec<Figure>) {
         let cache = contents.into_iter().map(&str::to_string).collect::<Cache>();
         let figures = cache.figures();
