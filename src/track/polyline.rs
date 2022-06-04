@@ -1,4 +1,4 @@
-use anyhow::{Result, ensure};
+use anyhow::{ensure, Result};
 
 /// 1つの軌道を表す連続線
 pub struct Polyline(Vec<Stroke>);
@@ -12,10 +12,16 @@ impl FromIterator<Stroke> for Result<Polyline> {
     }
 }
 
-// 連続線を作成するために必要な情報
-//
+// 連続線を作成するために必要な情報：始終点の座標
+pub trait Edge {
+    /// 始点座標
+    fn start(&self) -> Option<(f64, f64)>;
 
-// 連続線が保持する具体的な情報 これはimpl？
+    /// 終点座標
+    fn end(&self) -> Option<(f64, f64)>;
+}
+
+// 連続線が保持する具体的な情報 これはrelativeの実装？
 pub enum Stroke {
     // 直線
     Straight(Point, Point),

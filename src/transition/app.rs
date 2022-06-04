@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use anyhow::Result;
 
-use crate::agent::jww::JwcTemp;
+use crate::agent::jwc_temp::JwcTemp;
 
 use super::{curve::Diminish, unit::Meter, Param};
 

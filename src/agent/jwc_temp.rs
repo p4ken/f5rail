@@ -15,6 +15,8 @@ use crate::{
     transition::unit::{Deg, Meter, Vector},
 };
 
+use super::figure::Figure;
+
 /// 入出力用の座標ファイル。
 ///
 /// (参考) JWC_TEMP.TXTのフォーマット
@@ -211,25 +213,6 @@ impl Cache {
     }
 }
 
-/// JWW_TEMPファイルの図形データ
-#[derive(Debug, PartialEq)]
-pub enum Figure {
-    /// 単線
-    Straight([f64; 4]),
-
-    /// 円弧
-    Arc([f64; 5]),
-
-    /// 円・楕円・楕円弧
-    Ellipse,
-
-    /// ブロック図形
-    Block,
-
-    /// ソリッド（線形・円周）
-    Solid,
-}
-
 impl Figure {
     /// 図形データをパースする
     fn parse(line: &str) -> Result<Option<Self>> {
@@ -256,13 +239,6 @@ impl Figure {
         v.iter()
             .filter_map(|s| s.parse().ok())
             .collect::<Vec<f64>>()
-    }
-}
-
-impl From<&Figure> for Stroke {
-    fn from(_: &Figure) -> Self {
-        // TODO
-        Stroke::ToDo
     }
 }
 

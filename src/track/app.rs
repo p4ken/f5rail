@@ -5,10 +5,8 @@ use anyhow::{anyhow, Context, Error, Result};
 use crate::agent::{
     bat::Args,
     bve::{MapFile, MapPath},
-    jww::{self, JwcTemp},
+    jwc_temp::{self, JwcTemp},
 };
-
-
 
 #[derive(Debug)]
 /// 外部変形 "TRACK"
@@ -75,7 +73,7 @@ impl<'a> Track<'a> {
     }
 
     /// JWC_TEMP.TXTを作成する。
-    fn create_temp_file(&self) -> Result<jww::Write> {
+    fn create_temp_file(&self) -> Result<jwc_temp::Write> {
         JwcTemp::create(self.args.temp_path()?)
     }
 }
