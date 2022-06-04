@@ -173,16 +173,13 @@ impl Cache {
             .iter()
             .find_map(|line| line.strip_prefix("file="))
             .context("JWC_TEMPファイルにパスが出力されていません")?;
-
         ensure!(
             !path.is_empty(),
             "作業中のファイルに名前をつけて保存してください"
         );
-
         let dir = Path::new(path)
             .parent()
             .with_context(|| format!("{} と同じフォルダに出力できません", path))?;
-
         Ok(dir.to_path_buf())
     }
 
@@ -203,6 +200,21 @@ impl Cache {
             .iter()
             .filter_map(|line| Figure::parse(line).transpose())
             .collect()
+    }
+
+    /// 出力始点
+    fn anchor_0(&self) -> Result<[f64; 2]> {
+        let hp1 = self
+            .buf
+            .iter()
+            .find_map(|line| line.strip_prefix("hp1"))
+            .context("JWC_TEMPファイルに指示点1がありません")?;
+        hp1.split_whitespace()
+            .filter_map(|s| s.parse().ok())
+            .collect::<Vec<f64>>()
+            .try_into()
+            .ok()
+            .with_context(|| format!("指示点 {} を数値にパースできません", hp1))
     }
 }
 
@@ -301,14 +313,26 @@ mod 座標ファイルをパースする {
     }
 
     #[rstest]
-    #[case::直線(vec![" 1 2 3 4"], vec![Figure::Straight([1.,2.,3.,4.])])]
-    #[case::円弧(vec!["ci 1 2 3 4 5 1 0"], vec![Figure::Arc([1.,2.,3.,4.,5.])])]
+    #[case::直線(vec![" -47275.9875573158 -46216.5741820161 93751.1092168777 -72084.3161175"], vec![Figure::Straight([-47275.9875573158, -46216.5741820161, 93751.1092168777, -72084.3161175])])]
+    #[case::円弧(vec!["ci 26701.9673429692 8497.03095908351 48568.3678393406 39.3304039946051 138.775693111848 1 0"], vec![Figure::Arc([26701.9673429692,8497.03095908351,48568.3678393406,39.3304039946051,138.775693111848])])]
     #[case::楕円弧(vec!["ci 1 2 3 4 5 1.5 5"], vec![Figure::Ellipse])]
     #[case::円(vec!["ci 1 2 3"], vec![Figure::Circle])]
+    #[case::ソリッド図形(vec!["sl 1"], vec![])] // TODO: ソリッド図形
     fn 図形データ(#[case] contents: Vec<&str>, #[case] expected: Vec<Figure>) {
         let cache = contents.into_iter().map(&str::to_string).collect::<Cache>();
         let figures = cache.figures();
         assert!(figures.is_ok());
         assert_eq!(figures.unwrap(), expected);
+    }
+
+    #[rstest]
+    #[case::直線(vec!["hp1   136190.26326708 -45574.8870993316"], Ok([136190.26326708,-45574.8870993316]))]
+    fn 出力始点(#[case] contents: Vec<&str>, #[case] expected: Result<[f64; 2]>) {
+        let cache = contents.into_iter().map(&str::to_string).collect::<Cache>();
+        match (cache.anchor_0(), expected) {
+            (Ok(x), Ok(expected)) => assert_eq!(x, expected),
+            (Err(e), Err(expected)) => assert_eq!(e.to_string(), expected.to_string()),
+            _ => panic!(""),
+        }
     }
 }
