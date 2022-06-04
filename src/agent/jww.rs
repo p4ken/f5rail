@@ -6,6 +6,7 @@ use std::{
 };
 
 use anyhow::{bail, ensure, Context, Result};
+use derive_more::Deref;
 use encoding_rs::SHIFT_JIS;
 use encoding_rs_io::DecodeReaderBytesBuilder;
 
@@ -112,7 +113,7 @@ impl Read {
         self.cache().map(Cache::track_name)
     }
 
-    /// 作業中のファイルがあるディレクトリ
+    /// 作業中のファイルが存在するディレクトリ
     pub fn project_dir(&mut self) -> Result<PathBuf> {
         self.cache()?.project_dir()
     }
@@ -125,51 +126,42 @@ impl Read {
     fn cache(&mut self) -> Result<&Cache> {
         // 必要になったときに読み取る。
         if self.cache.is_none() {
-            self.cache = Some(self.read()?);
+            self.cache = Some(self.read_cache()?);
         }
         self.cache.as_ref().context("")
     }
 
-    fn read(&self) -> Result<Cache> {
+    fn read_cache(&self) -> Result<Cache> {
         let decoder = DecodeReaderBytesBuilder::new()
             .encoding(Some(SHIFT_JIS))
             .build(&self.file);
         BufReader::new(decoder)
             .lines()
-            .map(|a| a.context(""))
-            .collect::<Result<Cache>>()
+            .collect::<std::io::Result<Cache>>()
+            .context("JWC_TEMPファイルの読み取りに失敗しました")
     }
 }
 
-#[derive(Debug, PartialEq, Default)]
-struct Cache {
-    buf: Vec<String>,
-    project_path: Option<String>,
-    figures: Vec<Figure>,
-}
+#[derive(Debug, PartialEq)]
+struct Cache(Vec<String>);
 
 impl FromIterator<String> for Cache {
     fn from_iter<T: IntoIterator<Item = String>>(iter: T) -> Self {
-        let mut cache = Self::default();
-        cache.buf = iter.into_iter().collect();
-        cache
+        Self(<Vec<String>>::from_iter(iter))
     }
 }
 
 impl Cache {
     /// トラック名
     fn track_name(&self) -> &str {
-        for line in &self.buf {
-            if let Some(s) = line.strip_prefix("/トラック名:") {
-                return s;
-            }
-        }
-        " "
+        self.iter()
+            .find_map(|line| line.strip_prefix("/トラック名:"))
+            .unwrap_or(" ")
     }
 
+    /// 作業中のファイルが存在するディレクトリ
     fn project_dir(&self) -> Result<PathBuf> {
         let path = self
-            .buf
             .iter()
             .find_map(|line| line.strip_prefix("file="))
             .context("JWC_TEMPファイルにパスが出力されていません")?;
@@ -186,7 +178,6 @@ impl Cache {
     /// 始点距離程
     fn distance_0(&self) -> Result<f64> {
         let s = self
-            .buf
             .iter()
             .find_map(|line| line.strip_prefix("/始点距離程:"))
             .context("始点距離程を指定してください")?;
@@ -196,16 +187,14 @@ impl Cache {
 
     /// 図形データ
     fn figures(&self) -> Result<Vec<Figure>> {
-        self.buf
-            .iter()
-            .filter_map(|line| Figure::parse(line).transpose())
+        self.iter()
+            .filter_map(|line| Figure::parse(&line).transpose())
             .collect()
     }
 
     /// 出力始点
     fn anchor_0(&self) -> Result<[f64; 2]> {
         let hp1 = self
-            .buf
             .iter()
             .find_map(|line| line.strip_prefix("hp1"))
             .context("JWC_TEMPファイルに指示点1がありません")?;
@@ -215,6 +204,10 @@ impl Cache {
             .try_into()
             .ok()
             .with_context(|| format!("指示点 {} を数値にパースできません", hp1))
+    }
+
+    fn iter(&self) -> impl Iterator<Item = &String> {
+        self.0.iter()
     }
 }
 
