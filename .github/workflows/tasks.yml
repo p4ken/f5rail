@@ -1,0 +1,22 @@
+on:
+  push:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  tasks:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: テスト
+        run: cargo test
+      - name: ビルド
+        run: cargo build --release --bin f5rail
+      - name: パッケージ
+        run: cargo run --bin make
+      - name: 保存
+        uses: actions/upload-artifact@v3
+        with:
+          path: 外部変形/f5rail-*.zip
