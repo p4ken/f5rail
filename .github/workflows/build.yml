@@ -12,5 +12,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Run tests
-        run: cargo test --verbose
+      - run: cargo test
+      - run: cargo build --release --bin f5rail
+      - run: cargo run --bin make
+      - uses: actions/upload-artifact@v3
+        with:
+          path: 外部変形/f5rail-*.zip
