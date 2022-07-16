@@ -1,4 +1,4 @@
-name: Build
+name: ビルドタスク
 
 on:
   push:
@@ -11,13 +11,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: チェックアウト
-        uses: actions/checkout@v3
-      - name: ユニットテスト
+      - uses: actions/checkout@v3
+      - name: テスト
         run: cargo test
-      - name: リリースビルド
+      - name: ビルド
         run: cargo build --release --bin f5rail
-      - name: 外部変形生成
+      - name: パッケージ
         run: cargo run --bin make
       - name: 保存
         uses: actions/upload-artifact@v3
