@@ -1,10 +1,10 @@
 pub mod app;
 pub mod canvas;
 pub mod curve;
+pub mod distance;
 pub mod param;
 pub mod unit;
 
-mod distance;
 #[cfg(test)]
 mod test;
 
