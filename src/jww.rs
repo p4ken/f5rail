@@ -16,14 +16,19 @@ use crate::unit::Meter;
 
 // エントリーポイント
 pub fn f5rail(args: impl IntoIterator<Item = std::ffi::OsString>) -> Result<()> {
-    PlugIn::new(args.into_iter().collect()).run()
+    F5rail::new(args.into_iter().collect()).run()
 }
 
-#[derive(derive_more::Constructor)]
-pub struct PlugIn {
+/// 外部変形
+pub struct F5rail {
     args: Args,
 }
-impl PlugIn {
+impl F5rail {
+    /// エントリーポイント
+    pub fn cli(args: impl IntoIterator<Item = std::ffi::OsString>) -> Result<()> {
+        let args = args.into_iter().collect();
+        F5rail { args }.run()
+    }
     pub fn run(&self) -> Result<()> {
         let result = self.routing();
         self.show_result(result)
