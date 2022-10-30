@@ -6,6 +6,7 @@ use crate::{
 };
 
 use anyhow::{bail, Result};
+use derive_more::Constructor;
 
 use super::{
     canvas::Point,
@@ -14,7 +15,7 @@ use super::{
 };
 
 /// 緩和曲線パラメータ
-#[derive(Debug)]
+#[derive(Debug, Constructor)]
 pub struct Param {
     /// 逓減関数
     pub diminish: Diminish,

@@ -2,7 +2,7 @@
 
 use std::{
     fs::File,
-    io::{self, BufWriter, Write},
+    io::{self, BufWriter, Write}, path::Path,
 };
 
 use crate::cg::Track;
@@ -21,6 +21,10 @@ impl<W: Write> MapWriter<W> {
     }
 }
 impl MapWriter<File> {
+    fn create(path: &(impl AsRef<Path> + ?Sized)) -> anyhow::Result<Self> {
+        let file = File::create(path)?;
+        Ok(Self::new(file))
+    }
     pub fn close(self) -> io::Result<()> {
         self.buf.into_inner()?.sync_all()
     }

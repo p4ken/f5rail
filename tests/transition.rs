@@ -21,6 +21,39 @@ use tempfile::NamedTempFile;
             "h#サイン半波長逓減曲線を描画しました。"])]
 fn transition(#[case] strv: Vec<&str>, #[case] expected: Vec<&str>) -> Result<()> {
     let path = NamedTempFile::new_in("./tests")?.into_temp_path();
+    f5rail::Plugin::cli(Args::new(&path, &strv))?;
+
+    let file = File::open(&path)?;
+    let reader = DecodeReaderBytesBuilder::new()
+        .encoding(Some(SHIFT_JIS))
+        .build(file);
+    let reader = BufReader::new(reader);
+    let lines = reader.lines().into_iter().collect::<IoResult<Vec<_>>>()?;
+    let lines = lines
+        .iter()
+        .map(AsRef::as_ref)
+        .map(Option::Some)
+        .chain(iter::once(None));
+    let expects = expected
+        .into_iter()
+        .map(Option::Some)
+        .chain(iter::once(None));
+    lines
+        .zip(expects)
+        .enumerate()
+        .for_each(|(i, (line, expect))| assert_eq!(line, expect, "line {}", i + 1));
+
+    path.close()?;
+    Ok(())
+}
+
+#[rstest]
+#[case(vec!["/TRANSITION:1"], vec!["heTCLを指定してください"])]
+#[case(vec!["/TRANSITION:1", "/R1:-123.4", "/TCL:1"],
+       vec!["ci 0.00000000000001511214150147834 246.8 246.8 -90 -89.76784530181085",
+            "h#サイン半波長逓減曲線を描画しました。"])]
+fn transition_outdated(#[case] strv: Vec<&str>, #[case] expected: Vec<&str>) -> Result<()> {
+    let path = NamedTempFile::new_in("./tests")?.into_temp_path();
     f5rail::layout(Args::new(&path, &strv))?;
 
     let file = File::open(&path)?;

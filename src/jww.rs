@@ -7,130 +7,23 @@ use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::path::Path;
 use std::{fmt::Display, fs::File};
 
-use crate::bve;
 use crate::cad::{Point, Polyline};
 use crate::cg::{Anchor0, Track};
-use crate::track;
 use crate::transition::canvas::Spiral;
 use crate::unit::Meter;
 
-// エントリーポイント
-pub fn f5rail(args: impl IntoIterator<Item = std::ffi::OsString>) -> Result<()> {
-    F5rail::new(args.into_iter().collect()).run()
-}
-
-/// 外部変形
-pub struct F5rail {
-    args: Args,
-}
-impl F5rail {
-    /// エントリーポイント
-    pub fn cli(args: impl IntoIterator<Item = std::ffi::OsString>) -> Result<()> {
-        let args = args.into_iter().collect();
-        F5rail { args }.run()
-    }
-    pub fn run(&self) -> Result<()> {
-        let result = self.routing();
-        self.show_result(result)
-    }
-    fn routing(&self) -> Result<String> {
-        if let Some(diminish) = self.args.transition() {
-            self.draw_transition(&diminish)
-        } else if let Some(number) = self.args.track() {
-            match number {
-                "0" | "x" => self.check_track(number),
-                "export" => self.export_track(),
-                _ => bail!("trackの値が無効"),
-            }
-        } else {
-            bail!("機能の指定なし")
-        }
-    }
-    fn show_result(&self, result: Result<String>) -> Result<()> {
-        let jwc = TempWriter::create(self.args.jwc_path())?;
-        match result {
-            Ok(s) => jwc.write_ok(s),
-            Err(e) => jwc.write_err(e),
-        }
-    }
-    fn draw_transition(&self, &diminish: &crate::transition::curve::Diminish) -> Result<String> {
-        // args -> JwcTemp, App
-        let k0 = self.args.curvature(0)?;
-        let k1 = self.args.curvature(1)?;
-        let l0 = self.args.distance0();
-        let tcl = self.args.tcl()?;
-        let p0 = self.args.p0();
-        let t0 = self.args.t0();
-        let param = crate::transition::param::Param {
-            diminish,
-            k0,
-            k1,
-            l0,
-            tcl,
-            p0,
-            t0,
-        };
-        let spiral = crate::transition::plot(&param);
-
-        // 緩和曲線 `spiral` を出力する
-        let mut jwc_temp = TempWriter::create(self.args.jwc_path())?;
-        jwc_temp.write_spiral(spiral)?;
-        let diminish = match diminish {
-            crate::transition::curve::Diminish::Sine => "サイン半波長逓減曲線",
-            crate::transition::curve::Diminish::Linear => "直線逓減（クロソイド）",
-        };
-        Ok(format!("{}を描画しました", diminish))
-    }
-    fn check_track(&self, number: &str) -> Result<String> {
-        Ok("todo".to_owned())
-    }
-    fn export_track(&self) -> Result<String> {
-        // ひたすらDI
-        // ファイル操作をここに集約する
-        // args -> JwcTemp, App
-        let jwc = TempReader::open(self.args.jwc_path())?;
-        let jwc_0 = TempReader::open(self.args.jwc_0_path())?;
-        let jwc_x = TempReader::open(self.args.jwc_x_path())?;
-        // temp0 -> BveFile
-
-        // エラー表示文字列とかはappに集約したい気もする。
-        // jwcファイルのtraitオブジェクトでもDIは可能。
-        // 逆にappがエラーを返さないならこのままがいい。
-
-        let polylines = (jwc_0.polyline()?, jwc_x.polyline()?);
-        // TODO: point_0がpolylinesの上にあることをチェック、point_0よりも手前をカット、point_0から近い順にソート、連続性チェック
-        let point_0 = Point::new(Meter(0.0), Meter(0.0)); // tmp
-        let anchor_0 = jwc_0.anchor_0()?;
-
-        // ドメインにはargsの値またはクロージャまたはtraitのみを渡す
-        let app = track::App::new(polylines, point_0, anchor_0);
-        let track = app.calculate_track();
-
-        let track_name = "track1";
-        let map_path = "map.txt";
-        let mut map = bve::MapWriter::new(File::create(map_path)?);
-        map.write_track(track_name, &track)?;
-
-        jwc.close()?;
-        jwc_0.close()?;
-        jwc_x.close()?;
-        map.close()?;
-
-        Ok(format!("{}に出力しました", map_path))
-    }
-}
-
+/// コマンドライン引数
 pub struct Args(Vec<OsString>);
-impl FromIterator<OsString> for Args {
-    fn from_iter<I: IntoIterator<Item = OsString>>(iter: I) -> Self {
-        Self(iter.into_iter().collect())
+impl<T: Into<OsString>> FromIterator<T> for Args {
+    fn from_iter<U: IntoIterator<Item = T>>(iter: U) -> Self {
+        Self(iter.into_iter().map(Into::into).collect())
     }
 }
 impl Args {
-    fn track(&self) -> Option<&str> {
+    pub fn track(&self) -> Option<&str> {
         Some("export")
     }
-    fn transition(&self) -> Option<crate::transition::curve::Diminish> {
+    pub fn transition(&self) -> Option<crate::transition::curve::Diminish> {
         let transition = self
             .0
             .iter()
@@ -145,7 +38,7 @@ impl Args {
             None => None,
         }
     }
-    fn curvature(&self, i: i32) -> Result<crate::transition::curve::Curvature> {
+    pub fn curvature(&self, i: i32) -> Result<crate::transition::curve::Curvature> {
         let prefix = format!("/R{}:", i);
         let radius = self
             .0
@@ -162,10 +55,10 @@ impl Args {
         };
         Ok(crate::transition::curve::Curvature::from(r))
     }
-    fn distance0(&self) -> crate::transition::distance::Distance<f64> {
+    pub fn distance0(&self) -> crate::transition::distance::Distance<f64> {
         crate::transition::distance::Distance::from(0.0)
     }
-    fn tcl(&self) -> Result<crate::transition::curve::Subtension> {
+    pub fn tcl(&self) -> Result<crate::transition::curve::Subtension> {
         const PREFIX: &str = "/TCL:";
         let tcl = self
             .0
@@ -181,24 +74,39 @@ impl Args {
             Err(_) => bail!("TCLに{}を指定できません", tcl),
         }
     }
-    fn p0(&self) -> crate::transition::canvas::Point {
+    pub fn p0(&self) -> crate::transition::canvas::Point {
         crate::transition::canvas::Point::from((0.0, 0.0))
     }
-    fn t0(&self) -> crate::transition::curve::Tangential {
+    pub fn t0(&self) -> crate::transition::curve::Tangential {
         crate::transition::curve::Tangential::from(0.0)
     }
-    fn jwc_path(&self) -> &OsStr {
-        OsStr::new("abc")
+    pub fn jwc_path(&self) -> Result<&OsStr> {
+        self.get("/TEMP:")
     }
-    fn jwc_0_path(&self) -> &OsStr {
-        OsStr::new("abc")
+    pub fn jwc_0_path(&self) -> Result<&OsStr> {
+        self.get("/TEMP_0:")
     }
-    fn jwc_x_path(&self) -> &OsStr {
-        OsStr::new("abc")
+    pub fn jwc_x_path(&self) -> Result<&OsStr> {
+        self.get("/TEMP_X:")
+    }
+    pub fn map_name(&self) -> &OsStr {
+        self.get("/出力ファイル名:").unwrap_or(OsStr::new(""))
+    }
+    pub fn get(&self, prefix: &str) -> Result<&OsStr> {
+        let path = self
+            .0
+            .iter()
+            .filter_map(|x| x.to_str())
+            .find_map(|x| x.split_once(prefix))
+            .map(|x| x.1);
+        match path {
+            Some(path) => Ok(OsStr::new(path)),
+            None => bail!("{}が指定されていません", prefix),
+        }
     }
 }
 
-struct TempReader<R: Read> {
+pub struct TempReader<R: Read> {
     buf: BufReader<R>,
     // cache: JwcFormat
 }
@@ -207,26 +115,66 @@ impl<R: Read> TempReader<R> {
         let buf = BufReader::new(inner);
         Self { buf }
     }
+    pub fn project_dir(&self) -> Result<&OsStr> {
+        todo!()
+    }
     fn track_name(&self) -> () {
         // ここでCP932->UTF-8の変換が必要
     }
-    fn polyline(&self) -> Result<Polyline> {
+    pub fn polyline(&self) -> Result<Polyline> {
         // todo
         Ok(Polyline::new(vec![]))
     }
     /// 始点のBVE距離程
-    fn anchor_0(&self) -> Result<Anchor0> {
+    pub fn anchor_0(&self) -> Result<Anchor0> {
         // todo
         Ok(Anchor0::new(Meter(0.0)))
     }
 }
 impl TempReader<File> {
-    fn open(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
+    pub fn open(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
         let file = File::open(path)?;
         Ok(Self::new(file))
     }
-    fn close(self) -> std::io::Result<()> {
+    pub fn close(self) -> std::io::Result<()> {
         self.buf.into_inner().sync_all()
+    }
+}
+
+#[derive(Default)]
+struct JwcTemp {
+    project_path: Option<String>,
+    track_name: Option<String>,
+    polyline: Option<Polyline>,
+    anchor_0: Option<Point>,
+}
+
+impl JwcTemp {
+    fn load(reader: &impl Read) -> Self {
+        let mut jwc_temp = Self::default();
+        jwc_temp
+    }
+    fn project_dir(&self) -> Result<&str> {
+        let path_str = self
+            .project_path
+            .as_ref()
+            .context("JWC_TEMPファイルにパスが出力されていません")?;
+
+        ensure!(
+            !path_str.is_empty(),
+            "作業中のファイルに名前をつけて保存してください"
+        );
+
+        ensure!(
+            Path::new(path_str).parent().is_some(),
+            "{} と同じフォルダに出力できません",
+            path_str
+        );
+
+        Ok(path_str)
+    }
+    fn dump(writer: &impl Write) -> io::Result<()> {
+        Ok(())
     }
 }
 
@@ -239,13 +187,13 @@ impl<W: Write> TempWriter<W> {
         let writer = BufWriter::new(writer);
         Self { buf: writer }
     }
-    fn write_err(&self, e: impl Display) -> Result<()> {
+    pub fn write_err(&self, e: impl Display) -> Result<()> {
         Ok(())
     }
-    fn write_ok(&self, info: impl Display) -> Result<()> {
+    pub fn write_ok(&self, info: impl Display) -> Result<()> {
         Ok(())
     }
-    fn write_spiral(&mut self, spiral: Spiral) -> Result<()> {
+    pub fn write_spiral(&mut self, spiral: Spiral) -> Result<()> {
         for stroke in spiral.iter() {
             match stroke.center().zip(
                 stroke
@@ -295,7 +243,7 @@ impl<W: Write> TempWriter<W> {
     }
 }
 impl TempWriter<File> {
-    fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
+    pub fn create(path: &(impl AsRef<Path> + ?Sized)) -> Result<Self> {
         let file = File::create(path)?;
         Ok(Self::new(file))
     }
@@ -305,7 +253,7 @@ impl TempWriter<File> {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use std::ffi::OsString;
 
     use anyhow::Result;
@@ -330,7 +278,7 @@ mod test {
         ];
         let args = Args(args);
         assert_eq!(args.transition(), Some(Diminish::Sine));
-        // assert_eq!(args.jwc_path(), "./JWC_TEMP.TXT");
+        assert_eq!(args.jwc_path().ok(), Some(OsStr::new("./JWC_TEMP.TXT")));
         assert_eq!(args.curvature(0).ok(), Some(Radius(1.1).into()));
         assert_eq!(args.curvature(1).ok(), Some(Radius(2.0).into()));
         assert_eq!(args.tcl().ok(), Some(3.0.into()));
@@ -344,10 +292,9 @@ mod test {
     //         OsString::from("/TCL:3"),
     //         OsString::from("/TEMP:./JWC_TEMP.TXT"),
     //     ];
-    //     let args = Args::parse(args);
-    //     let args = args.unwrap();
+    //     let args = Args(args);
     //     let transition = args.unwrap_transition();
-    //     assert_eq!(transition.0, "./JWC_TEMP.TXT");
+    //     assert_eq!(args.transition(), "./JWC_TEMP.TXT");
     //     let param = transition.1.as_ref().unwrap();
     //     assert!(matches!(param.diminish, Diminish::Sine));
     //     assert!(param.k0.is_straight());
@@ -409,23 +356,5 @@ mod test {
     //     assert_eq!(transition.0, "./JWC_TEMP.TXT");
     //     let e = transition.1.as_ref().unwrap_err();
     //     assert_eq!(e.to_string(), err);
-    // }
-
-    // impl Args {
-    //     fn unwrap_transition(&self) -> (String, Result<transition::Param>) {
-    //         if let Ok(formula) = self.transition() {
-    //             let file = self.temp_path().unwrap().into();
-    //             let param = Param::parse(&formula, &self);
-    //             (file, param)
-    //         } else {
-    //             panic!("This is not a transition.")
-    //         }
-    //     }
-    // }
-
-    // impl Curvature {
-    //     fn is_straight(&self) -> bool {
-    //         *self == STRAIGHT
-    //     }
     // }
 }

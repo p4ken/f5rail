@@ -26,6 +26,33 @@ fn relative(#[case] map_name: &str) -> Result<()> {
         Arg::new("/TEMP:").push(jwc_temp.path()),
         Arg::new("/出力ファイル名:").push(map_name),
     ];
+    f5rail::Plugin::cli(args)?;
+
+    assert!(project_dir.path().join(map_name).exists());
+
+    jwc_temp_0.close()?;
+    jwc_temp_x.close()?;
+    project_dir.close()?;
+    Ok(())
+}
+
+#[rstest]
+#[case("ascii.txt")]
+fn relative_outdated(#[case] map_name: &str) -> Result<()> {
+    let jwc_temp_0 = TestFile::create()?;
+    let jwc_temp_x = TestFile::create()?;
+    let jwc_temp = TestFile::create()?;
+    let project_dir = TestDir::create()?;
+    jwc_temp.write_path(&project_dir.path().join("foo.jww"))?;
+    jwc_temp_x.write_track_name("1")?;
+
+    let args = vec![
+        Arg::new("/TRACK:X"),
+        Arg::new("/TEMP_0:").push(jwc_temp_0.path()),
+        Arg::new("/TEMP_X:").push(jwc_temp_x.path()),
+        Arg::new("/TEMP:").push(jwc_temp.path()),
+        Arg::new("/出力ファイル名:").push(map_name),
+    ];
     f5rail::layout(args)?;
 
     assert!(project_dir.path().join(map_name).exists());
@@ -85,6 +112,12 @@ impl Arg {
     fn push(mut self, s: &(impl AsRef<OsStr> + ?Sized)) -> Self {
         self.0.push(s);
         self
+    }
+}
+
+impl Into<OsString> for Arg {
+    fn into(self) -> OsString {
+        self.0
     }
 }
 
