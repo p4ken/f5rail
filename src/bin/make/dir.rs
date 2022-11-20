@@ -1,11 +1,11 @@
 use std::{
     ffi::OsStr,
-    fs::DirEntry,
+    fs::{DirEntry, ReadDir},
     io,
     path::{Path, PathBuf},
 };
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 pub struct Dir {
     childlen: Vec<PathBuf>,
@@ -13,9 +13,15 @@ pub struct Dir {
 
 impl Dir {
     pub fn open(path: &str) -> Result<Self> {
-        let dir1 = Path::new(path).read_dir()?;
-        let dir2 = Path::new(path).join("sub").read_dir()?;
-        Ok(dir2.chain(dir1).collect::<io::Result<Self>>()?)
+        let dir = Path::new(path)
+            .read_dir()
+            .with_context(|| "{path}を開けません")?;
+        let sub_dir = Path::new(path).join("sub").read_dir();
+        let io_result = match sub_dir {
+            Ok(sub_dir) => sub_dir.chain(dir).collect::<io::Result<Self>>(),
+            Err(e) => dir.collect::<io::Result<Self>>(),
+        };
+        Ok(io_result?)
     }
 
     pub fn bat_iter(&self) -> impl IntoIterator<Item = &Path> {

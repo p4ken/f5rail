@@ -3,7 +3,7 @@ use std::{
     io::{BufReader, Read, Write},
 };
 
-use anyhow::{ensure, Result};
+use anyhow::{ensure, Context, Result};
 use encoding_rs::SHIFT_JIS;
 
 use crate::{dir::Dir, zip::Package};
