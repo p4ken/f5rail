@@ -23,6 +23,10 @@ fn main() -> Result<()> {
         let mut utf8 = String::new();
         File::open(bat_path)?.read_to_string(&mut utf8)?;
 
+        // 改行コード変更
+        utf8 = utf8.replace("\n", "\r\n");
+        utf8 = utf8.replace("\r\r", "\r");
+
         // 文字列展開
         utf8 = utf8.replace("(VERSION)", env!("CARGO_PKG_VERSION"));
 
