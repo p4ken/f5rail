@@ -26,6 +26,10 @@ pub fn layout(args: impl IntoIterator<Item = impl AsRef<OsStr>>) -> Result<()> {
     }
 }
 
+pub fn cli(args: impl IntoIterator<Item = impl Into<OsString>>) -> Result<()> {
+    Ok(())
+}
+
 /// 外部変形
 #[derive(derive_more::Constructor)]
 pub struct Plugin {

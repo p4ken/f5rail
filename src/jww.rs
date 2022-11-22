@@ -12,6 +12,11 @@ use crate::cg::{Anchor0, Track};
 use crate::transition::canvas::Spiral;
 use crate::unit::Meter;
 
+/// 外部変形
+pub struct PlugIn{
+    
+}
+
 /// コマンドライン引数
 pub struct Args(Vec<OsString>);
 impl<T: Into<OsString>> FromIterator<T> for Args {
@@ -116,6 +121,7 @@ impl<R: Read> TempReader<R> {
         Self { buf }
     }
     pub fn project_dir(&self) -> Result<&OsStr> {
+        // TODO: 文字コード変換 or win32を使う
         todo!()
     }
     fn track_name(&self) -> () {
