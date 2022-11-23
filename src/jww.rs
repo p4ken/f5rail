@@ -121,11 +121,11 @@ impl<R: Read> TempReader<R> {
         Self { buf }
     }
     pub fn project_dir(&self) -> Result<&OsStr> {
-        // TODO: 文字コード変換 or win32を使う
+        // コマンドライン引数へと変更予定。
         todo!()
     }
     fn track_name(&self) -> () {
-        // ここでCP932->UTF-8の変換が必要
+        // コマンドライン引数へと変更予定。
     }
     pub fn polyline(&self) -> Result<Polyline> {
         // todo

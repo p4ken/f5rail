@@ -1,5 +1,5 @@
 @REM 【未実装】BVEの他線座標を計算します
-@echo off
+@ECHO OFF
 REM #jww
 REM #hf
 REM #cd
@@ -14,4 +14,5 @@ REM #c出力ファイル名 /_/file:
 REM #e
 
 ECHO %* > log.txt
-ECHO h#map.txtに出力しました > JWC_TEMP.txt
+for /f "delims=" %%i in ('FINDSTR /B "file=" JWC_TEMP.txt') do SET PROJECT_FILE=%%i
+f5rail.exe %* "%PROJECT_FILE%"
