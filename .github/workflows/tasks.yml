@@ -18,7 +18,7 @@ jobs:
       - name: ビルド
         run: cargo build --release --bin f5rail
       - name: パッケージ
-        run: cargo run --bin make
+        run: cargo run --package distro
       - name: 保存
         uses: actions/upload-artifact@v3
         with:

@@ -1,0 +1,10 @@
+[package]
+name = "distro"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow = "1.0.54"
+encoding_rs = "0.8.31"
+time = "0.3.9"
+zip = { version = "0.6.2", default-features = false, features = ["deflate", "time"] }

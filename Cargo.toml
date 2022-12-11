@@ -1,7 +1,14 @@
-[package]
-name = "f5rail"
+[workspace]
+members = ["distro"]
+
+[workspace.package]
 version = "0.2.0"
 edition = "2021"
+
+[package]
+name = "f5rail"
+version.workspace = true
+edition.workspace = true
 default-run = "f5rail"
 
 [profile.release]
@@ -15,8 +22,6 @@ encoded = "0.4.0"
 encoding_rs = "0.8.31" # +165KB
 encoding_rs_io = "0.1.7"
 rfd = "0.10.0"
-time = "0.3.9"
-zip = { version = "0.6.2", default-features = false, features = ["deflate", "time"] }
 
 [dev-dependencies]
 rstest = "0.12.0"
