@@ -6,7 +6,7 @@ impl TempFormat {
     pub fn load(file: impl io::Read) -> io::Result<()> {
         for line in BufRead::lines(BufReader::new(file)) {
             match line {
-                Err(e) if e.kind() == ErrorKind::InvalidData => continue, // ignore non-UTF-8
+                Err(e) if e.kind() == ErrorKind::InvalidData => continue, // ignore non-UTF-8 line
                 Err(e) => return Err(e),
                 Ok(_) => (), // TODO: parse
             }
@@ -14,8 +14,7 @@ impl TempFormat {
         Ok(()) // TODO: return self
     }
 
-    pub fn dump(file: &mut impl io::Write) -> io::Result<()> {
-
+    pub fn dump(_file: &mut impl io::Write) -> io::Result<()> {
         Ok(())
     }
 }
