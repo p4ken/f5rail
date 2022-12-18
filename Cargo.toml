@@ -1,5 +1,5 @@
 [workspace]
-members = ["distro"]
+members = ["distro", "jwwio"]
 
 [workspace.package]
 version = "0.2.0"

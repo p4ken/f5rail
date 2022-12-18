@@ -1,0 +1,6 @@
+[package]
+name = "jwwio"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
